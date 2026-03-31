@@ -6,6 +6,7 @@
     "1a-linebreak",
     "1b-shaping-wasm",
     "1c-font-engine",
+    "2a-render-core",
     "1-knuth-plass",
     "2-color"
   ]

@@ -10,7 +10,7 @@ import { describe, it, expect, beforeAll } from 'vitest';
 
 import { createParagraphComposer } from '../src/paragraph';
 import { createMeasurer, FontkitEngine } from '@paragraf/font-engine';
-import { layoutParagraph, renderToSvg } from '../src/render';
+import { layoutParagraph, renderToSvg } from '@paragraf/render-core';
 import { WasmFontEngine, loadShapingWasm } from '@paragraf/shaping-wasm';
 import { Font, FontRegistry } from '@paragraf/types';
 

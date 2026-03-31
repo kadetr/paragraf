@@ -5,7 +5,7 @@ import {
   renderToSvg,
   renderToCanvas,
   RenderedParagraph,
-} from '../src/render';
+} from '@paragraf/render-core';
 import { ComposedLine, Font, FontRegistry, Measurer } from '@paragraf/types';
 import {
   mockMeasure,
@@ -15,7 +15,7 @@ import {
   FontEngine,
   FontkitEngine,
 } from '@paragraf/font-engine';
-import { createParagraphComposer } from '../src/paragraph';
+import { createParagraphComposer } from 'paragraf-knuth-plass';
 
 // ─── Shared fixtures ──────────────────────────────────────────────────────────
 

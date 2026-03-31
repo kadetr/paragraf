@@ -11,8 +11,8 @@ import {
   ParagraphInput,
   ParagraphOutput,
 } from './paragraph.js';
-import { Measurer } from './measure.js';
-import { layoutParagraph, RenderedParagraph } from './render.js';
+import { Measurer } from '@paragraf/types';
+import { layoutParagraph, RenderedParagraph } from '@paragraf/render-core';
 
 // ─── Public types ─────────────────────────────────────────────────────────────
 

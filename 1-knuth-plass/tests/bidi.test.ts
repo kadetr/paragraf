@@ -10,7 +10,7 @@ import {
 } from '../src/paragraph';
 import { loadShapingWasm } from '@paragraf/shaping-wasm';
 import { Measurer } from '@paragraf/types';
-import { layoutParagraph } from '../src/render';
+import { layoutParagraph } from '@paragraf/render-core';
 import { FontRegistry, Font } from '@paragraf/types';
 
 const FONTS_DIR = path.resolve(__dirname, '../../fonts');

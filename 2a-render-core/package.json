@@ -1,0 +1,25 @@
+{
+  "name": "@paragraf/render-core",
+  "version": "0.1.0",
+  "description": "Canvas/SVG layout engine for the paragraf typesetter.",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@paragraf/types": "*",
+    "@paragraf/font-engine": "*"
+  },
+  "devDependencies": {
+    "@types/node": "^22.19.15",
+    "paragraf-knuth-plass": "*",
+    "tsx": "^4.21.0",
+    "typescript": "^5.4.0",
+    "vitest": "^3.2.4"
+  }
+}

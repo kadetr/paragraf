@@ -7,7 +7,7 @@
 | types | `0-types` | `@paragraf/types` | ✅ done |
 | linebreak | `1a-linebreak` | `@paragraf/linebreak` | ✅ done |
 | font-engine | `1c-font-engine` | `@paragraf/font-engine` | ✅ done |
-| shaping-wasm | `1b-shaping-wasm` | `@paragraf/shaping-wasm` | ⬜ next |
+| shaping-wasm | `1b-shaping-wasm` | `@paragraf/shaping-wasm` | ✅ done |
 | render-core | `2a-render-core` | `@paragraf/render-core` | ⬜ |
 | typography | `3a-typography` | `@paragraf/typography` | ⬜ |
 | render-pdf | `2b-render-pdf` | `@paragraf/render-pdf` | ⬜ |
@@ -86,7 +86,7 @@ No TS code to extract yet — greenfield Rust package.
     └────────┬───────┘      └───────┬──────────┘
              │                  ┌───┴──────────┐
              │                  ▼              ▼
-             │        ┌──────────────┐  ┌─────────────────┐
+             │        ┌──────────────┐  ┌──────────────-───┐
              │        │1b-shaping    │  │  2a-render-core  │
              │        │   -wasm      │  └────────┬─────────┘
              │        └──────┬───────┘           │

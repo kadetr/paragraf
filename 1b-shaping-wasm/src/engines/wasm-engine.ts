@@ -8,10 +8,9 @@ import {
   FontEngine,
   Glyph,
   GlyphPath,
-  FontMetrics,
   PathCommand,
 } from '@paragraf/font-engine';
-import { Font } from '@paragraf/types';
+import { Font, FontMetrics } from '@paragraf/types';
 
 export class WasmFontEngine implements FontEngine {
   private readonly wasm: any;
