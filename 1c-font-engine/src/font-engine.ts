@@ -112,6 +112,3 @@ export interface FontEngine {
     variant?: 'normal' | 'superscript' | 'subscript',
   ): FontMetrics;
 }
-
-// FontMetrics type is re-exported from src/types.ts for consistency
-export type { FontMetrics };

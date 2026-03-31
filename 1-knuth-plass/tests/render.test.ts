@@ -6,16 +6,15 @@ import {
   renderToCanvas,
   RenderedParagraph,
 } from '../src/render';
-import { ComposedLine, Font, FontRegistry } from '@paragraf/types';
+import { ComposedLine, Font, FontRegistry, Measurer } from '@paragraf/types';
 import {
   mockMeasure,
   mockMetrics,
   mockSpace,
   createMeasurer,
-  Measurer,
-} from '../src/measure';
-import { FontEngine } from '../src/font-engine';
-import { FontkitEngine } from '../src/engines/fontkit-engine';
+  FontEngine,
+  FontkitEngine,
+} from '@paragraf/font-engine';
 import { createParagraphComposer } from '../src/paragraph';
 
 // ─── Shared fixtures ──────────────────────────────────────────────────────────

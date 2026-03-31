@@ -10,10 +10,9 @@ import * as path from 'path';
 import { describe, it, expect, beforeAll } from 'vitest';
 
 import { createParagraphComposer } from '../src/paragraph';
-import { createMeasurer } from '../src/measure';
+import { createMeasurer, FontkitEngine } from '@paragraf/font-engine';
 import { layoutParagraph, renderToSvg } from '../src/render';
 import { WasmFontEngine } from '../src/engines/wasm-engine';
-import { FontkitEngine } from '../src/engines/fontkit-engine';
 import { Font, FontRegistry } from '@paragraf/types';
 
 const _require = createRequire(import.meta.url);

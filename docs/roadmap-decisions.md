@@ -15,8 +15,8 @@
 
 | Test file | Moves to package |
 |---|---|
-| `linebreak.test.ts`, `nodes.test.ts`, `compose.test.ts`, `hyphenate.test.ts` | `1-linebreak` |
-| `measure.test.ts` | `font-engine` |
+| `linebreak.test.ts`, `nodes.test.ts`, `compose.test.ts`, `hyphenate.test.ts` | `1a-linebreak` |
+| `measure.test.ts` | `1c-font-engine` |
 | `wasm.test.ts`, `render-wasm.test.ts`, `binary-debug.test.ts`, `equivalence.test.ts` | `1b-shaping-wasm` |
 | `render.test.ts`, `baseline-grid.test.ts`, `optical-margin.test.ts` | `2a-render` |
 | `pdf.test.ts`, `pdf-document.test.ts` | `2b-render-pdf` |

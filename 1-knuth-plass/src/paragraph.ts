@@ -25,11 +25,10 @@ import {
   LineBreak,
   composeParagraph,
 } from '@paragraf/linebreak';
-import { createMeasurer, Measurer, GlueSpaceMetrics } from './measure';
+import { createMeasurer, FontkitEngine, FontEngine } from '@paragraf/font-engine';
+import { Measurer, GlueSpaceMetrics } from '@paragraf/types';
 import { tracebackWasmBinary } from './wasm-binary.js';
 import { WasmFontEngine } from './engines/wasm-engine.js';
-import { FontkitEngine } from './engines/fontkit-engine.js';
-import { FontEngine } from './font-engine';
 import { buildOmaAdjustments, buildOmaInput } from './optical-margin.js';
 
 // ─── WASM module — loaded once at module initialisation ───────────────────────

@@ -24,12 +24,8 @@ import type {
   ParagraphOutput,
 } from '../src/paragraph.js';
 import type { ComposedLine } from '@paragraf/types';
-import {
-  mockMeasure,
-  mockSpace,
-  mockMetrics,
-  type Measurer,
-} from '../src/measure.js';
+import { mockMeasure, mockSpace, mockMetrics } from '@paragraf/font-engine';
+import type { Measurer } from '@paragraf/types';
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 

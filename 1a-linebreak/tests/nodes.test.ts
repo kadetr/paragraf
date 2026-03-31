@@ -22,7 +22,10 @@ const REGULAR_PATH = path.resolve(
   __dirname,
   '../../fonts/LiberationSerif-Regular.ttf',
 );
-const BOLD_PATH = path.resolve(__dirname, '../../fonts/LiberationSerif-Bold.ttf');
+const BOLD_PATH = path.resolve(
+  __dirname,
+  '../../fonts/LiberationSerif-Bold.ttf',
+);
 
 const FONT_REGULAR: Font = {
   id: 'liberation-serif-regular',

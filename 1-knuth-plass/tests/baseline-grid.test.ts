@@ -20,12 +20,8 @@ import type {
   ParagraphInput,
   ParagraphOutput,
 } from '../src/paragraph';
-import {
-  mockMeasure,
-  mockSpace,
-  mockMetrics,
-  type Measurer,
-} from '../src/measure';
+import { mockMeasure, mockSpace, mockMetrics } from '@paragraf/font-engine';
+import type { Measurer } from '@paragraf/types';
 
 // ─── Fixture helpers ──────────────────────────────────────────────────────────
 

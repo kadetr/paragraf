@@ -4,7 +4,7 @@ import * as path from 'path';
 import { describe, it, expect, beforeAll } from 'vitest';
 import { computeBreakpoints, traceback } from '@paragraf/linebreak';
 import { FORCED_BREAK, PROHIBITED } from '@paragraf/types';
-import { createMeasurer } from '../src/measure';
+import { createMeasurer } from '@paragraf/font-engine';
 
 const require = createRequire(import.meta.url);
 

@@ -18,7 +18,7 @@ import { readFileSync } from 'fs';
 import * as path from 'path';
 import { describe, it, expect, beforeAll } from 'vitest';
 
-import { createMeasurer } from '../src/measure';
+import { createMeasurer } from '@paragraf/font-engine';
 import {
   buildNodeSequence,
   computeBreakpoints,

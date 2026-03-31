@@ -9,7 +9,7 @@ import {
   ParagraphComposer,
   wasmStatus,
 } from '../src/paragraph';
-import { Measurer } from '../src/measure';
+import { Measurer } from '@paragraf/types';
 import { layoutParagraph } from '../src/render';
 import { FontRegistry, Font } from '@paragraf/types';
 
@@ -220,7 +220,7 @@ describe('RTL visual reordering in layoutParagraph', () => {
 
   beforeAll(async () => {
     if (wasmStatus().status !== 'loaded') return;
-    const { createMeasurer } = await import('../src/measure');
+    const { createMeasurer } = await import('@paragraf/font-engine');
     measurer = createMeasurer(REGISTRY);
     composer = await createParagraphComposer(REGISTRY);
   });

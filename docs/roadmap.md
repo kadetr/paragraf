@@ -26,13 +26,13 @@
 
 ## Extraction steps
 
-### Step 1 — `1-linebreak`
+### Step 1 — `1a-linebreak`
 Pure Knuth-Plass + hyphenation. No font deps, no WASM.
 Files: `linebreak.ts`, `traceback.ts`, `nodes.ts`, `compose.ts`, `hyphenate.ts`
 Deps: `@paragraf/types`, `hyphen`
 Browser-safe, importable standalone.
 
-### Step 2 — `font-engine`
+### Step 2 — `1c-font-engine`
 Font metrics abstraction + fontkit adapter + measurer.
 Files: `font-engine.ts`, `engines/fontkit-engine.ts`, `measure.ts`
 Deps: `@paragraf/types`, `fontkit`
@@ -46,17 +46,17 @@ Peers with `font-engine` — swappable backend.
 ### Step 4 — `2a-render`
 Canvas/SVG layout output. Browser-safe.
 Files: `render.ts`
-Deps: `@paragraf/types`, `font-engine`
+Deps: `@paragraf/types`, `1c-font-engine`
 
 ### Step 5 — `2b-render-pdf`
 PDF output via pdfkit. Node-only.
 Files: `pdf.ts`
-Deps: `pdfkit`, `font-engine`, `2a-render`
+Deps: `pdfkit`, `1c-font-engine`, `2a-render`
 
 ### Step 6 — `paragraph` (compositor)
 Orchestrates linebreak + font-engine + shaping.
 Files: `paragraph.ts`, `optical-margin.ts`
-Deps: `1-linebreak`, `font-engine`, `1b-shaping-wasm` (optional)
+Deps: `1a-linebreak`, `1c-font-engine`, `1b-shaping-wasm` (optional)
 
 ### Step 7 — `document`
 Document model: multi-paragraph layout.

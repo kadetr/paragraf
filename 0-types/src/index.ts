@@ -180,7 +180,7 @@ export interface ComposedLine {
 export type ComposedParagraph = ComposedLine[];
 
 // ─── Measurer — font-measurement abstraction ──────────────────────────────────
-// Defined here so algorithm packages (1-linebreak) can type-check against the
+// Defined here so algorithm packages (1a-linebreak) can type-check against the
 // interface without depending on a fontkit implementation.
 
 export type MeasureText = (content: string, font: Font) => number;

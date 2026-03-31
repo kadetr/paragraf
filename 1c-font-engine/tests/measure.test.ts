@@ -1,12 +1,8 @@
 import { describe, it, expect, beforeAll } from 'vitest';
 import * as path from 'path';
-import {
-  createMeasurer,
-  mockMeasure,
-  mockSpace,
-  Measurer,
-} from '../src/measure';
-import { Font, FontRegistry } from '@paragraf/types';
+import { createMeasurer } from '../src/measure';
+import { mockMeasure, mockSpace } from '../src/testing';
+import { Font, FontRegistry, Measurer } from '@paragraf/types';
 
 // ─── Fixtures ────────────────────────────────────────────────────────────────
 

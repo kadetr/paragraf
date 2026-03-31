@@ -1,8 +1,7 @@
 // render.ts
 
-import { ComposedParagraph, Font } from '@paragraf/types';
-import { Measurer } from './measure';
-import { FontEngine } from './font-engine';
+import { ComposedParagraph, Font, Measurer } from '@paragraf/types';
+import { FontEngine } from '@paragraf/font-engine';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
