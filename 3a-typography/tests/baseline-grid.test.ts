@@ -13,13 +13,13 @@ import {
   type Frame,
   type BaselineGrid,
   type Document,
-} from '../src/document';
+} from '@paragraf/typography';
 import type { ComposedLine } from '@paragraf/types';
 import type {
   ParagraphComposer,
   ParagraphInput,
   ParagraphOutput,
-} from '../src/paragraph';
+} from '@paragraf/typography';
 import { mockMeasure, mockSpace, mockMetrics } from '@paragraf/font-engine';
 import type { Measurer } from '@paragraf/types';
 

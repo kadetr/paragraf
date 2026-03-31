@@ -12,9 +12,9 @@ import {
   lookupProtrusion,
   buildOmaAdjustments,
   buildOmaInput,
-} from '../src/optical-margin';
+} from '@paragraf/typography';
 import type { ComposedLine, ComposedParagraph } from '@paragraf/types';
-import type { ParagraphInput } from '../src/paragraph';
+import type { ParagraphInput } from '@paragraf/typography';
 
 // ─── Fixture helpers ──────────────────────────────────────────────────────────
 

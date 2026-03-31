@@ -3,7 +3,7 @@ import * as path from 'path';
 import { renderToPdf, PdfOptions } from '../src/pdf';
 import { layoutParagraph, RenderedParagraph } from '@paragraf/render-core';
 import { createMeasurer, FontkitEngine } from '@paragraf/font-engine';
-import { createParagraphComposer } from '../src/paragraph';
+import { createParagraphComposer } from '@paragraf/typography';
 import { Font, FontRegistry, ComposedLine } from '@paragraf/types';
 
 // ─── Fixtures ────────────────────────────────────────────────────────────────

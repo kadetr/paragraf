@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeAll } from 'vitest';
 import * as path from 'path';
-import { createParagraphComposer, ParagraphComposer } from '../src/paragraph';
+import { createParagraphComposer, ParagraphComposer } from '@paragraf/typography';
 import { FontRegistry, Font, ComposedParagraph } from '@paragraf/types';
 
 // ─── Fixtures ────────────────────────────────────────────────────────────────

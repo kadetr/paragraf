@@ -1,9 +1,9 @@
 // pdf.ts
 
 import { createRequire } from 'module';
-import { RenderedParagraph } from './render.js';
-import { RenderedDocument } from './document.js';
-import { FontEngine } from './font-engine.js';
+import { RenderedParagraph } from '@paragraf/render-core';
+import { RenderedDocument } from '@paragraf/typography';
+import { FontEngine } from '@paragraf/font-engine';
 
 let _PDFDocument: any = null;
 const getPDFDocument = (): any => {

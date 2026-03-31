@@ -7,7 +7,7 @@ import {
   createParagraphComposer,
   ParagraphComposer,
   wasmStatus,
-} from '../src/paragraph';
+} from '@paragraf/typography';
 import { loadShapingWasm } from '@paragraf/shaping-wasm';
 import { Measurer } from '@paragraf/types';
 import { layoutParagraph } from '@paragraf/render-core';

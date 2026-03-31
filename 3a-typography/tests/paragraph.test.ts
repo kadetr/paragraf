@@ -5,7 +5,7 @@ import {
   ParagraphInput,
   ParagraphOutput,
   ParagraphComposer,
-} from '../src/paragraph';
+} from '@paragraf/typography';
 import { FontRegistry, Font } from '@paragraf/types';
 
 // ─── Fixtures ────────────────────────────────────────────────────────────────

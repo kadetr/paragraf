@@ -12,17 +12,17 @@ import type {
   ComposedDocument,
   RenderedDocument,
   RenderedPage,
-} from '../src/document.js';
+} from '@paragraf/typography';
 import {
   composeDocument,
   layoutDocument,
   deriveLineWidths,
-} from '../src/document.js';
+} from '@paragraf/typography';
 import type {
   ParagraphComposer,
   ParagraphInput,
   ParagraphOutput,
-} from '../src/paragraph.js';
+} from '@paragraf/typography';
 import type { ComposedLine } from '@paragraf/types';
 import { mockMeasure, mockSpace, mockMetrics } from '@paragraf/font-engine';
 import type { Measurer } from '@paragraf/types';

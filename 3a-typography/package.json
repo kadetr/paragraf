@@ -1,7 +1,7 @@
 {
-  "name": "@paragraf/render-core",
+  "name": "@paragraf/typography",
   "version": "0.1.0",
-  "description": "Canvas/SVG layout engine for the paragraf typesetter.",
+  "description": "Paragraph compositor, optical margin alignment, and document model for the paragraf typesetter.",
   "type": "module",
   "exports": {
     ".": "./src/index.ts"
@@ -13,12 +13,13 @@
   },
   "dependencies": {
     "@paragraf/types": "*",
-    "@paragraf/font-engine": "*"
+    "@paragraf/linebreak": "*",
+    "@paragraf/font-engine": "*",
+    "@paragraf/shaping-wasm": "*",
+    "@paragraf/render-core": "*"
   },
   "devDependencies": {
-    "@paragraf/typography": "*",
     "@types/node": "^22.19.15",
-    "tsx": "^4.21.0",
     "typescript": "^5.4.0",
     "vitest": "^3.2.4"
   }

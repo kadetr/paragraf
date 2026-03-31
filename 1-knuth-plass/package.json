@@ -3,9 +3,6 @@
   "version": "0.11.0",
   "description": "Paragraf Knuth-Plass",
   "type": "module",
-  "exports": {
-    ".": "./src/paragraph.ts"
-  },
   "files": [
     "src/",
     "wasm/pkg/knuth_plass_wasm.js",
@@ -27,6 +24,7 @@
     "@paragraf/linebreak": "*",
     "@paragraf/render-core": "*",
     "@paragraf/shaping-wasm": "*",
+    "@paragraf/typography": "*",
     "@paragraf/types": "*",
     "fontkit": "^2.0.4",
     "hyphen": "^1.14.1",

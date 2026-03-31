@@ -15,7 +15,7 @@ import {
   FontEngine,
   FontkitEngine,
 } from '@paragraf/font-engine';
-import { createParagraphComposer } from 'paragraf-knuth-plass';
+import { createParagraphComposer } from '@paragraf/typography';
 
 // ─── Shared fixtures ──────────────────────────────────────────────────────────
 

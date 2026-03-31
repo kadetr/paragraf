@@ -8,7 +8,7 @@ import { readFileSync } from 'fs';
 import * as path from 'path';
 import { describe, it, expect, beforeAll } from 'vitest';
 
-import { createParagraphComposer } from '../src/paragraph';
+import { createParagraphComposer } from '@paragraf/typography';
 import { createMeasurer, FontkitEngine } from '@paragraf/font-engine';
 import { layoutParagraph, renderToSvg } from '@paragraf/render-core';
 import { WasmFontEngine, loadShapingWasm } from '@paragraf/shaping-wasm';
