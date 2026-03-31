@@ -2,11 +2,17 @@
 
 ## Current state
 
-| Package | Status | Contents |
-|---|---|---|
-| `0-types` | ✅ done | All shared interfaces + constants |
-| `1-knuth-plass` | monolith (will be deleted) | Everything else |
-| `2-color` | standalone | Color math |
+| Package | Folder | npm name | Status |
+|---|---|---|---|
+| types | `0-types` | `@paragraf/types` | ✅ done |
+| linebreak | `1a-linebreak` | `@paragraf/linebreak` | ✅ done |
+| font-engine | `1c-font-engine` | `@paragraf/font-engine` | ✅ done |
+| shaping-wasm | `1b-shaping-wasm` | `@paragraf/shaping-wasm` | ⬜ next |
+| render-core | `2a-render-core` | `@paragraf/render-core` | ⬜ |
+| typography | `3a-typography` | `@paragraf/typography` | ⬜ |
+| render-pdf | `2b-render-pdf` | `@paragraf/render-pdf` | ⬜ |
+| color | `2-color` | `@paragraf/color` | standalone |
+| `1-knuth-plass` | — | — | monolith (will be deleted) |
 
 ## What's inside `1-knuth-plass` to split apart
 
@@ -38,32 +44,30 @@ Files: `font-engine.ts`, `engines/fontkit-engine.ts`, `measure.ts`
 Deps: `@paragraf/types`, `fontkit`
 Sits between the algorithm and the compositor.
 
-### Step 3 — `1b-shaping-wasm`
+### Step 3 — `1b-shaping-wasm` → `@paragraf/shaping-wasm`
 Rust/WASM shaping engine.
 Files: `engines/wasm-engine.ts`, `wasm-binary.ts`, `wasm/`
-Peers with `font-engine` — swappable backend.
+Deps: `@paragraf/font-engine`
+Peers with font-engine — swappable backend.
 
-### Step 4 — `2a-render`
+### Step 4 — `2a-render-core` → `@paragraf/render-core`
 Canvas/SVG layout output. Browser-safe.
 Files: `render.ts`
-Deps: `@paragraf/types`, `1c-font-engine`
+Deps: `@paragraf/types`, `@paragraf/font-engine`
 
-### Step 5 — `2b-render-pdf`
+### Step 5 — `3a-typography` → `@paragraf/typography`
+Compositor + document model.
+Files: `paragraph.ts`, `optical-margin.ts`, `document.ts`
+Deps: `@paragraf/linebreak`, `@paragraf/font-engine`, `@paragraf/shaping-wasm`, `@paragraf/render-core`
+Note: steps 3 and 4 must both be done before this step.
+
+### Step 6 — `2b-render-pdf` → `@paragraf/render-pdf`
 PDF output via pdfkit. Node-only.
 Files: `pdf.ts`
-Deps: `pdfkit`, `1c-font-engine`, `2a-render`
+Deps: `pdfkit`, `@paragraf/render-core`, `@paragraf/font-engine`
+Note: can be done in parallel with step 5.
 
-### Step 6 — `paragraph` (compositor)
-Orchestrates linebreak + font-engine + shaping.
-Files: `paragraph.ts`, `optical-margin.ts`
-Deps: `1a-linebreak`, `1c-font-engine`, `1b-shaping-wasm` (optional)
-
-### Step 7 — `document`
-Document model: multi-paragraph layout.
-Files: `document.ts`
-Deps: `paragraph`, `2a-render`
-
-### Step 8 — `5-imposition` (future)
+### Step 7 — `5-imposition` (future)
 Second Rust crate. Page imposition, signature folding.
 No TS code to extract yet — greenfield Rust package.
 
@@ -71,7 +75,27 @@ No TS code to extract yet — greenfield Rust package.
 
 ## Execution order
 
-1 → 2 → 6 → 3 → 4 → 5 → 7
+```
+                    ┌──────────────┐
+                    │   0-types    │ ✅
+                    └──────┬───────┘
+               ┌───────────┴───────────┐
+               ▼                       ▼
+    ┌────────────────┐      ┌──────────────────┐
+    │  1a-linebreak  │ ✅   │  1c-font-engine  │ ✅
+    └────────┬───────┘      └───────┬──────────┘
+             │                  ┌───┴──────────┐
+             │                  ▼              ▼
+             │        ┌──────────────┐  ┌─────────────────┐
+             │        │1b-shaping    │  │  2a-render-core  │
+             │        │   -wasm      │  └────────┬─────────┘
+             │        └──────┬───────┘           │
+             │               │                   ├──────────────────┐
+             └───────────────┼───────────────────┘                  │
+                             ▼                                       ▼
+                  ┌─────────────────────┐             ┌─────────────────────┐
+                  │   3a-typography     │             │   2b-render-pdf     │
+                  └─────────────────────┘             └─────────────────────┘
+```
 
-Algorithm first, then font engine, then compositor, then renderers and doc model last.
-Step 3 (`1b-shaping-wasm`) can happen independently of steps 4–7.
+Steps 1 and 2 are done. Steps 3 and 4 are independent of each other and can be worked in parallel. Step 5 requires both 3 and 4 to be done first. Step 6 requires only step 4.

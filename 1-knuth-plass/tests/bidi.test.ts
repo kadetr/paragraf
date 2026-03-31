@@ -1,7 +1,6 @@
 // tests/bidi.test.ts
 // v0.8 — BiDi/RTL tests (WASM-only; no TypeScript fallback equivalence)
 
-import { createRequire } from 'module';
 import * as path from 'path';
 import { describe, it, expect, beforeAll } from 'vitest';
 import {
@@ -9,13 +8,10 @@ import {
   ParagraphComposer,
   wasmStatus,
 } from '../src/paragraph';
+import { loadShapingWasm } from '@paragraf/shaping-wasm';
 import { Measurer } from '@paragraf/types';
 import { layoutParagraph } from '../src/render';
 import { FontRegistry, Font } from '@paragraf/types';
-
-const _require = createRequire(import.meta.url);
-
-// ─── Fixtures ────────────────────────────────────────────────────────────────
 
 const FONTS_DIR = path.resolve(__dirname, '../../fonts');
 
@@ -76,7 +72,7 @@ describe('analyze_bidi — WASM BiDi run analysis', () => {
   let wasm: any;
 
   beforeAll(() => {
-    wasm = _require('../wasm/pkg/knuth_plass_wasm.js');
+    wasm = loadShapingWasm();
   });
 
   it('empty string returns empty run list', () => {

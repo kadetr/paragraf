@@ -1,6 +1,5 @@
 // paragraph.ts
 
-import { createRequire } from 'module';
 import { readFileSync } from 'fs';
 
 import {
@@ -25,10 +24,17 @@ import {
   LineBreak,
   composeParagraph,
 } from '@paragraf/linebreak';
-import { createMeasurer, FontkitEngine, FontEngine } from '@paragraf/font-engine';
+import {
+  createMeasurer,
+  FontkitEngine,
+  FontEngine,
+} from '@paragraf/font-engine';
 import { Measurer, GlueSpaceMetrics } from '@paragraf/types';
-import { tracebackWasmBinary } from './wasm-binary.js';
-import { WasmFontEngine } from './engines/wasm-engine.js';
+import {
+  WasmFontEngine,
+  tracebackWasmBinary,
+  loadShapingWasm,
+} from '@paragraf/shaping-wasm';
 import { buildOmaAdjustments, buildOmaInput } from './optical-margin.js';
 
 // ─── WASM module — loaded once at module initialisation ───────────────────────
@@ -44,8 +50,7 @@ import { buildOmaAdjustments, buildOmaInput } from './optical-margin.js';
 let _wasm: any = null;
 let _wasmError: string | null = null;
 try {
-  const _require = createRequire(import.meta.url);
-  _wasm = _require('../wasm/pkg/knuth_plass_wasm.js');
+  _wasm = loadShapingWasm();
 } catch (e) {
   _wasmError = e instanceof Error ? e.message : String(e);
 }

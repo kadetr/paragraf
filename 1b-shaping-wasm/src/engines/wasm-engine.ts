@@ -10,7 +10,7 @@ import {
   GlyphPath,
   FontMetrics,
   PathCommand,
-} from '../font-engine';
+} from '@paragraf/font-engine';
 import { Font } from '@paragraf/types';
 
 export class WasmFontEngine implements FontEngine {

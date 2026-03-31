@@ -4,6 +4,7 @@
   "workspaces": [
     "0-types",
     "1a-linebreak",
+    "1b-shaping-wasm",
     "1c-font-engine",
     "1-knuth-plass",
     "2-color"

@@ -22,6 +22,7 @@
   "dependencies": {
     "@paragraf/font-engine": "*",
     "@paragraf/linebreak": "*",
+    "@paragraf/shaping-wasm": "*",
     "@paragraf/types": "*",
     "fontkit": "^2.0.4",
     "hyphen": "^1.14.1",

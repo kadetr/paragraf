@@ -18,10 +18,9 @@
 | `linebreak.test.ts`, `nodes.test.ts`, `compose.test.ts`, `hyphenate.test.ts` | `1a-linebreak` |
 | `measure.test.ts` | `1c-font-engine` |
 | `wasm.test.ts`, `render-wasm.test.ts`, `binary-debug.test.ts`, `equivalence.test.ts` | `1b-shaping-wasm` |
-| `render.test.ts`, `baseline-grid.test.ts`, `optical-margin.test.ts` | `2a-render` |
+| `render.test.ts`, `baseline-grid.test.ts` | `2a-render-core` |
 | `pdf.test.ts`, `pdf-document.test.ts` | `2b-render-pdf` |
-| `paragraph.test.ts`, `bidi.test.ts` | `paragraph` |
-| `document.test.ts` | `document` |
+| `paragraph.test.ts`, `bidi.test.ts`, `optical-margin.test.ts`, `document.test.ts` | `3a-typography` |
 | `e2e.test.ts` | monorepo root `tests/` |
 
 ## Shared test fixtures

@@ -4,7 +4,6 @@
  * FontkitEngine on glyph counts for a NaN-free paragraph render.
  */
 
-import { createRequire } from 'module';
 import { readFileSync } from 'fs';
 import * as path from 'path';
 import { describe, it, expect, beforeAll } from 'vitest';
@@ -12,10 +11,8 @@ import { describe, it, expect, beforeAll } from 'vitest';
 import { createParagraphComposer } from '../src/paragraph';
 import { createMeasurer, FontkitEngine } from '@paragraf/font-engine';
 import { layoutParagraph, renderToSvg } from '../src/render';
-import { WasmFontEngine } from '../src/engines/wasm-engine';
+import { WasmFontEngine, loadShapingWasm } from '@paragraf/shaping-wasm';
 import { Font, FontRegistry } from '@paragraf/types';
-
-const _require = createRequire(import.meta.url);
 
 const FONTS_DIR = path.resolve(
   path.dirname(new URL(import.meta.url).pathname),
@@ -43,7 +40,7 @@ let wasmEngine: WasmFontEngine;
 let otEngine: FontkitEngine;
 
 beforeAll(async () => {
-  wasm = _require('../wasm/pkg/knuth_plass_wasm.js');
+  wasm = loadShapingWasm();
   wasm.register_font('lib-reg', readFileSync(SERIF_PATH));
 
   wasmEngine = new WasmFontEngine(wasm);
