@@ -178,3 +178,23 @@ export interface ComposedLine {
 }
 
 export type ComposedParagraph = ComposedLine[];
+
+// ─── Measurer — font-measurement abstraction ──────────────────────────────────
+// Defined here so algorithm packages (1-linebreak) can type-check against the
+// interface without depending on a fontkit implementation.
+
+export type MeasureText = (content: string, font: Font) => number;
+export type GlueSpaceFn = (font: Font) => GlueSpaceMetrics;
+
+export interface GlueSpaceMetrics {
+  width: number;
+  stretch: number;
+  shrink: number;
+}
+
+export interface Measurer {
+  measure: MeasureText;
+  space: GlueSpaceFn;
+  metrics: GetFontMetrics;
+  registry: FontRegistry;
+}

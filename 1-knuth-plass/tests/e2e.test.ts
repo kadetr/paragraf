@@ -5,7 +5,7 @@ import { FontRegistry, Font, ComposedParagraph } from '@paragraf/types';
 
 // ─── Fixtures ────────────────────────────────────────────────────────────────
 
-const FONTS_DIR = path.resolve(__dirname, '../fonts');
+const FONTS_DIR = path.resolve(__dirname, '../../fonts');
 
 const REGISTRY: FontRegistry = new Map([
   [

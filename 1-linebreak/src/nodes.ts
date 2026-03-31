@@ -11,8 +11,8 @@ import {
   HYPHEN_PENALTY,
   SOFT_HYPHEN_PENALTY,
 } from '@paragraf/types';
+import { Measurer } from '@paragraf/types';
 import { HyphenatedWord } from './hyphenate';
-import { Measurer } from './measure';
 
 // ─── Extended input type ──────────────────────────────────────────────────────
 

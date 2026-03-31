@@ -20,6 +20,7 @@
     "manual:mt": "tsx manual/run-all.ts"
   },
   "dependencies": {
+    "@paragraf/linebreak": "*",
     "@paragraf/types": "*",
     "fontkit": "^2.0.4",
     "hyphen": "^1.14.1",

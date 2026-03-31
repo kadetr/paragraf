@@ -20,7 +20,7 @@ const _require = createRequire(import.meta.url);
 
 const FONTS_DIR = path.resolve(
   path.dirname(new URL(import.meta.url).pathname),
-  '../fonts',
+  '../../fonts',
 );
 const SERIF_PATH = path.join(FONTS_DIR, 'LiberationSerif-Regular.ttf');
 

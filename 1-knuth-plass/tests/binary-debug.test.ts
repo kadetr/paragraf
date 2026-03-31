@@ -9,14 +9,14 @@ import * as path from 'path';
 import { describe, it, expect, beforeAll } from 'vitest';
 
 import { createMeasurer } from '../src/measure';
-import { buildNodeSequence } from '../src/nodes';
-import { computeBreakpoints } from '../src/linebreak';
-import { traceback } from '../src/traceback';
 import {
+  buildNodeSequence,
+  computeBreakpoints,
+  traceback,
   loadHyphenator,
   hyphenateParagraph,
   DEFAULT_HYPHENATE_OPTIONS,
-} from '../src/hyphenate';
+} from '@paragraf/linebreak';
 import { FontRegistry, Font, Language } from '@paragraf/types';
 import { serializeNodesToBinary } from '../src/wasm-binary.js';
 
@@ -25,7 +25,7 @@ const wasm: any = _require('../wasm/pkg/knuth_plass_wasm.js');
 
 const FONTS_DIR = path.resolve(
   path.dirname(new URL(import.meta.url).pathname),
-  '../fonts',
+  '../../fonts',
 );
 
 const REGISTRY: FontRegistry = new Map([

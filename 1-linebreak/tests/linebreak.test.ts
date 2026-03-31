@@ -3,7 +3,8 @@ import * as path from 'path';
 import { computeBreakpoints, BreakpointResult } from '../src/linebreak';
 import { buildNodeSequence } from '../src/nodes';
 import { hyphenateParagraph, loadLanguages } from '../src/hyphenate';
-import { createMeasurer, mockMeasure, mockSpace } from '../src/measure';
+import { createMeasurer } from './helpers/measure';
+import { mockMeasure, mockSpace } from '../src/testing';
 import { traceback } from '../src/traceback';
 import { Font, FontRegistry, Paragraph, BreakpointNode } from '@paragraf/types';
 
@@ -11,7 +12,7 @@ import { Font, FontRegistry, Paragraph, BreakpointNode } from '@paragraf/types';
 
 const REGULAR_PATH = path.resolve(
   __dirname,
-  '../fonts/LiberationSerif-Regular.ttf',
+  '../../fonts/LiberationSerif-Regular.ttf',
 );
 
 const FONT: Font = {

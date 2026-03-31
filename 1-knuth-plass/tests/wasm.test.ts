@@ -1,8 +1,8 @@
 import { createRequire } from 'module';
 import { readFileSync } from 'fs';
+import * as path from 'path';
 import { describe, it, expect, beforeAll } from 'vitest';
-import { computeBreakpoints } from '../src/linebreak';
-import { traceback } from '../src/traceback';
+import { computeBreakpoints, traceback } from '@paragraf/linebreak';
 import { FORCED_BREAK, PROHIBITED } from '@paragraf/types';
 import { createMeasurer } from '../src/measure';
 
@@ -532,7 +532,10 @@ describe('Phase 3 — equivalence with TypeScript traceback', () => {
 
 // ─── Phase 4 — font shaping via rustybuzz ────────────────────────────────────
 
-const P4_FONT_PATH = './fonts/LiberationSerif-Regular.ttf';
+const P4_FONT_PATH = path.resolve(
+  path.dirname(new URL(import.meta.url).pathname),
+  '../../fonts/LiberationSerif-Regular.ttf',
+);
 const P4_FONT_ID = 'ls-regular-p4';
 const P4_FONT_12 = {
   id: P4_FONT_ID,

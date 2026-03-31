@@ -18,12 +18,14 @@ import {
   loadHyphenator,
   hyphenateParagraph,
   hyphenateWord,
-} from './hyphenate';
+  buildNodeSequence,
+  HyphenatedWordWithFont,
+  computeBreakpoints,
+  traceback,
+  LineBreak,
+  composeParagraph,
+} from '@paragraf/linebreak';
 import { createMeasurer, Measurer, GlueSpaceMetrics } from './measure';
-import { buildNodeSequence, HyphenatedWordWithFont } from './nodes';
-import { computeBreakpoints } from './linebreak';
-import { traceback, LineBreak } from './traceback';
-import { composeParagraph } from './compose';
 import { tracebackWasmBinary } from './wasm-binary.js';
 import { WasmFontEngine } from './engines/wasm-engine.js';
 import { FontkitEngine } from './engines/fontkit-engine.js';

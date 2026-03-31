@@ -1,0 +1,26 @@
+{
+  "name": "@paragraf/linebreak",
+  "version": "0.1.0",
+  "description": "Knuth-Plass line-breaking algorithm + hyphenation. Browser-safe, zero font dependencies.",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@paragraf/types": "*",
+    "hyphen": "^1.14.1"
+  },
+  "devDependencies": {
+    "@types/fontkit": "^2.0.9",
+    "@types/node": "^22.19.15",
+    "fontkit": "^2.0.4",
+    "tsx": "^4.21.0",
+    "typescript": "^5.4.0",
+    "vitest": "^3.2.4"
+  }
+}

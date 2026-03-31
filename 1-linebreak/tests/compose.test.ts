@@ -4,7 +4,7 @@ import { composeParagraph } from '../src/compose';
 import { computeBreakpoints } from '../src/linebreak';
 import { buildNodeSequence } from '../src/nodes';
 import { hyphenateParagraph, loadLanguages } from '../src/hyphenate';
-import { createMeasurer } from '../src/measure';
+import { createMeasurer } from './helpers/measure';
 import { traceback } from '../src/traceback';
 import {
   Font,
@@ -19,9 +19,9 @@ import {
 
 const REGULAR_PATH = path.resolve(
   __dirname,
-  '../fonts/LiberationSerif-Regular.ttf',
+  '../../fonts/LiberationSerif-Regular.ttf',
 );
-const BOLD_PATH = path.resolve(__dirname, '../fonts/LiberationSerif-Bold.ttf');
+const BOLD_PATH = path.resolve(__dirname, '../../fonts/LiberationSerif-Bold.ttf');
 
 const FONT_REGULAR: Font = {
   id: 'liberation-serif-regular',

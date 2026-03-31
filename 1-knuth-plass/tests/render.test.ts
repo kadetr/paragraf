@@ -20,7 +20,7 @@ import { createParagraphComposer } from '../src/paragraph';
 
 // ─── Shared fixtures ──────────────────────────────────────────────────────────
 
-const FONTS_DIR = path.resolve(__dirname, '../fonts');
+const FONTS_DIR = path.resolve(__dirname, '../../fonts');
 const SERIF_PATH = path.join(FONTS_DIR, 'LiberationSerif-Regular.ttf');
 
 const FONT_12: Font = {

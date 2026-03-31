@@ -9,7 +9,7 @@ import { FontkitEngine } from '../src/engines/fontkit-engine';
 
 // ─── Fixtures ────────────────────────────────────────────────────────────────
 
-const FONTS_DIR = path.resolve(__dirname, '../fonts');
+const FONTS_DIR = path.resolve(__dirname, '../../fonts');
 const SERIF_PATH = path.join(FONTS_DIR, 'LiberationSerif-Regular.ttf');
 
 const SERIF_FONT: Font = {

@@ -10,7 +10,7 @@ import { Font, FontRegistry } from '@paragraf/types';
 
 // ─── Fixtures ────────────────────────────────────────────────────────────────
 
-const FONTS_DIR = path.resolve(__dirname, '../fonts');
+const FONTS_DIR = path.resolve(__dirname, '../../fonts');
 const REGULAR_FONT_PATH = path.join(FONTS_DIR, 'LiberationSerif-Regular.ttf');
 const BOLD_FONT_PATH = path.join(FONTS_DIR, 'LiberationSerif-Bold.ttf');
 const ROBOTO_REGULAR_PATH = path.join(FONTS_DIR, 'Roboto-Regular.ttf');

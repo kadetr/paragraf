@@ -19,14 +19,15 @@ import * as path from 'path';
 import { describe, it, expect, beforeAll } from 'vitest';
 
 import { createMeasurer } from '../src/measure';
-import { buildNodeSequence } from '../src/nodes';
-import { computeBreakpoints } from '../src/linebreak';
-import { traceback, LineBreak } from '../src/traceback';
 import {
+  buildNodeSequence,
+  computeBreakpoints,
+  traceback,
+  LineBreak,
   loadHyphenator,
   hyphenateParagraph,
   DEFAULT_HYPHENATE_OPTIONS,
-} from '../src/hyphenate';
+} from '@paragraf/linebreak';
 import { FontRegistry, Font, Language, Node } from '@paragraf/types';
 
 // ─── WASM ────────────────────────────────────────────────────────────────────
@@ -43,7 +44,7 @@ const toWasmJson = (obj: unknown): string =>
 
 // ─── Fixtures ────────────────────────────────────────────────────────────────
 
-const FONTS_DIR = path.resolve(__dirname, '../fonts');
+const FONTS_DIR = path.resolve(__dirname, '../../fonts');
 
 const REGISTRY: FontRegistry = new Map([
   [

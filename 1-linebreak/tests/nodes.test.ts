@@ -2,7 +2,7 @@ import { describe, it, expect, beforeAll } from 'vitest';
 import * as path from 'path';
 import { buildNodeSequence } from '../src/nodes';
 import { hyphenateParagraph, loadLanguages } from '../src/hyphenate';
-import { createMeasurer } from '../src/measure';
+import { createMeasurer } from './helpers/measure';
 import {
   Font,
   FontRegistry,
@@ -20,9 +20,9 @@ import { DEFAULT_HYPHENATE_OPTIONS } from '../src/hyphenate';
 
 const REGULAR_PATH = path.resolve(
   __dirname,
-  '../fonts/LiberationSerif-Regular.ttf',
+  '../../fonts/LiberationSerif-Regular.ttf',
 );
-const BOLD_PATH = path.resolve(__dirname, '../fonts/LiberationSerif-Bold.ttf');
+const BOLD_PATH = path.resolve(__dirname, '../../fonts/LiberationSerif-Bold.ttf');
 
 const FONT_REGULAR: Font = {
   id: 'liberation-serif-regular',
