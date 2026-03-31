@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"enum":["Node"],"fn":["compute_breakpoints_wasm","hello","round_trip_node","round_trip_paragraph","traceback_wasm"],"struct":["BoxNode","BreakpointNode","Font","GlueNode","LineBreak","ParagraphInput","PenaltyNode"]};

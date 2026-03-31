@@ -1,0 +1,67 @@
+{
+  "test": "MT-06",
+  "timestamp": "2026-03-31T02:21:31.425Z",
+  "perf": {
+    "composeMs": 4.340042000000011
+  },
+  "lines": [
+    {
+      "idx": 0,
+      "y": 0,
+      "ratio": 0.07317708333333334,
+      "hyphenated": false,
+      "xOffset": 0,
+      "lineWidth": 200,
+      "wordCount": 6
+    },
+    {
+      "idx": 1,
+      "y": 0,
+      "ratio": 0.33392333984375,
+      "hyphenated": false,
+      "xOffset": 0,
+      "lineWidth": 200,
+      "wordCount": 7
+    },
+    {
+      "idx": 2,
+      "y": 0,
+      "ratio": 0.3138382523148148,
+      "hyphenated": false,
+      "xOffset": 0,
+      "lineWidth": 200,
+      "wordCount": 2
+    },
+    {
+      "idx": 3,
+      "y": 0,
+      "ratio": 0.3877898185483871,
+      "hyphenated": false,
+      "xOffset": 0,
+      "lineWidth": 200,
+      "wordCount": 6
+    },
+    {
+      "idx": 4,
+      "y": 0,
+      "ratio": 0,
+      "hyphenated": false,
+      "xOffset": 0,
+      "lineWidth": 200,
+      "wordCount": 4
+    }
+  ],
+  "summary": {
+    "lineCount": 5,
+    "usedEmergency": true,
+    "ratioVariance": 0.0146,
+    "maxRatio": 0.3877898185483871,
+    "minRatio": 0,
+    "hyphenatedLines": 0
+  },
+  "extra": {
+    "noEmergencyThrew": true,
+    "noEmergencyMaxRatio": null,
+    "noEmergencyUsedEmergency": null
+  }
+}

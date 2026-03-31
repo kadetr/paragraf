@@ -1,0 +1,12 @@
+/Users/kemaldenizteket/cs/2026-projects/Knuth-Plass/v1/wasm/target/wasm32-unknown-unknown/debug/deps/serde-fa1430a6a4f59a2f.d: /Users/kemaldenizteket/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/lib.rs /Users/kemaldenizteket/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/integer128.rs /Users/kemaldenizteket/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/private/mod.rs /Users/kemaldenizteket/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/private/de.rs /Users/kemaldenizteket/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/private/ser.rs /Users/kemaldenizteket/cs/2026-projects/Knuth-Plass/v1/wasm/target/wasm32-unknown-unknown/debug/build/serde-5a86b8b0c27f43c4/out/private.rs
+
+/Users/kemaldenizteket/cs/2026-projects/Knuth-Plass/v1/wasm/target/wasm32-unknown-unknown/debug/deps/libserde-fa1430a6a4f59a2f.rmeta: /Users/kemaldenizteket/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/lib.rs /Users/kemaldenizteket/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/integer128.rs /Users/kemaldenizteket/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/private/mod.rs /Users/kemaldenizteket/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/private/de.rs /Users/kemaldenizteket/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/private/ser.rs /Users/kemaldenizteket/cs/2026-projects/Knuth-Plass/v1/wasm/target/wasm32-unknown-unknown/debug/build/serde-5a86b8b0c27f43c4/out/private.rs
+
+/Users/kemaldenizteket/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/lib.rs:
+/Users/kemaldenizteket/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/integer128.rs:
+/Users/kemaldenizteket/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/private/mod.rs:
+/Users/kemaldenizteket/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/private/de.rs:
+/Users/kemaldenizteket/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/private/ser.rs:
+/Users/kemaldenizteket/cs/2026-projects/Knuth-Plass/v1/wasm/target/wasm32-unknown-unknown/debug/build/serde-5a86b8b0c27f43c4/out/private.rs:
+
+# env-dep:OUT_DIR=/Users/kemaldenizteket/cs/2026-projects/Knuth-Plass/v1/wasm/target/wasm32-unknown-unknown/debug/build/serde-5a86b8b0c27f43c4/out

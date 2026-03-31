@@ -1,0 +1,140 @@
+{
+  "test": "MT-15",
+  "timestamp": "2026-03-31T02:21:40.447Z",
+  "perf": {
+    "composeMs": 39.92675
+  },
+  "lines": [
+    {
+      "idx": 0,
+      "y": 80.3203125,
+      "ratio": 0.4751790364583333,
+      "hyphenated": false,
+      "xOffset": 0,
+      "lineWidth": 380,
+      "wordCount": 13
+    },
+    {
+      "idx": 1,
+      "y": 93.029296875,
+      "ratio": -0.3027719350961541,
+      "hyphenated": false,
+      "xOffset": 0,
+      "lineWidth": 380,
+      "wordCount": 13
+    },
+    {
+      "idx": 2,
+      "y": 105.73828125,
+      "ratio": -0.016246448863636336,
+      "hyphenated": false,
+      "xOffset": 0,
+      "lineWidth": 380,
+      "wordCount": 11
+    },
+    {
+      "idx": 3,
+      "y": 118.447265625,
+      "ratio": 0.349609375,
+      "hyphenated": false,
+      "xOffset": 0,
+      "lineWidth": 386,
+      "wordCount": 13
+    },
+    {
+      "idx": 4,
+      "y": 131.15625,
+      "ratio": -0.08527483258928602,
+      "hyphenated": false,
+      "xOffset": 0,
+      "lineWidth": 380,
+      "wordCount": 14
+    },
+    {
+      "idx": 5,
+      "y": 143.865234375,
+      "ratio": -0.08913010817307725,
+      "hyphenated": false,
+      "xOffset": 0,
+      "lineWidth": 380,
+      "wordCount": 13
+    },
+    {
+      "idx": 6,
+      "y": 156.57421875,
+      "ratio": -0.08879882812500202,
+      "hyphenated": false,
+      "xOffset": 0,
+      "lineWidth": 388.4,
+      "wordCount": 10
+    },
+    {
+      "idx": 7,
+      "y": 169.283203125,
+      "ratio": -0.26643880208333426,
+      "hyphenated": true,
+      "xOffset": 0,
+      "lineWidth": 380,
+      "wordCount": 9
+    },
+    {
+      "idx": 8,
+      "y": 181.9921875,
+      "ratio": 0.5948079427083334,
+      "hyphenated": false,
+      "xOffset": 0,
+      "lineWidth": 380,
+      "wordCount": 13
+    },
+    {
+      "idx": 9,
+      "y": 194.701171875,
+      "ratio": 0.0517578125,
+      "hyphenated": false,
+      "xOffset": 0,
+      "lineWidth": 380,
+      "wordCount": 14
+    },
+    {
+      "idx": 10,
+      "y": 207.41015625,
+      "ratio": -0.509162454044114,
+      "hyphenated": false,
+      "xOffset": 0,
+      "lineWidth": 380,
+      "wordCount": 17
+    },
+    {
+      "idx": 11,
+      "y": 220.119140625,
+      "ratio": -0.16856971153846034,
+      "hyphenated": false,
+      "xOffset": 0,
+      "lineWidth": 380,
+      "wordCount": 13
+    },
+    {
+      "idx": 12,
+      "y": 232.828125,
+      "ratio": 0,
+      "hyphenated": false,
+      "xOffset": 0,
+      "lineWidth": 388.4,
+      "wordCount": 5
+    }
+  ],
+  "summary": {
+    "lineCount": 13,
+    "usedEmergency": false,
+    "ratioVariance": 0.0358,
+    "maxRatio": 0.5948079427083334,
+    "minRatio": 0,
+    "hyphenatedLines": 1
+  },
+  "extra": {
+    "noOmaLineCount": 13,
+    "noOmaComposeMs": 30.96920800000001,
+    "linesWithNonZeroXOffset": 0,
+    "xOffsetIssues": 0
+  }
+}

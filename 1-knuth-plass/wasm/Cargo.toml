@@ -1,0 +1,19 @@
+[package]
+name = "knuth-plass-wasm"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+wasm-bindgen = "0.2"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+rustybuzz = "0.14"
+unicode-bidi = "0.3"
+unicode-segmentation = "1"
+
+[profile.release]
+opt-level = "z"
+lto = true

@@ -1,0 +1,35 @@
+{
+  "test": "MT-04",
+  "timestamp": "2026-03-31T02:21:29.768Z",
+  "perf": {
+    "composeMs": 15.679707999999977
+  },
+  "lines": [
+    {
+      "idx": 0,
+      "y": 0,
+      "ratio": -0.32976143973214433,
+      "hyphenated": false,
+      "xOffset": 0,
+      "lineWidth": 451.28,
+      "wordCount": 15
+    },
+    {
+      "idx": 1,
+      "y": 0,
+      "ratio": 0,
+      "hyphenated": false,
+      "xOffset": 0,
+      "lineWidth": 451.28,
+      "wordCount": 3
+    }
+  ],
+  "summary": {
+    "lineCount": 4,
+    "usedEmergency": false,
+    "ratioVariance": 0,
+    "maxRatio": 0,
+    "minRatio": 0,
+    "hyphenatedLines": 0
+  }
+}

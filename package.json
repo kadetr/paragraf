@@ -1,0 +1,9 @@
+{
+  "name": "paragraf-monorepo",
+  "private": true,
+  "workspaces": [
+    "0-types",
+    "1-knuth-plass",
+    "2-color"
+  ]
+}
