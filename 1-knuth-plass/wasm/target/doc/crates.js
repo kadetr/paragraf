@@ -1,2 +1,0 @@
-window.ALL_CRATES = ["bitflags","bumpalo","bytemuck","cfg_if","itoa","knuth_plass_wasm","memchr","once_cell","proc_macro2","quote","rustybuzz","serde","serde_core","serde_derive","serde_json","smallvec","syn","ttf_parser","unicode_bidi_mirroring","unicode_ccc","unicode_ident","unicode_properties","unicode_script","wasm_bindgen","wasm_bindgen_macro","wasm_bindgen_macro_support","wasm_bindgen_shared","zmij"];
-//{"start":21,"fragment_lengths":[10,10,11,9,7,19,9,12,14,8,12,8,13,15,13,11,6,13,25,14,16,21,17,15,21,29,22,7]}

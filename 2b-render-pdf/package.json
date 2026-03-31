@@ -1,0 +1,27 @@
+{
+  "name": "@paragraf/render-pdf",
+  "version": "0.1.0",
+  "description": "PDF rendering backend for the paragraf typesetter.",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@paragraf/types": "*",
+    "@paragraf/font-engine": "*",
+    "@paragraf/render-core": "*",
+    "@paragraf/typography": "*",
+    "pdfkit": "^0.18.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.19.15",
+    "@types/pdfkit": "^0.17.5",
+    "typescript": "^5.4.0",
+    "vitest": "^3.2.4"
+  }
+}

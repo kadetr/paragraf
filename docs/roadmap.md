@@ -77,12 +77,12 @@ No TS code to extract yet — greenfield Rust package.
 
 ```
                     ┌──────────────┐
-                    │   0-types    │ ✅
+                    │   0-types    │
                     └──────┬───────┘
                ┌───────────┴───────────┐
                ▼                       ▼
     ┌────────────────┐      ┌──────────────────┐
-    │  1a-linebreak  │ ✅   │  1c-font-engine  │ ✅
+    │  1a-linebreak  │      │  1c-font-engine  │
     └────────┬───────┘      └───────┬──────────┘
              │                  ┌───┴──────────┐
              │                  ▼              ▼

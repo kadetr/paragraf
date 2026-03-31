@@ -1,1 +1,0 @@
-window.SIDEBAR_ITEMS = {"struct":["JsOption","Null","Undefined"],"trait":["Promising"]};
