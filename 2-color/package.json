@@ -1,5 +1,5 @@
 {
-  "name": "paragraf-color",
+  "name": "@paragraf/color",
   "version": "0.1.0",
   "description": "ICC color management for the paragraf typography library",
   "type": "module",

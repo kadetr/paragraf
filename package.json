@@ -1,6 +1,9 @@
 {
   "name": "paragraf-monorepo",
   "private": true,
+  "scripts": {
+    "test:e2e": "vitest run --config tests/vitest.config.ts"
+  },
   "workspaces": [
     "0-types",
     "1a-linebreak",
