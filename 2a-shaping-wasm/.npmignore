@@ -1,0 +1,12 @@
+# Presence of this file causes npm to use .npmignore instead of .gitignore,
+# overriding the wasm/pkg/.gitignore that wasm-pack generates with a wildcard `*`.
+# The files field in package.json acts as the allowlist (dist/, wasm/pkg/, README.md).
+src/
+tests/
+scripts/
+tsup.config.ts
+tsconfig.json
+vitest.config.ts
+wasm/src/
+wasm/target/
+wasm/Cargo.toml

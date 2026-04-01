@@ -3,6 +3,7 @@
   "private": true,
   "type": "module",
   "scripts": {
+    "build": "npm run build --workspaces --if-present",
     "test": "npm test --workspaces --if-present",
     "test:e2e": "vitest run --config tests/vitest.config.ts",
     "manual": "tsx tests/manual/run-all.ts"
@@ -16,5 +17,8 @@
     "3a-typography",
     "3b-render-pdf",
     "0-color"
-  ]
+  ],
+  "devDependencies": {
+    "tsup": "^8.5.1"
+  }
 }

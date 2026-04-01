@@ -148,3 +148,18 @@ API (breaking change for `createParagraphComposer`).
 This will be scoped into a proper step when there is a concrete browser use-case.
 Packages that are already browser-safe today: `@paragraf/types`,
 `@paragraf/linebreak`, `@paragraf/render-core`.
+
+### `2c-color-wasm` — LCMS2-based accurate color transforms
+
+A future layer-2 package (`@paragraf/color-wasm`) that wraps
+[LCMS2](https://www.littlecms.com/) compiled to WASM. Targets printing
+use cases that require accuracy beyond pure TypeScript ICC math: CMYK
+separation, spot color simulation, paper white adaptation, and gamut
+mapping for press profiles.
+
+Follows the identical WASM loading pattern established by `2a-shaping-wasm`:
+`wasm-pack --target nodejs`, `__dirname`-relative `readFileSync`, externalized
+in the tsup build config. No new architectural decisions required.
+
+Will depend on `0-color` for profile parsing and LUT types. Does not
+depend on any typography packages — usable standalone for image workflows.

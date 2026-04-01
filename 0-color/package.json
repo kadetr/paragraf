@@ -19,6 +19,7 @@
     }
   },
   "scripts": {
+    "build": "tsup",
     "test": "vitest run",
     "test:watch": "vitest",
     "test:ui": "vitest --ui",

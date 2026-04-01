@@ -52,3 +52,18 @@ browser-compatible requires:
 
 This is a future work item, not a numbered step. It will be scoped and planned
 when there is a concrete browser use-case (e.g. a web paragraph composer).
+
+## Future package: `2c-color-wasm`
+
+A future layer-2 package (`@paragraf/color-wasm`) wrapping LCMS2 compiled to
+WASM. Intended for printing use cases: CMYK separation, spot color simulation,
+paper white adaptation, gamut mapping.
+
+**Architecture decisions (pre-confirmed):**
+- Layer 2 — depends on `0-color` for profile/LUT types, no typography deps
+- WASM loading: same pattern as `2a-shaping-wasm` (`wasm-pack --target nodejs`,
+  `__dirname`-relative `readFileSync`, externalized in tsup config)
+- `0-color` remains the pure TypeScript fallback for environments where WASM
+  is unavailable or unnecessary
+- No API change required in `0-color` — `2c-color-wasm` is an additive package,
+  not a replacement
