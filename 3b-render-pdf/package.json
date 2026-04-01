@@ -15,7 +15,6 @@
     "@paragraf/types": "*",
     "@paragraf/font-engine": "*",
     "@paragraf/render-core": "*",
-    "@paragraf/typography": "*",
     "pdfkit": "^0.18.0"
   },
   "devDependencies": {

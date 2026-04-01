@@ -3,17 +3,18 @@
   "private": true,
   "type": "module",
   "scripts": {
+    "test": "npm test --workspaces --if-present",
     "test:e2e": "vitest run --config tests/vitest.config.ts",
     "manual": "tsx tests/manual/run-all.ts"
   },
   "workspaces": [
     "0-types",
     "1a-linebreak",
-    "1b-shaping-wasm",
-    "1c-font-engine",
-    "2a-render-core",
-    "2b-render-pdf",
+    "1b-font-engine",
+    "2a-shaping-wasm",
+    "2b-render-core",
     "3a-typography",
-    "2-color"
+    "3b-render-pdf",
+    "0-color"
   ]
 }

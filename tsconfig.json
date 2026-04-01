@@ -1,0 +1,24 @@
+{
+  "compilerOptions": {
+    "target":            "ES2022",
+    "module":            "ESNext",
+    "moduleResolution":  "bundler",
+    "strict":            true,
+    "allowSyntheticDefaultImports": true,
+    "esModuleInterop":   true,
+    "skipLibCheck":      true,
+    "resolveJsonModule": true,
+    "noEmit":            true,
+    "paths": {
+      "@paragraf/types":       ["./0-types/src/index.ts"],
+      "@paragraf/linebreak":   ["./1a-linebreak/src/index.ts"],
+      "@paragraf/font-engine": ["./1b-font-engine/src/index.ts"],
+      "@paragraf/shaping-wasm":["./2a-shaping-wasm/src/index.ts"],
+      "@paragraf/render-core": ["./2b-render-core/src/index.ts"],
+      "@paragraf/typography":  ["./3a-typography/src/index.ts"],
+      "@paragraf/render-pdf":  ["./3b-render-pdf/src/index.ts"],
+      "@paragraf/color":       ["./0-color/src/index.ts"]
+    }
+  },
+  "include": ["tests/**/*"]
+}

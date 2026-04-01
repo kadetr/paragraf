@@ -1,8 +1,7 @@
 // pdf.ts
 
 import { createRequire } from 'module';
-import { RenderedParagraph } from '@paragraf/render-core';
-import { RenderedDocument } from '@paragraf/typography';
+import { RenderedParagraph, RenderedDocument } from '@paragraf/render-core';
 import { FontEngine } from '@paragraf/font-engine';
 
 let _PDFDocument: any = null;

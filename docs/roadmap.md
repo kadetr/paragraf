@@ -6,12 +6,12 @@
 |---|---|---|---|
 | types | `0-types` | `@paragraf/types` | ✅ done |
 | linebreak | `1a-linebreak` | `@paragraf/linebreak` | ✅ done |
-| font-engine | `1c-font-engine` | `@paragraf/font-engine` | ✅ done |
-| shaping-wasm | `1b-shaping-wasm` | `@paragraf/shaping-wasm` | ✅ done |
-| render-core | `2a-render-core` | `@paragraf/render-core` | ✅ done |
+| font-engine | `1b-font-engine` | `@paragraf/font-engine` | ✅ done |
+| shaping-wasm | `2a-shaping-wasm` | `@paragraf/shaping-wasm` | ✅ done |
+| render-core | `2b-render-core` | `@paragraf/render-core` | ✅ done |
 | typography | `3a-typography` | `@paragraf/typography` | ✅ done |
-| render-pdf | `2b-render-pdf` | `@paragraf/render-pdf` | ✅ done |
-| color | `2-color` | `@paragraf/color` | standalone |
+| render-pdf | `3b-render-pdf` | `@paragraf/render-pdf` | ✅ done |
+| color | `0-color` | `@paragraf/color` | ✅ done (standalone, no deps on other @paragraf packages) |
 | `1-knuth-plass` | — | — | monolith (will be deleted) |
 
 ## What's inside `1-knuth-plass` to split apart
@@ -38,19 +38,19 @@ Files: `linebreak.ts`, `traceback.ts`, `nodes.ts`, `compose.ts`, `hyphenate.ts`
 Deps: `@paragraf/types`, `hyphen`
 Browser-safe, importable standalone.
 
-### Step 2 — `1c-font-engine`
+### Step 2 — `1b-font-engine`
 Font metrics abstraction + fontkit adapter + measurer.
 Files: `font-engine.ts`, `engines/fontkit-engine.ts`, `measure.ts`
 Deps: `@paragraf/types`, `fontkit`
 Sits between the algorithm and the compositor.
 
-### Step 3 — `1b-shaping-wasm` → `@paragraf/shaping-wasm`
+### Step 3 — `2a-shaping-wasm` → `@paragraf/shaping-wasm`
 Rust/WASM shaping engine.
 Files: `engines/wasm-engine.ts`, `wasm-binary.ts`, `wasm/`
 Deps: `@paragraf/font-engine`
 Peers with font-engine — swappable backend.
 
-### Step 4 — `2a-render-core` → `@paragraf/render-core`
+### Step 4 — `2b-render-core` → `@paragraf/render-core`
 Canvas/SVG layout output. Browser-safe.
 Files: `render.ts`
 Deps: `@paragraf/types`, `@paragraf/font-engine`
@@ -61,7 +61,7 @@ Files: `paragraph.ts`, `optical-margin.ts`, `document.ts`
 Deps: `@paragraf/linebreak`, `@paragraf/font-engine`, `@paragraf/shaping-wasm`, `@paragraf/render-core`
 Note: steps 3 and 4 must both be done before this step.
 
-### Step 6 — `2b-render-pdf` → `@paragraf/render-pdf`
+### Step 6 — `3b-render-pdf` → `@paragraf/render-pdf`
 PDF output via pdfkit. Node-only.
 Files: `pdf.ts`
 Deps: `pdfkit`, `@paragraf/render-core`, `@paragraf/font-engine`
@@ -76,29 +76,30 @@ No TS code to extract yet — greenfield Rust package.
 ## Execution order
 
 ```
-                    ┌──────────────┐
-                    │   0-types    │
-                    └──────┬───────┘
-               ┌───────────┴───────────┐
-               ▼                       ▼
-    ┌────────────────┐      ┌──────────────────┐
-    │  1a-linebreak  │      │  1c-font-engine  │
-    └────────┬───────┘      └───────┬──────────┘
-             │                  ┌───┴──────────┐
-             │                  ▼              ▼
-             │        ┌──────────────┐  ┌──────────────-───┐
-             │        │1b-shaping    │  │  2a-render-core  │
-             │        │   -wasm      │  └────────┬─────────┘
-             │        └──────┬───────┘           │
-             │               │                   ├──────────────────┐
-             └───────────────┼───────────────────┘                  │
-                             ▼                                       ▼
-                  ┌─────────────────────┐             ┌─────────────────────┐
-                  │   3a-typography     │             │   2b-render-pdf     │
-                  └─────────────────────┘             └─────────────────────┘
+  ┌──────────────┐          ┌─────────────┐
+  │   0-color    │          │   0-types   │
+  │  (standalone)│          └──────┬──────┘
+  └──────────────┘    ┌────────────┴────────────┐
+                       ▼                         ▼
+            ┌──────────────────┐     ┌──────────────────┐
+            │  1a-linebreak    │     │  1b-font-engine  │
+            └────────┬─────────┘     └────────┬─────────┘
+                     │                ┌────────┴────────┐
+                     │                ▼                 ▼
+                     │  ┌──────────────────┐  ┌──────────────────┐
+                     │  │ 2a-shaping-wasm  │  │  2b-render-core  │
+                     │  └────────┬─────────┘  └────┬─────────────┘
+                     │           │                  │
+                     └───────────┤    ┌─────────────┤
+                                 ▼    ▼             ▼
+                      ┌──────────────────┐  ┌──────────────────┐
+                      │  3a-typography   │  │  3b-render-pdf   │
+                      └──────────────────┘  └──────────────────┘
 ```
 
-Steps 1 and 2 are done. Steps 3 and 4 are independent of each other and can be worked in parallel. Step 5 requires both 3 and 4 to be done first. Step 6 requires only step 4.
+`3a-typography` and `3b-render-pdf` are true layer-3 siblings — neither depends on the other.
+`3b-render-pdf` was able to shed its dependency on `3a-typography` because `RenderedDocument` /
+`RenderedPage` types were moved into `2b-render-core` where they belong.
 
 ---
 

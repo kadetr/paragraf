@@ -5,7 +5,7 @@
 import { describe, it, expect, vi } from 'vitest';
 import { renderDocumentToPdf } from '@paragraf/render-pdf';
 import type { DocumentPdfOptions } from '@paragraf/render-pdf';
-import type { RenderedDocument, RenderedPage } from '@paragraf/typography';
+import type { RenderedDocument, RenderedPage } from '@paragraf/render-core';
 import type { FontEngine } from '@paragraf/font-engine';
 
 // ─── Minimal mock engine ──────────────────────────────────────────────────────

@@ -13,6 +13,7 @@ import {
 } from '@paragraf/typography';
 import { createMeasurer } from '@paragraf/font-engine';
 import { renderToSvg } from '@paragraf/render-core';
+import type { RenderedPage, RenderedItem } from '@paragraf/render-core';
 import { renderDocumentToPdf } from '@paragraf/render-pdf';
 import { serifRegistry, F12 } from '../fixtures/fonts.js';
 import { EN_BODY, DOCUMENT_PARA_1, DOCUMENT_PARA_2 } from '../fixtures/text.js';
@@ -107,11 +108,19 @@ if (badLines.length > 0) {
   failures += badLines.length;
 }
 
-const totalLines = laid.pages.reduce(
-  (s, p) => s + p.items.reduce((ss, it) => ss + it.rendered.length, 0),
+const totalLines = laid.pages.reduce<number>(
+  (s: number, p: RenderedPage) =>
+    s +
+    p.items.reduce<number>(
+      (ss: number, it: RenderedItem) => ss + it.rendered.length,
+      0,
+    ),
   0,
 );
-const totalItems = laid.pages.reduce((s, p) => s + p.items.length, 0);
+const totalItems = laid.pages.reduce<number>(
+  (s: number, p: RenderedPage) => s + p.items.length,
+  0,
+);
 console.log(
   `\n  ${laid.pages.length} page(s), ${totalLines} total lines, ${totalItems} items on ${GRID_UNIT}pt grid`,
 );
