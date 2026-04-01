@@ -8,9 +8,9 @@
 | linebreak | `1a-linebreak` | `@paragraf/linebreak` | ✅ done |
 | font-engine | `1c-font-engine` | `@paragraf/font-engine` | ✅ done |
 | shaping-wasm | `1b-shaping-wasm` | `@paragraf/shaping-wasm` | ✅ done |
-| render-core | `2a-render-core` | `@paragraf/render-core` | ⬜ |
-| typography | `3a-typography` | `@paragraf/typography` | ⬜ |
-| render-pdf | `2b-render-pdf` | `@paragraf/render-pdf` | ⬜ |
+| render-core | `2a-render-core` | `@paragraf/render-core` | ✅ done |
+| typography | `3a-typography` | `@paragraf/typography` | ✅ done |
+| render-pdf | `2b-render-pdf` | `@paragraf/render-pdf` | ✅ done |
 | color | `2-color` | `@paragraf/color` | standalone |
 | `1-knuth-plass` | — | — | monolith (will be deleted) |
 
@@ -99,3 +99,34 @@ No TS code to extract yet — greenfield Rust package.
 ```
 
 Steps 1 and 2 are done. Steps 3 and 4 are independent of each other and can be worked in parallel. Step 5 requires both 3 and 4 to be done first. Step 6 requires only step 4.
+
+---
+
+## Updates — post-extraction
+
+Steps 1–7 are complete. The monorepo now has 8 clean `@paragraf/*` packages with no legacy shell. The following steps cover quality, distribution, and documentation.
+
+### Step 8 — Manual test suite (E)
+
+Port the existing 15 manual tests from `1-knuth-plass-v0.11/manual/` to the new package architecture (all imports currently point at deleted source files). Then expand coverage with systematic parameter sweeps: font size, line height, letter spacing, column width, tolerance, looseness, alignment modes. Manual tests produce real SVG/PDF output with real fonts — they catch visual regressions and rendering correctness that mocked unit tests cannot.
+
+Live in a new top-level `manual/` folder at the monorepo root, run with `npm run manual`.
+
+### Step 9 — Build and publish pipeline (C)
+
+Each package currently resolves via TypeScript sources through workspace symlinks — fine for development, not suitable for publishing. This step adds:
+- `tsc` build per package → `dist/` with `.js` + `.d.ts` output
+- `exports` fields updated to point at `dist/` for published builds
+- A release workflow (version bumps, changelog, `npm publish` per package or as a batch)
+- Decide on the publish strategy: independent versioning vs. lockstep versioning
+
+Step 8 must be done first to confirm the public API surface is stable before locking it into a release.
+
+### Step 10 — Documentation (B)
+
+With a stable API (confirmed by Step 8) and publishable packages (Step 9), write:
+- README per package: purpose, install, minimal usage example
+- Getting started guide: full pipeline walkthrough from text input to PDF output
+- Document model explanation: frames, pages, baseline grid, document composition
+- Input/output schemas per package: what goes in, what comes out, what the options mean
+- HTML/CSS usage notes for browser-safe packages (`@paragraf/linebreak`, `@paragraf/render-core`)

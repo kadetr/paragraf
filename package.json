@@ -1,8 +1,10 @@
 {
   "name": "paragraf-monorepo",
   "private": true,
+  "type": "module",
   "scripts": {
-    "test:e2e": "vitest run --config tests/vitest.config.ts"
+    "test:e2e": "vitest run --config tests/vitest.config.ts",
+    "manual": "tsx tests/manual/run-all.ts"
   },
   "workspaces": [
     "0-types",

@@ -1,8 +1,0 @@
-node_modules/
-dist/
-output/
-*.tsbuildinfo
-.DS_Store
-
-# Rust/WASM build artifacts
-wasm/target/
