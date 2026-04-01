@@ -67,3 +67,24 @@ paper white adaptation, gamut mapping.
   is unavailable or unnecessary
 - No API change required in `0-color` — `2c-color-wasm` is an additive package,
   not a replacement
+
+## Deferred: `@paragraf/color` initial publish
+
+`0-color` will not be published with the initial release. The useful color
+pipeline surface — CMYK separation, black generation, UCR/GCR, image conversion
+to output color space — requires `2c-color-wasm` alongside it. Shipping `0-color`
+alone would give callers ICC profile parsing and LUT interpolation with no
+integration point into any render package, no CMYK output path, and no
+practical entry point for press workflows. The decision is to ship `0-color` and
+`2c-color-wasm` together as a pair in a future step, with render-pdf integration
+(optional `ColorManager` on `PdfOptions`) at the same time.
+
+## Deferred: HTML/CSS browser usage documentation
+
+`@paragraf/linebreak` and `@paragraf/render-core` are browser-safe today, but
+there is no browser-specific entry point, no bundler configuration, and no worked
+example. Writing browser integration docs before those integration patterns are
+designed creates documentation with no corresponding code and immediate
+maintenance debt. Deferred until browser support is scoped as a numbered step
+(see "Browser support for `@paragraf/shaping-wasm`" in the roadmap future-work
+section).

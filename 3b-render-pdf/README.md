@@ -8,7 +8,7 @@ paragraphs and full documents to PDF files.
 ## Install
 
 ```bash
-npm install @paragraf/render-pdf @paragraf/render-core @paragraf/font-engine
+npm install @paragraf/render-pdf @paragraf/typography @paragraf/render-core @paragraf/font-engine
 ```
 
 ## Usage
@@ -17,30 +17,30 @@ npm install @paragraf/render-pdf @paragraf/render-core @paragraf/font-engine
 
 ```ts
 import { renderToPdf } from '@paragraf/render-pdf';
-import { createWriteStream } from 'fs';
+import { writeFileSync } from 'fs';
 
-const stream = createWriteStream('output.pdf');
-
-await renderToPdf(renderedParagraph, fontEngine, registry, stream, {
+const pdfBuffer = await renderToPdf(renderedParagraph, fontEngine, {
   width: 595.28,   // A4 width in points
   height: 841.89,  // A4 height in points
   fill: 'black',
 });
+
+writeFileSync('output.pdf', pdfBuffer);
 ```
 
 ### Render a full document
 
 ```ts
 import { renderDocumentToPdf } from '@paragraf/render-pdf';
-import { createWriteStream } from 'fs';
+import { writeFileSync }        from 'fs';
 
-const stream = createWriteStream('document.pdf');
-
-await renderDocumentToPdf(renderedDocument, fontEngine, registry, stream, {
+const pdfBuffer = await renderDocumentToPdf(renderedDocument, fontEngine, {
   pageWidth: 595.28,
   pageHeight: 841.89,
   fill: 'black',
 });
+
+writeFileSync('document.pdf', pdfBuffer);
 ```
 
 ## Options
@@ -66,7 +66,7 @@ import { createParagraphComposer, createDefaultFontEngine } from '@paragraf/typo
 import { createMeasurer }                                   from '@paragraf/font-engine';
 import { layoutParagraph }                                  from '@paragraf/render-core';
 import { renderToPdf }                                      from '@paragraf/render-pdf';
-import { createWriteStream }                                from 'fs';
+import { writeFileSync }                                    from 'fs';
 
 const registry = new Map([
   ['regular', { id: 'regular', face: 'SourceSerif4', filePath: './fonts/SourceSerif4-Regular.ttf' }],
@@ -86,8 +86,8 @@ const { lines } = composer.compose({
 
 const rendered = layoutParagraph(lines, measurer, { x: 72, y: 72 });
 
-const stream = createWriteStream('output.pdf');
-await renderToPdf(rendered, fontEngine, registry, stream);
+const pdfBuffer = await renderToPdf(rendered, fontEngine);
+writeFileSync('output.pdf', pdfBuffer);
 ```
 
 See the [getting started guide](../docs/getting-started.md) for a complete walkthrough.

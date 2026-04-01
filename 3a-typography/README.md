@@ -9,7 +9,7 @@ Wraps `@paragraf/linebreak`, `@paragraf/font-engine`, and
 ## Install
 
 ```bash
-npm install @paragraf/typography @paragraf/types
+npm install @paragraf/typography @paragraf/font-engine @paragraf/types
 ```
 
 ## Quick start
@@ -85,6 +85,9 @@ const { lines } = composer.compose({ text: '...', font, lineWidth: 396, language
 
 ```ts
 import { composeDocument, layoutDocument } from '@paragraf/typography';
+import { createMeasurer }                  from '@paragraf/font-engine';
+
+const measurer = await createMeasurer(registry);
 
 const doc = {
   paragraphs: [...],

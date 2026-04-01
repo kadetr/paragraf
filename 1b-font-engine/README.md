@@ -14,8 +14,8 @@ npm install @paragraf/font-engine @paragraf/types
 ### Load fonts and create a measurer
 
 ```ts
-import { createMeasurer, loadFontkitFont } from '@paragraf/font-engine';
-import { FontRegistry } from '@paragraf/types';
+import { createMeasurer } from '@paragraf/font-engine';
+import { FontRegistry }   from '@paragraf/types';
 
 const registry: FontRegistry = new Map([
   ['regular', { id: 'regular', face: 'SourceSerif4', filePath: './fonts/SourceSerif4-Regular.ttf' }],
@@ -34,11 +34,11 @@ const measurer = await createMeasurer(registry);
 import { FontkitEngine } from '@paragraf/font-engine';
 
 const engine = new FontkitEngine();
-await loadFontkitFont(engine, descriptor);
+await engine.loadFont('regular', './fonts/SourceSerif4-Regular.ttf');
 
-const glyphs = engine.glyphsForString('fontId', 'Hello');
-const path   = engine.getGlyphPath('fontId', glyph, x, y, fontSize);
-const metrics = engine.getFontMetrics('fontId', fontSize);
+const glyphs  = engine.glyphsForString('regular', 'Hello');
+const path    = engine.getGlyphPath('regular', glyph, x, y, fontSize);
+const metrics = engine.getFontMetrics('regular', fontSize);
 ```
 
 ### `FontEngine` interface

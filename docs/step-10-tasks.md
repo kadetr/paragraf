@@ -1,10 +1,12 @@
 # Step 10 — Documentation
 
 This step produces the written documentation needed before publishing: per-package
-READMEs, a pipeline getting-started guide, a document model explanation, and
-input/output reference schemas. The HTML/CSS browser usage item from the original
-roadmap is deferred — there is no browser-facing package yet and writing browser
-integration notes before the browser support step exists would be speculative.
+READMEs, a pipeline getting-started guide, a dependency graph reference, a document
+model explanation, and input/output reference schemas.
+
+`@paragraf/color` is explicitly out of scope for this step — it will not be shipped
+with the initial publish. Browser usage notes are deferred — no browser integration
+package exists yet.
 
 ---
 
@@ -20,9 +22,11 @@ integration notes before the browser support step exists would be speculative.
 | D6 — README: `@paragraf/typography` | ✅ done |
 | D7 — README: `@paragraf/render-pdf` | ✅ done |
 | D8 — Getting started guide | ✅ done |
-| D9 — Document model explanation | ⬜ not started |
-| D10 — Input/output schemas reference | ⬜ not started |
-| D11 — Update roadmap to reflect Step 10 scope | ⬜ not started |
+| Audit + 11-bug fix pass (D1–D8) | ✅ done |
+| D9 — `docs/dependency.md` | ✅ done |
+| D10 — Document model explanation | ✅ done |
+| D11 — Input/output schemas reference | ✅ done |
+| D12 — Update roadmap + roadmap-decisions | ✅ done |
 
 ---
 
@@ -47,7 +51,14 @@ multi-language hyphenation. The guide ends with a browser compatibility matrix.
 
 ---
 
-## D9 — Document model explanation
+## D9 — `docs/dependency.md` ✅
+
+Package dependency graph — per-package dep table (direct `@paragraf/*` deps +
+third-party), install-footprint per use case, and notes on `fontkit`/`hyphen`/`pdfkit`.
+
+---
+
+## D10 — Document model explanation
 
 **File to create:** `docs/document-model.md`
 
@@ -103,7 +114,7 @@ and the cursor relate to each other.
 
 ---
 
-## D10 — Input/output schemas reference
+## D11 — Input/output schemas reference
 
 **File to create:** `docs/io-schemas.md`
 
@@ -170,35 +181,33 @@ field must have at least one sentence of prose explaining its semantics.
 
 ---
 
-## D11 — Update roadmap to reflect actual Step 10 scope
+## D12 — Update roadmap + roadmap-decisions
 
-**File to update:** `docs/roadmap.md`
+**Files to update:** `docs/roadmap.md`, `docs/roadmap-decisions.md`
 
-The Step 10 entry in the roadmap currently lists "HTML/CSS usage notes for
-browser-safe packages" as an in-scope item. This must be removed and moved into
-the existing "Browser support for `@paragraf/shaping-wasm`" future-work section,
-or noted separately as deferred until a dedicated browser integration step is
-planned. There is no browser-facing package today. Writing browser integration
-docs before the browser support work exists produces documentation with no
-corresponding code, which creates maintenance debt immediately.
+Three things to fix:
 
-The Step 10 entry should also be updated to reflect what was actually scoped and
-completed: READMEs for all 7 packages (D1–D7), getting-started guide (D8), and
-the two remaining items (D9 document model, D10 I/O schemas). The update should
-be minimal — a sentence noting the HTML/CSS item is deferred and a pointer to
-the future-work section.
+1. **`roadmap.md` Step 10 scope:** remove "HTML/CSS usage notes" line; replace with
+   the actual scope (D1–D9 as listed above, D10–D11 remaining).
+
+2. **`roadmap.md` current-state table:** remove `0-color` row — it is not shipping
+   with the initial publish. Move it to a "deferred packages" note.
+
+3. **`roadmap-decisions.md` color decision:** add a decision entry recording that
+   `@paragraf/color` is deferred until `2c-color-wasm` is ready to ship alongside
+   it. The full color pipeline (ICC, CMYK separation, black generation, UCR/GCR,
+   image conversion) requires both packages to be meaningful; shipping `0-color`
+   alone without the WASM layer and without API integration in the render packages
+   would produce an incomplete and misleading public surface.
 
 ---
 
 ## Deferred from Step 10
 
-**HTML/CSS usage notes for browser-safe packages.** This item requires a
-concrete browser integration package or at minimum a documented integration
-target (e.g. a Canvas-based renderer or a CSS layout bridge) before the notes
-can be accurate. `@paragraf/linebreak` and `@paragraf/render-core` are
-browser-safe today, but there is no browser-specific entry point, no bundler
-configuration guide, and no worked example of using them in a browser context.
-Writing this documentation now would require speculating about integration
-patterns that have not been designed. Defer until browser support is scoped as
-a proper step (see "Browser support for `@paragraf/shaping-wasm`" in the
-roadmap future-work section).
+**HTML/CSS usage notes for browser-safe packages.** No browser-specific entry
+point or integration target exists yet. Deferred until browser support is a
+scheduled step.
+
+**`@paragraf/color` documentation.** `0-color` will not ship with the initial
+publish. The full color pipeline requires `2c-color-wasm` alongside it. Both
+will be scoped and documented together in a future step.

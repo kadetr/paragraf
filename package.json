@@ -15,8 +15,7 @@
     "2a-shaping-wasm",
     "2b-render-core",
     "3a-typography",
-    "3b-render-pdf",
-    "0-color"
+    "3b-render-pdf"
   ],
   "devDependencies": {
     "tsup": "^8.5.1"

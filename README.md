@@ -7,7 +7,6 @@ A TypeScript typesetting engine built around the Knuth-Plass optimum line-breaki
 | Package | Description | Browser |
 |---|---|---|
 | [`@paragraf/types`](0-types/) | Shared interfaces and constants | ✅ |
-| [`@paragraf/color`](0-color/) | ICC color profiles, transforms, color management | ✅ |
 | [`@paragraf/linebreak`](1a-linebreak/) | Knuth-Plass algorithm + hyphenation | ✅ |
 | [`@paragraf/font-engine`](1b-font-engine/) | Font metrics abstraction + fontkit adapter | ✅ |
 | [`@paragraf/shaping-wasm`](2a-shaping-wasm/) | Rust/WASM OpenType shaper (rustybuzz) | — |
@@ -56,7 +55,7 @@ See [docs/getting-started.md](docs/getting-started.md) for a full walkthrough.
 ```
   ┌──────────────┐          ┌─────────────┐
   │   0-color    │          │   0-types   │
-  │  (standalone)│          └──────┬──────┘
+  │  (in progess)│          └──────┬──────┘
   └──────────────┘    ┌────────────┴────────────┐
                        ▼                         ▼
             ┌──────────────────┐     ┌──────────────────┐
@@ -87,7 +86,6 @@ npm run build      # build all packages to dist/
 
 ```
 0-types/           @paragraf/types
-0-color/           @paragraf/color
 1a-linebreak/      @paragraf/linebreak
 1b-font-engine/    @paragraf/font-engine
 2a-shaping-wasm/   @paragraf/shaping-wasm

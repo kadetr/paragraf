@@ -11,8 +11,6 @@
 | render-core | `2b-render-core` | `@paragraf/render-core` | ✅ done |
 | typography | `3a-typography` | `@paragraf/typography` | ✅ done |
 | render-pdf | `3b-render-pdf` | `@paragraf/render-pdf` | ✅ done |
-| color | `0-color` | `@paragraf/color` | ✅ done (standalone, no deps on other @paragraf packages) |
-| `1-knuth-plass` | — | — | monolith (will be deleted) |
 
 ## What's inside `1-knuth-plass` to split apart
 
@@ -78,7 +76,7 @@ No TS code to extract yet — greenfield Rust package.
 ```
   ┌──────────────┐          ┌─────────────┐
   │   0-color    │          │   0-types   │
-  │  (standalone)│          └──────┬──────┘
+  │ (in progress)│          └──────┬──────┘
   └──────────────┘    ┌────────────┴────────────┐
                        ▼                         ▼
             ┌──────────────────┐     ┌──────────────────┐
@@ -125,12 +123,13 @@ Step 8 must be done first to confirm the public API surface is stable before loc
 
 ### Step 10 — Documentation (B)
 
-With a stable API (confirmed by Step 8) and publishable packages (Step 9), write:
-- README per package: purpose, install, minimal usage example
-- Getting started guide: full pipeline walkthrough from text input to PDF output
-- Document model explanation: frames, pages, baseline grid, document composition
-- Input/output schemas per package: what goes in, what comes out, what the options mean
-- HTML/CSS usage notes for browser-safe packages (`@paragraf/linebreak`, `@paragraf/render-core`)
+READMEs for all 7 packages (D1–D7) ✅, getting-started guide (D8) ✅,
+dependency graph reference (D9) ✅, document model explanation (D10) ⬜,
+input/output schemas reference (D11) ⬜.
+
+Deferred from scope: HTML/CSS browser usage notes (no browser integration package
+exists yet — see decisions), `@paragraf/color` documentation (`0-color` does not
+ship with the initial publish — see decisions).
 
 ---
 

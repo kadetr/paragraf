@@ -17,7 +17,14 @@ npm install @paragraf/render-core @paragraf/font-engine @paragraf/types
 
 ```ts
 import { layoutParagraph } from '@paragraf/render-core';
+import { createMeasurer }  from '@paragraf/font-engine';
+import { FontRegistry }    from '@paragraf/types';
 
+const registry: FontRegistry = new Map([
+  ['regular', { id: 'regular', face: 'SourceSerif4', filePath: './fonts/SourceSerif4-Regular.ttf' }],
+]);
+
+const measurer = await createMeasurer(registry);
 const rendered = layoutParagraph(composedParagraph, measurer, { x: 72, y: 72 });
 // rendered: RenderedParagraph — array of RenderedLine
 ```
@@ -42,9 +49,13 @@ interface PositionedSegment {
 ### Render to SVG
 
 ```ts
-import { renderToSvg } from '@paragraf/render-core';
+import { FontkitEngine } from '@paragraf/font-engine';
+import { renderToSvg }   from '@paragraf/render-core';
 
-const svg = renderToSvg(rendered, { width: 595, height: 842 });
+const fontEngine = new FontkitEngine();
+await fontEngine.loadFont('regular', './fonts/SourceSerif4-Regular.ttf');
+
+const svg = renderToSvg(rendered, fontEngine, { width: 595, height: 842 });
 ```
 
 ### Render to Canvas
@@ -52,7 +63,8 @@ const svg = renderToSvg(rendered, { width: 595, height: 842 });
 ```ts
 import { renderToCanvas } from '@paragraf/render-core';
 
-renderToCanvas(rendered, ctx); // HTMLCanvasElement 2D context
+// fontEngine created as above; reuse across render calls
+renderToCanvas(rendered, fontEngine, ctx); // HTMLCanvasElement 2D context
 ```
 
 ### Document types

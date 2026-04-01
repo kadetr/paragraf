@@ -5,15 +5,12 @@
 | Package | npm name | Direct `@paragraf/*` deps | Direct third-party deps |
 |---|---|---|---|
 | `0-types` | `@paragraf/types` | — | — |
-| `0-color` ¹ | `@paragraf/color` | — | — |
 | `1a-linebreak` | `@paragraf/linebreak` | `types` | `hyphen` |
 | `1b-font-engine` | `@paragraf/font-engine` | `types` | `fontkit` |
 | `2a-shaping-wasm` | `@paragraf/shaping-wasm` | `types`, `font-engine` | — |
 | `2b-render-core` | `@paragraf/render-core` | `types`, `font-engine` | — |
 | `3a-typography` | `@paragraf/typography` | `types`, `linebreak`, `font-engine`, `shaping-wasm`, `render-core` | — |
 | `3b-render-pdf` | `@paragraf/render-pdf` | `types`, `font-engine`, `render-core` | `pdfkit` |
-
-¹ `0-color` has no `@paragraf/*` dependencies — it is a pure utility package at layer 0, alongside `0-types`.
 
 ---
 

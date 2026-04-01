@@ -54,7 +54,7 @@ export default defineConfig({
 ```
 
 Applies to: `0-types`, `1a-linebreak`, `1b-font-engine`, `2b-render-core`,
-`3a-typography`, `3b-render-pdf`, `0-color`.
+`3a-typography`, `3b-render-pdf`
 
 ### `2a-shaping-wasm` — special config
 

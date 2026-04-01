@@ -11,7 +11,7 @@ to a justified PDF with real fonts.
 ## 1. Install
 
 ```bash
-npm install @paragraf/typography @paragraf/font-engine @paragraf/render-core @paragraf/render-pdf
+npm install @paragraf/typography @paragraf/font-engine @paragraf/render-core @paragraf/render-pdf @paragraf/types
 ```
 
 For TypeScript users, all packages ship type declarations — nothing extra needed.
@@ -181,7 +181,8 @@ writeFileSync('output.pdf', pdfBuffer);
 ```ts
 import { renderToSvg } from '@paragraf/render-core';
 
-const svg = renderToSvg(rendered, { width: 595, height: 842 });
+// fontEngine is from Section 7 (createDefaultFontEngine)
+const svg = renderToSvg(rendered, fontEngine, { width: 595, height: 842 });
 // svg: string — a complete <svg> element
 ```
 
