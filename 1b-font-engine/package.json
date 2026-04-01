@@ -1,10 +1,22 @@
 {
   "name": "@paragraf/font-engine",
-  "version": "0.1.0",
+  "version": "0.3.0",
   "description": "Font metrics abstraction, fontkit adapter, and measurer factory for the paragraf typesetter.",
   "type": "module",
+  "files": [
+    "dist/",
+    "README.md"
+  ],
   "exports": {
     ".": "./src/index.ts"
+  },
+  "publishConfig": {
+    "exports": {
+      ".": {
+        "import": "./dist/index.js",
+        "types": "./dist/index.d.ts"
+      }
+    }
   },
   "scripts": {
     "test": "vitest run",

@@ -131,3 +131,20 @@ With a stable API (confirmed by Step 8) and publishable packages (Step 9), write
 - Document model explanation: frames, pages, baseline grid, document composition
 - Input/output schemas per package: what goes in, what comes out, what the options mean
 - HTML/CSS usage notes for browser-safe packages (`@paragraf/linebreak`, `@paragraf/render-core`)
+
+---
+
+## Future work (unscheduled)
+
+### Browser support for `@paragraf/shaping-wasm`
+
+`@paragraf/shaping-wasm` is currently **Node.js-only**. The wasm-pack glue uses
+`require('fs').readFileSync` and `__dirname` — both unavailable in browsers.
+Making it browser-compatible requires rebuilding the crate with
+`wasm-pack build --target bundler`, switching to async
+`WebAssembly.instantiateStreaming`, and changing `loadShapingWasm()` to an async
+API (breaking change for `createParagraphComposer`).
+
+This will be scoped into a proper step when there is a concrete browser use-case.
+Packages that are already browser-safe today: `@paragraf/types`,
+`@paragraf/linebreak`, `@paragraf/render-core`.

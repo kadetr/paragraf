@@ -228,16 +228,16 @@ const mapFragmentsToSegments = (
 
   for (const frag of fragments) {
     const fragSegs: SpanSegment[] = [];
-    let needed = frag.length;
+    let needed = [...frag].length;
 
     while (needed > 0 && segIdx < wordSegs.length) {
       const seg = wordSegs[segIdx];
-      const avail = seg.text.length - charIdx;
+      const avail = [...seg.text].length - charIdx;
 
       if (avail <= needed) {
         if (avail > 0) {
           fragSegs.push({
-            text: seg.text.slice(charIdx),
+            text: [...seg.text].slice(charIdx).join(''),
             font: seg.font,
             verticalOffset: seg.verticalOffset,
           });
@@ -247,7 +247,7 @@ const mapFragmentsToSegments = (
         charIdx = 0;
       } else {
         fragSegs.push({
-          text: seg.text.slice(charIdx, charIdx + needed),
+          text: [...seg.text].slice(charIdx, charIdx + needed).join(''),
           font: seg.font,
           verticalOffset: seg.verticalOffset,
         });
@@ -411,9 +411,9 @@ export const createParagraphComposer = async (
     if (direction === 'rtl') {
       // Spans not supported in RTL for v0.8 — only one-direction paragraphs with a single font.
       if (spans && spans.length > 0) {
-        console.warn(
-          '[knuth-plass] BiDi: spans input is not supported for RTL paragraphs in v0.8. ' +
-            'Using input.font and concatenated text. Mixed-direction spans require v0.9+.',
+        throw new Error(
+          '[paragraf] RTL paragraphs do not support span input yet. ' +
+            'Use plain `text` input for RTL content.',
         );
       }
       // RTL: no hyphenation — split by whitespace and wrap each word directly.

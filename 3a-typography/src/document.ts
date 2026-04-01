@@ -156,6 +156,20 @@ export function composeDocument(
   const firstFrame = doc.frames[0];
   const textWidth = firstFrame ? colWidth(firstFrame) : 0;
 
+  if (doc.frames.length > 1) {
+    const widths = doc.frames.map((f) => colWidth(f));
+    const allSame = widths.every((w) => w === widths[0]);
+    if (!allSame) {
+      console.warn(
+        '[paragraf] composeDocument: frames have different column widths. ' +
+          'All paragraphs will be composed at frame[0] width (' +
+          widths[0] +
+          'pt). ' +
+          'Call deriveLineWidths() to assign per-paragraph widths explicitly.',
+      );
+    }
+  }
+
   const paragraphs = doc.paragraphs.map((input) => {
     const merged: ParagraphInput = {
       ...doc.styleDefaults,

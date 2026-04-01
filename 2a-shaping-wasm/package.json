@@ -1,10 +1,23 @@
 {
   "name": "@paragraf/shaping-wasm",
-  "version": "0.1.0",
+  "version": "0.3.0",
   "description": "Rust/WASM shaping engine for the paragraf typesetter.",
   "type": "module",
+  "files": [
+    "dist/",
+    "wasm/pkg/",
+    "README.md"
+  ],
   "exports": {
     ".": "./src/index.ts"
+  },
+  "publishConfig": {
+    "exports": {
+      ".": {
+        "import": "./dist/index.js",
+        "types": "./dist/index.d.ts"
+      }
+    }
   },
   "scripts": {
     "test": "vitest run",

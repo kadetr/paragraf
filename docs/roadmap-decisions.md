@@ -35,3 +35,20 @@
 - Each package exports through a single `src/index.ts` barrel.
 - Types from `@paragraf/types` are **not** re-exported by downstream packages — callers add `@paragraf/types` as a direct dep if they need raw types.
 - Internal helpers (not part of the public contract) stay unexported.
+
+## WASM loading strategy
+
+`@paragraf/shaping-wasm` currently uses a **Node.js-only** loading strategy: the
+wasm-pack-generated glue (`knuth_plass_wasm.js`) loads `knuth_plass_wasm_bg.wasm`
+via `require('fs').readFileSync` + `__dirname`. This is the correct production
+approach for server-side / Node.js callers and is not a temporary workaround.
+
+**Browser support is explicitly deferred.** Making `@paragraf/shaping-wasm`
+browser-compatible requires:
+1. Rebuilding the Rust crate with `wasm-pack build --target bundler` (or `--target web`).
+2. Switching from synchronous to async instantiation (`WebAssembly.instantiateStreaming`).
+3. Changing `loadShapingWasm()` to an async API — which cascades into a breaking
+   change for `createParagraphComposer` in `@paragraf/typography`.
+
+This is a future work item, not a numbered step. It will be scoped and planned
+when there is a concrete browser use-case (e.g. a web paragraph composer).

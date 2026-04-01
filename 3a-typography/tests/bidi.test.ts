@@ -9,7 +9,7 @@ import {
   wasmStatus,
 } from '@paragraf/typography';
 import { loadShapingWasm } from '@paragraf/shaping-wasm';
-import { Measurer } from '@paragraf/types';
+import { Measurer, TextSpan } from '@paragraf/types';
 import { layoutParagraph } from '@paragraf/render-core';
 import { FontRegistry, Font } from '@paragraf/types';
 
@@ -190,6 +190,14 @@ describe('RTL paragraph composition', () => {
     expect(() =>
       composer.compose({ text: 'שלום', font: FONT_HE, lineWidth: 200 }),
     ).not.toThrow();
+  });
+
+  it('RTL paragraph with spans input — throws informative error', () => {
+    if (wasmStatus().status !== 'loaded') return;
+    const spans: TextSpan[] = [{ text: 'שלום', font: FONT_HE }];
+    expect(() =>
+      composer.compose({ spans, font: FONT_HE, lineWidth: 200 }),
+    ).toThrow('[paragraf] RTL paragraphs do not support span input yet');
   });
 
   it('RTL paragraph with narrow lineWidth — correctly breaks into multiple lines', () => {

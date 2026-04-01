@@ -1,10 +1,22 @@
 {
   "name": "@paragraf/types",
-  "version": "0.1.0",
+  "version": "0.3.0",
   "description": "Shared TypeScript interfaces and constants for the paragraf typography library",
   "type": "module",
+  "files": [
+    "dist/",
+    "README.md"
+  ],
   "exports": {
     ".": "./src/index.ts"
+  },
+  "publishConfig": {
+    "exports": {
+      ".": {
+        "import": "./dist/index.js",
+        "types": "./dist/index.d.ts"
+      }
+    }
   },
   "scripts": {
     "typecheck": "tsc --noEmit"

@@ -1,14 +1,23 @@
 {
   "name": "@paragraf/color",
-  "version": "0.1.0",
+  "version": "0.3.0",
   "description": "ICC color management for the paragraf typography library",
   "type": "module",
+  "files": [
+    "dist/",
+    "README.md"
+  ],
   "exports": {
     ".": "./src/index.ts"
   },
-  "files": [
-    "src/"
-  ],
+  "publishConfig": {
+    "exports": {
+      ".": {
+        "import": "./dist/index.js",
+        "types": "./dist/index.d.ts"
+      }
+    }
+  },
   "scripts": {
     "test": "vitest run",
     "test:watch": "vitest",
