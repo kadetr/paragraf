@@ -10,15 +10,17 @@ npm install @paragraf/linebreak @paragraf/types
 
 ## Usage
 
-### High-level: `composeParagraph`
+### `computeBreakpoints` + `traceback` + `composeParagraph`
 
-Takes pre-built nodes (boxes, glues, penalties) and returns composed lines.
+Build a node sequence, find breakpoints, then assemble composed lines:
 
 ```ts
-import { composeParagraph } from '@paragraf/linebreak';
+import { computeBreakpoints, traceback, composeParagraph } from '@paragraf/linebreak';
 
-const lines = composeParagraph(paragraph, measurer);
-// lines: ComposedParagraph (array of ComposedLine)
+const result = computeBreakpoints(paragraph);
+// throws if no solution; result.usedEmergency is true if emergencyStretch was needed
+const breaks = traceback(result.node);
+const lines  = composeParagraph(nodes, breaks, 'justified', false, lineWidth, [], getMetrics);
 ```
 
 ### Node building: `buildNodeSequence`
@@ -34,44 +36,26 @@ const nodes = buildNodeSequence(hyphenatedWords, measurer);
 ### Hyphenation
 
 ```ts
-import { loadHyphenator, hyphenateParagraph, loadLanguages } from '@paragraf/linebreak';
+import { loadHyphenator, hyphenateWord, hyphenateParagraph, loadLanguages } from '@paragraf/linebreak';
 
-// Load a single pattern file
-const hyphenate = await loadHyphenator('en-us');
-const parts = hyphenate('typesetting'); // → ['type', 'set', 'ting']
+// Load patterns for a language (must call before hyphenating)
+await loadHyphenator('en-us');
+// patterns loaded — use hyphenateWord / hyphenateParagraph from this point on
+const words = hyphenateParagraph(text, { language: 'en-us', minWordLength: 5, fontSize: 12 });
 
 // Batch-load multiple languages
 await loadLanguages(['en-us', 'de', 'fr']);
-
-// Hyphenate a full word list
-const words = ['typesetting', 'algorithm', 'paragraph'];
-const hyphenated = await hyphenateParagraph(words, { language: 'en-us' });
 ```
 
 #### `HyphenateOptions`
 
 ```ts
 interface HyphenateOptions {
-  language?: Language;           // default 'en-us'
-  hyphenChar?: string;           // default '\u00AD' (soft hyphen)
-  minLeft?: number;              // min chars before first hyphen
-  minRight?: number;             // min chars after last hyphen
-  minWordLength?: number;        // skip short words
+  minWordLength: number;          // required — skip words shorter than this
+  fontSize: number;               // required — drives minLeft/minRight derivation
+  language: Language;             // required
+  preserveSoftHyphens?: boolean;  // default true
 }
-```
-
-### Low-level: `computeBreakpoints` + `traceback`
-
-For direct algorithm access:
-
-```ts
-import { computeBreakpoints, traceback } from '@paragraf/linebreak';
-
-const breakpoints = computeBreakpoints(paragraph);
-if (breakpoints === null) {
-  // no feasible solution within tolerance
-}
-const lines = traceback(breakpoints, paragraph);
 ```
 
 ### Test utilities

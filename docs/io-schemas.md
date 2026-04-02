@@ -304,10 +304,12 @@ objects covering the characters of `words[i]`. Used by the renderer to handle
 words that span a font boundary (e.g. a word that starts in regular and ends in
 bold because a span boundary falls mid-word).
 
-**`wordSpacing`** — The inter-word spacing value actually applied on this line,
-in points. Positive = expanded (line is loose). Negative = compressed (line is
-tight). The natural word space width plus this value gives the rendered word gap.
-For non-justified lines (`'left'`, `'right'`, `'center'`), `wordSpacing` is `0`.
+**`wordSpacing`** — The total resolved inter-word spacing for this line,
+in points. This is the final value placed between words — not an adjustment
+added on top of some base. Positive = expanded (line is loose). Negative =
+compressed (line is tight). Computed as: natural word space width + ratio ×
+stretch (or shrink). For non-justified lines (`'left'`, `'right'`, `'center'`),
+`wordSpacing` equals the natural word space width.
 
 **`hyphenated`** — `true` if this line ends with an automatic or explicit hyphen.
 
@@ -319,8 +321,10 @@ indicate the algorithm was struggling. Most callers do not read this field.
 **`alignment`** — The alignment mode applied to this line, propagated from
 `ParagraphInput.alignment`.
 
-**`isWidow`** — `true` if this is the last line of the paragraph and a widow
-penalty was applied due to frame overflow. For display/diagnostic purposes only.
+**`isWidow`** — `true` if this is the last line of the paragraph and it
+contains only one non-empty content word. This is a compositional fact set
+during the Knuth-Plass pass — it reflects the structure of the line itself,
+not whether it overflowed a frame. For display/diagnostic purposes only.
 
 **`lineWidth`** — The actual column width used for this line. May differ from
 `ParagraphInput.lineWidth` if `lineWidths` was provided.

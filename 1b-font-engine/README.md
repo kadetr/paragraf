@@ -22,7 +22,7 @@ const registry: FontRegistry = new Map([
   ['bold',    { id: 'bold',    face: 'SourceSerif4', filePath: './fonts/SourceSerif4-Bold.ttf' }],
 ]);
 
-const measurer = await createMeasurer(registry);
+const measurer = createMeasurer(registry);
 // measurer.measure(text, font) → width in points
 // measurer.space(font)         → { width, stretch, shrink }
 // measurer.metrics(font)       → FontMetrics
@@ -47,12 +47,14 @@ Both `FontkitEngine` (TypeScript) and `WasmFontEngine` (`@paragraf/shaping-wasm`
 
 ```ts
 interface FontEngine {
+  loadFont(id: string, path: string): Promise<void>;
   glyphsForString(fontId: string, text: string, font?: Font): Glyph[];
-  getFontMetrics(fontId: string, fontSize: number, variant?: FontVariant): FontMetrics;
+  glyphForCodePoint?(fontId: string, codePoint: number): Glyph | null; // only this is optional
+  applyLigatures(fontId: string, glyphs: Glyph[]): Glyph[];
+  applySingleSubstitution(fontId: string, glyphs: Glyph[], featureTag: 'sups' | 'subs'): Glyph[];
+  getKerning(fontId: string, glyph1: Glyph, glyph2: Glyph): number;
   getGlyphPath(fontId: string, glyph: Glyph, x: number, y: number, fontSize: number): GlyphPath;
-  applyLigatures?(fontId: string, glyphs: Glyph[]): Glyph[];
-  applySingleSubstitution?(fontId: string, glyphs: Glyph[], featureTag: string): Glyph[];
-  getKerning?(fontId: string, glyph1: Glyph, glyph2: Glyph): number;
+  getFontMetrics(fontId: string, fontSize: number, variant?: 'normal' | 'superscript' | 'subscript'): FontMetrics;
 }
 ```
 

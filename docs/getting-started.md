@@ -144,7 +144,7 @@ x/y positions for every text segment on the page:
 import { layoutParagraph } from '@paragraf/render-core';
 import { createMeasurer }  from '@paragraf/font-engine';
 
-const measurer = await createMeasurer(registry);
+const measurer = createMeasurer(registry);
 
 const rendered = layoutParagraph(lines, measurer, { x: 72, y: 72 });
 // rendered: RenderedParagraph — array of RenderedLine
@@ -210,7 +210,7 @@ const registry = new Map([
 
 const composer   = await createParagraphComposer(registry);
 const fontEngine = await createDefaultFontEngine(registry);
-const measurer   = await createMeasurer(registry);
+const measurer   = createMeasurer(registry);
 
 const doc = {
   paragraphs: [
@@ -228,11 +228,11 @@ const doc = {
       firstLineIndent: 11,
     },
   ],
-  frames: [{ x: 72, y: 72, width: 396, height: 648 }],
+  frames: [{ page: 0, x: 72, y: 72, width: 396, height: 648 }],
 };
 
 const composed       = composeDocument(doc, composer);
-const renderedDoc    = layoutDocument(composed, measurer);
+const renderedDoc    = layoutDocument(composed, doc.frames, measurer);
 
 const pdfBuffer = await renderDocumentToPdf(renderedDoc, fontEngine, {
   pageWidth: 595.28,
@@ -244,17 +244,18 @@ writeFileSync('document.pdf', pdfBuffer);
 
 ### Baseline grid
 
-Add a `BaselineGrid` to snap all text to a consistent vertical rhythm:
+Add a `BaselineGrid` to snap all text to a consistent vertical rhythm.
+The grid is defined on each `Frame`, not passed to `layoutDocument`:
 
 ```ts
-import { BaselineGrid } from '@paragraf/render-core';
+const frames = [{
+  page: 0, x: 72, y: 72, width: 396, height: 648,
+  grid: { first: 8.5, interval: 14 }, // first ≈ cap-height of 11pt font
+}];
 
-const grid: BaselineGrid = {
-  leading: 14,    // line-to-line distance in points
-  capHeight: 8,   // cap-height of the body font at body size
-};
-
-const renderedDoc = layoutDocument(composed, measurer, grid);
+const doc = { paragraphs: [...], frames };
+const composed    = composeDocument(doc, composer);
+const renderedDoc = layoutDocument(composed, frames, measurer);
 ```
 
 ---

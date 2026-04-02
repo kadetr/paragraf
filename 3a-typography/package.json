@@ -2,6 +2,20 @@
   "name": "@paragraf/typography",
   "version": "0.3.0",
   "description": "Paragraph compositor, optical margin alignment, and document model for the paragraf typesetter.",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/kadetr/paragraf.git",
+    "directory": "3a-typography"
+  },
+  "homepage": "https://github.com/kadetr/paragraf/tree/main/3a-typography#readme",
+  "keywords": [
+    "typography",
+    "typesetting",
+    "knuth-plass",
+    "line-breaking",
+    "paragraf"
+  ],
   "type": "module",
   "files": [
     "dist/",
@@ -20,16 +34,17 @@
   },
   "scripts": {
     "build": "tsup",
+    "prepublishOnly": "npm run build",
     "test": "vitest run",
     "test:watch": "vitest",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@paragraf/types": "*",
-    "@paragraf/linebreak": "*",
-    "@paragraf/font-engine": "*",
-    "@paragraf/shaping-wasm": "*",
-    "@paragraf/render-core": "*"
+    "@paragraf/types": "^0.3.0",
+    "@paragraf/linebreak": "^0.3.0",
+    "@paragraf/font-engine": "^0.3.0",
+    "@paragraf/shaping-wasm": "^0.3.0",
+    "@paragraf/render-core": "^0.3.0"
   },
   "devDependencies": {
     "@types/node": "^22.19.15",

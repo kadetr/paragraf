@@ -2,6 +2,20 @@
   "name": "@paragraf/shaping-wasm",
   "version": "0.3.0",
   "description": "Rust/WASM shaping engine for the paragraf typesetter.",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/kadetr/paragraf.git",
+    "directory": "2a-shaping-wasm"
+  },
+  "homepage": "https://github.com/kadetr/paragraf/tree/main/2a-shaping-wasm#readme",
+  "keywords": [
+    "typography",
+    "typesetting",
+    "wasm",
+    "shaping",
+    "paragraf"
+  ],
   "type": "module",
   "files": [
     "dist/",
@@ -21,13 +35,14 @@
   },
   "scripts": {
     "build": "tsup",
+    "prepublishOnly": "npm run build",
     "test": "vitest run",
     "test:watch": "vitest",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@paragraf/types": "*",
-    "@paragraf/font-engine": "*"
+    "@paragraf/types": "^0.3.0",
+    "@paragraf/font-engine": "^0.3.0"
   },
   "devDependencies": {
     "@types/node": "^22.19.15",

@@ -2,6 +2,19 @@
   "name": "@paragraf/render-pdf",
   "version": "0.3.0",
   "description": "PDF rendering backend for the paragraf typesetter.",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/kadetr/paragraf.git",
+    "directory": "3b-render-pdf"
+  },
+  "homepage": "https://github.com/kadetr/paragraf/tree/main/3b-render-pdf#readme",
+  "keywords": [
+    "typography",
+    "typesetting",
+    "pdf",
+    "paragraf"
+  ],
   "type": "module",
   "files": [
     "dist/",
@@ -20,14 +33,15 @@
   },
   "scripts": {
     "build": "tsup",
+    "prepublishOnly": "npm run build",
     "test": "vitest run",
     "test:watch": "vitest",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@paragraf/types": "*",
-    "@paragraf/font-engine": "*",
-    "@paragraf/render-core": "*",
+    "@paragraf/types": "^0.3.0",
+    "@paragraf/font-engine": "^0.3.0",
+    "@paragraf/render-core": "^0.3.0",
     "pdfkit": "^0.18.0"
   },
   "devDependencies": {

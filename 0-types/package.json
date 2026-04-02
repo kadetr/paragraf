@@ -2,6 +2,18 @@
   "name": "@paragraf/types",
   "version": "0.3.0",
   "description": "Shared TypeScript interfaces and constants for the paragraf typography library",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/kadetr/paragraf.git",
+    "directory": "0-types"
+  },
+  "homepage": "https://github.com/kadetr/paragraf/tree/main/0-types#readme",
+  "keywords": [
+    "typography",
+    "typesetting",
+    "paragraf"
+  ],
   "type": "module",
   "files": [
     "dist/",
@@ -20,6 +32,7 @@
   },
   "scripts": {
     "build": "tsup",
+    "prepublishOnly": "npm run build",
     "typecheck": "tsc --noEmit"
   },
   "devDependencies": {

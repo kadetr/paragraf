@@ -33,7 +33,7 @@ const registry = new Map([
 
 const composer   = await createParagraphComposer(registry);
 const engine     = await createDefaultFontEngine(registry);
-const measurer   = await createMeasurer(registry);
+const measurer   = createMeasurer(registry);
 
 const { lines } = composer.compose({
   text: 'The quick brown fox jumps over the lazy dog.',
@@ -57,15 +57,15 @@ See [docs/getting-started.md](docs/getting-started.md) for a full walkthrough.
   │   0-color    │          │   0-types   │
   │  (in progess)│          └──────┬──────┘
   └──────────────┘    ┌────────────┴────────────┐
-                       ▼                         ▼
+                      ▼                         ▼
             ┌──────────────────┐     ┌──────────────────┐
             │  1a-linebreak    │     │  1b-font-engine  │
             └────────┬─────────┘     └────────┬─────────┘
-                     │                ┌────────┴────────┐
+                     │                ┌───────┴────────-┐
                      │                ▼                 ▼
                      │  ┌──────────────────┐  ┌──────────────────┐
                      │  │ 2a-shaping-wasm  │  │  2b-render-core  │
-                     │  └────────┬─────────┘  └────┬─────────────┘
+                     │  └────────┬─────────┘  └────-┬────────────┘
                      │           │                  │
                      └───────────┤    ┌─────────────┤
                                  ▼    ▼             ▼

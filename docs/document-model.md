@@ -307,7 +307,7 @@ const doc: Document = {
 };
 
 const composer  = await createParagraphComposer(registry);
-const measurer  = await createMeasurer(registry);
+const measurer  = createMeasurer(registry);
 const fontEngine = await createDefaultFontEngine(registry);
 
 const composed     = composeDocument(doc, composer);

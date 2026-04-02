@@ -40,8 +40,13 @@ The serialized binary protocol (used by `@paragraf/typography` internally):
 ```ts
 import { serializeNodesToBinary, tracebackWasmBinary } from '@paragraf/shaping-wasm';
 
-const { f64s, u8s } = serializeNodesToBinary(nodes);
-const lines = tracebackWasmBinary(binaryResult, nodes, paragraph);
+const [f64s, u8s] = serializeNodesToBinary(nodes);
+
+const result = tracebackWasmBinary(wasm, nodes, lineWidth, tolerance,
+  emergencyStretch, looseness, widowPenalty, orphanPenalty,
+  consecutiveHyphenLimit, lineWidths);
+if ('error' in result) throw new Error(result.error);
+const { breaks, usedEmergency } = result.ok;
 ```
 
 ## WASM build

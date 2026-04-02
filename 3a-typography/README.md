@@ -87,17 +87,20 @@ const { lines } = composer.compose({ text: '...', font, lineWidth: 396, language
 import { composeDocument, layoutDocument } from '@paragraf/typography';
 import { createMeasurer }                  from '@paragraf/font-engine';
 
-const measurer = await createMeasurer(registry);
+const measurer = createMeasurer(registry);
 
-const doc = {
+const doc: Document = {
   paragraphs: [...],
-  frames: [{ x: 72, y: 72, width: 396, height: 648 }],
-  baselineGrid: { leading: 14, capHeight: 8 },
+  // baseline grid lives on each Frame, not on Document:
+  frames: [{ page: 0, x: 72, y: 72, width: 396, height: 648 }],
+  // with baseline grid:
+  // frames: [{ page: 0, x: 72, y: 72, width: 396, height: 648,
+  //            grid: { first: 9, interval: 14 } }],
 };
 
-const composed = composeDocument(doc, composer);
-const rendered = layoutDocument(composed, measurer);
-// rendered.pages: RenderedPage[]
+const composed    = composeDocument(doc, composer);
+const renderedDoc = layoutDocument(composed, doc.frames, measurer);
+// renderedDoc.pages: RenderedPage[]
 ```
 
 ## WASM status

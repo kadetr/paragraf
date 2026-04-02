@@ -24,7 +24,7 @@ const registry: FontRegistry = new Map([
   ['regular', { id: 'regular', face: 'SourceSerif4', filePath: './fonts/SourceSerif4-Regular.ttf' }],
 ]);
 
-const measurer = await createMeasurer(registry);
+const measurer = createMeasurer(registry);
 const rendered = layoutParagraph(composedParagraph, measurer, { x: 72, y: 72 });
 // rendered: RenderedParagraph — array of RenderedLine
 ```
@@ -73,14 +73,19 @@ renderToCanvas(rendered, fontEngine, ctx); // HTMLCanvasElement 2D context
 import type { BaselineGrid, Frame, RenderedPage, RenderedDocument } from '@paragraf/render-core';
 
 interface BaselineGrid {
-  leading: number;    // line-to-line distance
-  capHeight: number;  // cap-height of the primary font at primary size
+  first: number;             // offset from frame.y to first grid line in points
+  interval: number;          // distance between grid lines in points
 }
 
 interface Frame {
+  page: number;               // 0-based page index
   x: number;
   y: number;
   width: number;
   height: number;
+  columnCount?: number;       // default 1
+  gutter?: number;            // inter-column gap in points; default 0
+  grid?: BaselineGrid;
+  paragraphSpacing?: number;  // space below each paragraph; default 0
 }
 ```

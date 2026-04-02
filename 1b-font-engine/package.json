@@ -2,6 +2,20 @@
   "name": "@paragraf/font-engine",
   "version": "0.3.0",
   "description": "Font metrics abstraction, fontkit adapter, and measurer factory for the paragraf typesetter.",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/kadetr/paragraf.git",
+    "directory": "1b-font-engine"
+  },
+  "homepage": "https://github.com/kadetr/paragraf/tree/main/1b-font-engine#readme",
+  "keywords": [
+    "typography",
+    "typesetting",
+    "font",
+    "fontkit",
+    "paragraf"
+  ],
   "type": "module",
   "files": [
     "dist/",
@@ -20,12 +34,13 @@
   },
   "scripts": {
     "build": "tsup",
+    "prepublishOnly": "npm run build",
     "test": "vitest run",
     "test:watch": "vitest",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@paragraf/types": "*",
+    "@paragraf/types": "^0.3.0",
     "fontkit": "^2.0.4"
   },
   "devDependencies": {

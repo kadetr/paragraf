@@ -74,7 +74,7 @@ const registry = new Map([
 
 const composer    = await createParagraphComposer(registry);
 const fontEngine  = await createDefaultFontEngine(registry);
-const measurer    = await createMeasurer(registry);
+const measurer    = createMeasurer(registry);
 
 const { lines } = composer.compose({
   text: 'The quick brown fox jumps over the lazy dog.',
