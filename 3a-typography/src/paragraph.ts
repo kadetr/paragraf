@@ -379,6 +379,11 @@ export const createParagraphComposer = async (
 
     // Detect paragraph direction.
     // RTL paragraphs bypass language loading and hyphenation for v0.8.
+    if (spans && text) {
+      console.warn(
+        '[paragraf] compose(): both `text` and `spans` provided — `spans` takes precedence and `text` is ignored.',
+      );
+    }
     const sourceText = spans ? spans.map((s) => s.text).join('') : text;
     const direction: 'ltr' | 'rtl' = useWasm
       ? getDirectionViaWasm(sourceText)

@@ -36,6 +36,7 @@ const ALL_SCRIPTS = [
   'mt-20-tolerance',
   'mt-21-looseness',
   'mt-22-alignment-modes',
+  'mt-23-selectable-pdf',
 ];
 
 const filter = process.argv.slice(2);

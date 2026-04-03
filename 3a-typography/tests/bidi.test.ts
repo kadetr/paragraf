@@ -3,6 +3,12 @@
 
 import * as path from 'path';
 import { describe, it, expect, beforeAll } from 'vitest';
+
+// itWasm: skips the test (shows as SKIP in the reporter) when WASM is absent.
+// Using bare `return` inside an it() would show a false green dot instead.
+// Evaluated once at module load time — WASM status is fixed at startup.
+const wasmLoaded = () => wasmStatus().status === 'loaded';
+const itWasm = it.skipIf(wasmStatus().status !== 'loaded');
 import {
   createParagraphComposer,
   ParagraphComposer,
@@ -142,12 +148,11 @@ describe('RTL paragraph composition', () => {
   let composer: ParagraphComposer;
 
   beforeAll(async () => {
-    if (wasmStatus().status !== 'loaded') return;
+    if (!wasmLoaded()) return;
     composer = await createParagraphComposer(REGISTRY);
   });
 
-  it('Hebrew paragraph → ComposedLine.direction === "rtl"', () => {
-    if (wasmStatus().status !== 'loaded') return;
+  itWasm('Hebrew paragraph → ComposedLine.direction === "rtl"', () => {
     const out = composer.compose({
       text: 'שלום עולם זה טקסט בעברית',
       font: FONT_HE,
@@ -159,8 +164,7 @@ describe('RTL paragraph composition', () => {
     }
   });
 
-  it('Arabic paragraph → ComposedLine.direction === "rtl"', () => {
-    if (wasmStatus().status !== 'loaded') return;
+  itWasm('Arabic paragraph → ComposedLine.direction === "rtl"', () => {
     const out = composer.compose({
       text: 'مرحبا بالعالم هذا نص عربي',
       font: FONT_AR,
@@ -172,8 +176,7 @@ describe('RTL paragraph composition', () => {
     }
   });
 
-  it('English paragraph → ComposedLine.direction === "ltr"', () => {
-    if (wasmStatus().status !== 'loaded') return;
+  itWasm('English paragraph → ComposedLine.direction === "ltr"', () => {
     const out = composer.compose({
       text: 'Hello world this is an English paragraph with multiple words',
       font: FONT_EN,
@@ -185,35 +188,35 @@ describe('RTL paragraph composition', () => {
     }
   });
 
-  it('RTL single-word paragraph — does not throw', () => {
-    if (wasmStatus().status !== 'loaded') return;
+  itWasm('RTL single-word paragraph — does not throw', () => {
     expect(() =>
       composer.compose({ text: 'שלום', font: FONT_HE, lineWidth: 200 }),
     ).not.toThrow();
   });
 
-  it('RTL paragraph with spans input — throws informative error', () => {
-    if (wasmStatus().status !== 'loaded') return;
+  itWasm('RTL paragraph with spans input — throws informative error', () => {
     const spans: TextSpan[] = [{ text: 'שלום', font: FONT_HE }];
     expect(() =>
       composer.compose({ spans, font: FONT_HE, lineWidth: 200 }),
     ).toThrow('[paragraf] RTL paragraphs do not support span input yet');
   });
 
-  it('RTL paragraph with narrow lineWidth — correctly breaks into multiple lines', () => {
-    if (wasmStatus().status !== 'loaded') return;
-    const out = composer.compose({
-      text: 'שלום עולם ברוך הבא אל הטקסט',
-      font: FONT_HE,
-      lineWidth: 120,
-      tolerance: 5,
-      emergencyStretch: 20,
-    });
-    expect(out.lines.length).toBeGreaterThan(1);
-    for (const line of out.lines) {
-      expect(line.direction).toBe('rtl');
-    }
-  });
+  itWasm(
+    'RTL paragraph with narrow lineWidth — correctly breaks into multiple lines',
+    () => {
+      const out = composer.compose({
+        text: 'שלום עולם ברוך הבא אל הטקסט',
+        font: FONT_HE,
+        lineWidth: 120,
+        tolerance: 5,
+        emergencyStretch: 20,
+      });
+      expect(out.lines.length).toBeGreaterThan(1);
+      for (const line of out.lines) {
+        expect(line.direction).toBe('rtl');
+      }
+    },
+  );
 });
 
 // ─── Phase 3: visual reordering in layoutParagraph ───────────────────────────
@@ -223,82 +226,90 @@ describe('RTL visual reordering in layoutParagraph', () => {
   let measurer: Measurer;
 
   beforeAll(async () => {
-    if (wasmStatus().status !== 'loaded') return;
+    if (!wasmLoaded()) return;
     const { createMeasurer } = await import('@paragraf/font-engine');
     measurer = createMeasurer(REGISTRY);
     composer = await createParagraphComposer(REGISTRY);
   });
 
-  it('RTL line: first segment x > second segment x (right-to-left visual order)', () => {
-    if (wasmStatus().status !== 'loaded') return;
-    // At least two words needed to test ordering
-    const out = composer.compose({
-      text: 'שלום עולם',
-      font: FONT_HE,
-      lineWidth: 300,
-    });
-    // Ensure both words fit on one line
-    expect(out.lines.length).toBe(1);
+  itWasm(
+    'RTL line: first segment x > second segment x (right-to-left visual order)',
+    () => {
+      // At least two words needed to test ordering
+      const out = composer.compose({
+        text: 'שלום עולם',
+        font: FONT_HE,
+        lineWidth: 300,
+      });
+      // Ensure both words fit on one line
+      expect(out.lines.length).toBe(1);
 
-    const rendered = layoutParagraph(out.lines, measurer, { x: 0, y: 0 });
-    const lineSegs = rendered[0].segments;
-    expect(lineSegs.length).toBeGreaterThanOrEqual(2);
-    // Visual order: first rendered segment (rightmost word) has greater x
-    expect(lineSegs[0].x).toBeGreaterThan(lineSegs[1].x);
-  });
+      const rendered = layoutParagraph(out.lines, measurer, { x: 0, y: 0 });
+      const lineSegs = rendered[0].segments;
+      expect(lineSegs.length).toBeGreaterThanOrEqual(2);
+      // Visual order: first rendered segment (rightmost word) has greater x
+      expect(lineSegs[0].x).toBeGreaterThan(lineSegs[1].x);
+    },
+  );
 
-  it('LTR line: first segment x < second segment x (left-to-right visual order)', () => {
-    if (wasmStatus().status !== 'loaded') return;
-    const out = composer.compose({
-      text: 'Hello world',
-      font: FONT_EN,
-      lineWidth: 300,
-    });
-    expect(out.lines.length).toBe(1);
+  itWasm(
+    'LTR line: first segment x < second segment x (left-to-right visual order)',
+    () => {
+      const out = composer.compose({
+        text: 'Hello world',
+        font: FONT_EN,
+        lineWidth: 300,
+      });
+      expect(out.lines.length).toBe(1);
 
-    const rendered = layoutParagraph(out.lines, measurer, { x: 0, y: 0 });
-    const lineSegs = rendered[0].segments;
-    expect(lineSegs.length).toBeGreaterThanOrEqual(2);
-    // LTR: first segment on the left, increasing x
-    expect(lineSegs[0].x).toBeLessThan(lineSegs[1].x);
-  });
+      const rendered = layoutParagraph(out.lines, measurer, { x: 0, y: 0 });
+      const lineSegs = rendered[0].segments;
+      expect(lineSegs.length).toBeGreaterThanOrEqual(2);
+      // LTR: first segment on the left, increasing x
+      expect(lineSegs[0].x).toBeLessThan(lineSegs[1].x);
+    },
+  );
 
-  it('RTL segment x values are within [origin.x, origin.x + lineWidth]', () => {
-    if (wasmStatus().status !== 'loaded') return;
-    const origin = { x: 10, y: 0 };
-    const lineWidth = 300;
-    const out = composer.compose({
-      text: 'שלום עולם ברוך',
-      font: FONT_HE,
-      lineWidth,
-    });
+  itWasm(
+    'RTL segment x values are within [origin.x, origin.x + lineWidth]',
+    () => {
+      const origin = { x: 10, y: 0 };
+      const lineWidth = 300;
+      const out = composer.compose({
+        text: 'שלום עולם ברוך',
+        font: FONT_HE,
+        lineWidth,
+      });
 
-    const rendered = layoutParagraph(out.lines, measurer, origin);
-    for (const line of rendered) {
-      for (const seg of line.segments) {
-        expect(seg.x).toBeGreaterThanOrEqual(origin.x);
-        expect(seg.x).toBeLessThanOrEqual(origin.x + lineWidth);
+      const rendered = layoutParagraph(out.lines, measurer, origin);
+      for (const line of rendered) {
+        for (const seg of line.segments) {
+          expect(seg.x).toBeGreaterThanOrEqual(origin.x);
+          expect(seg.x).toBeLessThanOrEqual(origin.x + lineWidth);
+        }
       }
-    }
-  });
+    },
+  );
 
-  it('RTL multi-line: all lines have consistent right-to-left segment ordering', () => {
-    if (wasmStatus().status !== 'loaded') return;
-    const out = composer.compose({
-      text: 'שלום עולם ברוך הבא אל הטקסט העברי',
-      font: FONT_HE,
-      lineWidth: 120,
-      tolerance: 5,
-      emergencyStretch: 20,
-    });
-    expect(out.lines.length).toBeGreaterThan(1);
+  itWasm(
+    'RTL multi-line: all lines have consistent right-to-left segment ordering',
+    () => {
+      const out = composer.compose({
+        text: 'שלום עולם ברוך הבא אל הטקסט העברי',
+        font: FONT_HE,
+        lineWidth: 120,
+        tolerance: 5,
+        emergencyStretch: 20,
+      });
+      expect(out.lines.length).toBeGreaterThan(1);
 
-    const rendered = layoutParagraph(out.lines, measurer, { x: 0, y: 0 });
-    for (const line of rendered) {
-      // Lines with 2+ segments: x should be non-increasing (right-to-left)
-      if (line.segments.length >= 2) {
-        expect(line.segments[0].x).toBeGreaterThan(line.segments[1].x);
+      const rendered = layoutParagraph(out.lines, measurer, { x: 0, y: 0 });
+      for (const line of rendered) {
+        // Lines with 2+ segments: x should be non-increasing (right-to-left)
+        if (line.segments.length >= 2) {
+          expect(line.segments[0].x).toBeGreaterThan(line.segments[1].x);
+        }
       }
-    }
-  });
+    },
+  );
 });

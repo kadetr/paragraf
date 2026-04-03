@@ -12,7 +12,7 @@ import {
   SOFT_HYPHEN_PENALTY,
 } from '@paragraf/types';
 import { Measurer } from '@paragraf/types';
-import { HyphenatedWord } from './hyphenate';
+import { HyphenatedWord } from './hyphenate.js';
 
 // ─── Extended input type ──────────────────────────────────────────────────────
 

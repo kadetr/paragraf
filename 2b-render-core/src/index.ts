@@ -3,7 +3,12 @@ export type {
   RenderedLine,
   RenderedParagraph,
 } from './render.js';
-export { layoutParagraph, renderToSvg, renderToCanvas } from './render.js';
+export {
+  layoutParagraph,
+  renderToSvg,
+  renderToCanvas,
+  clearRenderCaches,
+} from './render.js';
 
 export type {
   BaselineGrid,

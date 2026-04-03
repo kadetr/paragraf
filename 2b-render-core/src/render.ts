@@ -107,6 +107,11 @@ const getAndSubstituteGlyphs = (
 
 // unitsPerEm is a font-level property (not size-dependent); cache by fontId only
 const metricsCache = new Map<string, number>();
+
+export function clearRenderCaches(): void {
+  metricsCache.clear();
+}
+
 const getUnitsPerEm = (
   fontEngine: FontEngine,
   fontId: string,

@@ -3,6 +3,8 @@
 import { createRequire } from 'module';
 import { RenderedParagraph, RenderedDocument } from '@paragraf/render-core';
 import { FontEngine } from '@paragraf/font-engine';
+import { FontRegistry } from '@paragraf/types';
+import { emitInvisibleSegment, applyMetadata } from './selectable.js';
 
 let _PDFDocument: any = null;
 const getPDFDocument = (): any => {
@@ -14,6 +16,11 @@ const getPDFDocument = (): any => {
 
 // unitsPerEm is a font-level property (not size-dependent); cache by fontId only
 const upmCache = new Map<string, number>();
+
+export function clearPdfCaches(): void {
+  upmCache.clear();
+}
+
 const getUnitsPerEm = (
   fontEngine: FontEngine,
   fontId: string,
@@ -34,12 +41,27 @@ export interface PdfOptions {
   width?: number; // page width in points, default 595.28 (A4)
   height?: number; // page height in points, default 841.89 (A4)
   fill?: string; // glyph fill color, default 'black'
+  selectable?: boolean; // add invisible text layer for copy-paste, default false
+  fontRegistry?: FontRegistry; // required when selectable is true
+  title?: string; // PDF document title (Info dict)
+  lang?: string; // document language tag (Info dict)
+  compress?: boolean; // pdfkit compression; defaults to pdfkit's own default
 }
 
 export interface DocumentPdfOptions {
   pageWidth?: number; // default 595.28 (A4)
   pageHeight?: number; // default 841.89 (A4)
   fill?: string; // glyph fill color, default 'black'
+  selectable?: boolean; // add invisible text layer for copy-paste, default false
+  fontRegistry?: FontRegistry; // required when selectable is true
+  title?: string; // PDF document title (Info dict)
+  lang?: string; // document language tag (Info dict)
+  compress?: boolean; // pdfkit compression; defaults to pdfkit's own default
+}
+
+// Internal: opts passed through to drawRenderedParagraph
+interface SelectableOpts {
+  fontRegistry: FontRegistry;
 }
 
 // ─── Shared drawing helper ────────────────────────────────────────────────────
@@ -53,6 +75,7 @@ function drawRenderedParagraph(
   rendered: RenderedParagraph,
   fontEngine: FontEngine,
   fill: string,
+  selectableOpts?: SelectableOpts,
 ): void {
   for (const line of rendered) {
     for (const seg of line.segments) {
@@ -133,6 +156,18 @@ function drawRenderedParagraph(
           gx += letterSpacing;
         }
       }
+
+      if (selectableOpts) {
+        emitInvisibleSegment(
+          doc,
+          seg.text,
+          seg.x,
+          seg.y,
+          seg.font.id,
+          seg.font.size,
+          selectableOpts.fontRegistry,
+        );
+      }
     }
   }
 }
@@ -150,17 +185,41 @@ export const renderToPdf = (
   fontEngine: FontEngine,
   options: PdfOptions = {},
 ): Promise<Buffer> => {
-  const { width = 595.28, height = 841.89, fill = 'black' } = options;
+  const {
+    width = 595.28,
+    height = 841.89,
+    fill = 'black',
+    selectable = false,
+    fontRegistry,
+    title,
+    lang,
+    compress,
+  } = options;
+
+  if (selectable && !fontRegistry) {
+    return Promise.reject(
+      new Error(
+        'renderToPdf: fontRegistry is required when selectable is true',
+      ),
+    );
+  }
 
   const PDFDocument = getPDFDocument();
-  const doc: any = new PDFDocument({ size: [width, height] });
+  const pdfOpts: Record<string, unknown> = { size: [width, height] };
+  if (compress !== undefined) pdfOpts['compress'] = compress;
+  const doc: any = new PDFDocument(pdfOpts);
   const chunks: Buffer[] = [];
   doc.on('data', (chunk: Buffer) => chunks.push(chunk));
+
+  if (title || lang) applyMetadata(doc, title, lang);
+
+  const selectableOpts =
+    selectable && fontRegistry ? { fontRegistry } : undefined;
 
   return new Promise<Buffer>((resolve, reject) => {
     doc.on('end', () => resolve(Buffer.concat(chunks)));
     doc.on('error', reject);
-    drawRenderedParagraph(doc, rendered, fontEngine, fill);
+    drawRenderedParagraph(doc, rendered, fontEngine, fill, selectableOpts);
     doc.end();
   });
 };
@@ -177,15 +236,39 @@ export const renderDocumentToPdf = (
   fontEngine: FontEngine,
   options: DocumentPdfOptions = {},
 ): Promise<Buffer> => {
-  const { pageWidth = 595.28, pageHeight = 841.89, fill = 'black' } = options;
+  const {
+    pageWidth = 595.28,
+    pageHeight = 841.89,
+    fill = 'black',
+    selectable = false,
+    fontRegistry,
+    title,
+    lang,
+    compress,
+  } = options;
+
+  if (selectable && !fontRegistry) {
+    return Promise.reject(
+      new Error(
+        'renderDocumentToPdf: fontRegistry is required when selectable is true',
+      ),
+    );
+  }
 
   const PDFDocument = getPDFDocument();
-  const doc: any = new PDFDocument({
+  const pdfOpts: Record<string, unknown> = {
     size: [pageWidth, pageHeight],
     autoFirstPage: false,
-  });
+  };
+  if (compress !== undefined) pdfOpts['compress'] = compress;
+  const doc: any = new PDFDocument(pdfOpts);
   const chunks: Buffer[] = [];
   doc.on('data', (chunk: Buffer) => chunks.push(chunk));
+
+  if (title || lang) applyMetadata(doc, title, lang);
+
+  const selectableOpts =
+    selectable && fontRegistry ? { fontRegistry } : undefined;
 
   return new Promise<Buffer>((resolve, reject) => {
     doc.on('end', () => resolve(Buffer.concat(chunks)));
@@ -195,7 +278,13 @@ export const renderDocumentToPdf = (
       doc.addPage({ size: [pageWidth, pageHeight] });
       const page = renderedDoc.pages[pi];
       for (const item of page.items) {
-        drawRenderedParagraph(doc, item.rendered, fontEngine, fill);
+        drawRenderedParagraph(
+          doc,
+          item.rendered,
+          fontEngine,
+          fill,
+          selectableOpts,
+        );
       }
     }
 

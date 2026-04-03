@@ -30,6 +30,10 @@ export interface Font {
 
 export interface FontDescriptor {
   id: FontId;
+  /**
+   * Human-readable font family name. Provided for identification purposes only.
+   * @remarks Not currently read by any engine for glyph lookup or substitution.
+   */
   face: string;
   filePath: string;
 }

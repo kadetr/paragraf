@@ -10,7 +10,7 @@ import {
   SpanSegment,
   GetFontMetrics,
 } from '@paragraf/types';
-import { LineBreak } from './traceback';
+import { LineBreak } from './traceback.js';
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 

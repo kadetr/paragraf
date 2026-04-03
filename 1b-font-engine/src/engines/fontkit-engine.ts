@@ -7,11 +7,25 @@ import { Font, FontMetrics } from '@paragraf/types';
 
 export class FontkitEngine implements FontEngine {
   private fontCache = new Map<string, any>();
+  private fontPathCache = new Map<string, string>();
 
   async loadFont(id: string, path: string): Promise<void> {
+    if (this.fontCache.has(id)) {
+      // The font is already loaded. Silently skip — but warn if caller
+      // is trying to register a different file path under the same id.
+      const existing = this.fontPathCache.get(id);
+      if (existing !== undefined && existing !== path) {
+        console.warn(
+          `[paragraf] loadFont(): font id "${id}" is already registered with path "${existing}". ` +
+            `Ignoring re-registration with path "${path}". Use a unique id per font file.`,
+        );
+      }
+      return;
+    }
     try {
       const font = fontkitOpenSync(path);
       this.fontCache.set(id, font);
+      this.fontPathCache.set(id, path);
     } catch (err) {
       throw new Error(
         `Failed to load font "${id}" from "${path}": ${

@@ -1,2 +1,2 @@
-export { renderToPdf, renderDocumentToPdf } from './pdf.js';
+export { renderToPdf, renderDocumentToPdf, clearPdfCaches } from './pdf.js';
 export type { PdfOptions, DocumentPdfOptions } from './pdf.js';

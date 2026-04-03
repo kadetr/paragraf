@@ -1,0 +1,37 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      # Fonts are committed to the repository under fonts/.
+      # This step verifies that all files are present and match their expected
+      # SHA-256 hashes, catching any accidental corruption or truncation.
+      - name: Verify fonts
+        run: npm run verify-fonts
+
+      - name: Build packages
+        run: npm run build
+
+      - name: Run unit tests (all workspaces)
+        run: npm test --workspaces --if-present
+
+      - name: Run e2e tests
+        run: npm run test:e2e
