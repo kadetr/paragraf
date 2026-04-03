@@ -1,0 +1,11 @@
+{
+  "name": "knuth-plass-wasm",
+  "version": "0.1.0",
+  "files": [
+    "knuth_plass_wasm_bg.wasm",
+    "knuth_plass_wasm.js",
+    "knuth_plass_wasm.d.ts"
+  ],
+  "main": "knuth_plass_wasm.js",
+  "types": "knuth_plass_wasm.d.ts"
+}
