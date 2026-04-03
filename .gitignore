@@ -5,4 +5,5 @@ dist/
 wasm/target/
 coverage/
 tests/manual/outputs/
-kdt-notes.md
+output/
+internal/

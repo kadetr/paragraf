@@ -20,6 +20,7 @@
   "files": [
     "dist/",
     "wasm/pkg/",
+    "wasm/pkg-bundler/",
     "README.md"
   ],
   "exports": {

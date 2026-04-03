@@ -1,0 +1,11 @@
+TODO LIST
+- manual tests
+- different font tests
+- readme for each package
+- getting started for each package
+- html/css usage
+- document model explanation
+- input/output schemas per package
+- pdf selectable text
+- html/css, docx adapters
+- default fonts, pages

@@ -33,6 +33,14 @@ export class WasmFontEngine implements FontEngine {
   }
 
   /**
+   * Browser-compatible alternative to loadFont().
+   * Registers raw font bytes (e.g. from fetch().arrayBuffer()) without fs access.
+   */
+  loadFontBytes(id: string, bytes: Uint8Array): void {
+    this.wasm.register_font(id, bytes);
+  }
+
+  /**
    * Shape `text` using rustybuzz, returning per-glyph info in font units.
    * `font` provides the font id, variant, and letter spacing.
    * When omitted, falls back to normal shaping (liga/rlig, no sups/subs).

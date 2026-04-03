@@ -1,0 +1,1 @@
+/Users/kemaldenizteket/cs/2026-projects/paragraf/2a-shaping-wasm/wasm/target/wasm32-unknown-unknown/release/libknuth_plass_wasm.rlib: /Users/kemaldenizteket/cs/2026-projects/paragraf/2a-shaping-wasm/wasm/src/lib.rs
