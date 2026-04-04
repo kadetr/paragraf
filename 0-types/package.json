@@ -33,7 +33,9 @@
   "scripts": {
     "build": "tsup",
     "prepublishOnly": "npm run build",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "prepack": "node ../scripts/publishconfig-swap.mjs apply",
+    "postpack": "node ../scripts/publishconfig-swap.mjs restore"
   },
   "devDependencies": {
     "typescript": "^5.4.0"

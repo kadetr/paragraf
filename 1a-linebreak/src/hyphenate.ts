@@ -38,29 +38,31 @@ export const deriveMinRight = (fontSize: number): number =>
 
 // ─── Pattern map ─────────────────────────────────────────────────────────────
 
+// Node.js ESM strict resolution requires explicit .js extensions for deep
+// imports into CJS packages (like `hyphen`) that have no exports map.
 const PATTERN_LOADERS: Record<Language, () => Promise<any>> = {
-  'en-us': () => import('hyphen/patterns/en-us'),
-  'en-gb': () => import('hyphen/patterns/en-gb'),
-  de: () => import('hyphen/patterns/de-1996'),
-  fr: () => import('hyphen/patterns/fr'),
-  tr: () => import('hyphen/patterns/tr'),
-  nl: () => import('hyphen/patterns/nl'),
-  pl: () => import('hyphen/patterns/pl'),
-  it: () => import('hyphen/patterns/it'),
-  es: () => import('hyphen/patterns/es'),
-  sv: () => import('hyphen/patterns/sv'),
-  no: () => import('hyphen/patterns/no'),
-  da: () => import('hyphen/patterns/da'),
-  fi: () => import('hyphen/patterns/fi'),
-  hu: () => import('hyphen/patterns/hu'),
-  cs: () => import('hyphen/patterns/cs'),
-  sk: () => import('hyphen/patterns/sk'),
-  ro: () => import('hyphen/patterns/ro'),
-  hr: () => import('hyphen/patterns/hr'),
-  sl: () => import('hyphen/patterns/sl'),
-  lt: () => import('hyphen/patterns/lt'),
-  lv: () => import('hyphen/patterns/lv'),
-  et: () => import('hyphen/patterns/et'),
+  'en-us': () => import('hyphen/patterns/en-us.js'),
+  'en-gb': () => import('hyphen/patterns/en-gb.js'),
+  de: () => import('hyphen/patterns/de-1996.js'),
+  fr: () => import('hyphen/patterns/fr.js'),
+  tr: () => import('hyphen/patterns/tr.js'),
+  nl: () => import('hyphen/patterns/nl.js'),
+  pl: () => import('hyphen/patterns/pl.js'),
+  it: () => import('hyphen/patterns/it.js'),
+  es: () => import('hyphen/patterns/es.js'),
+  sv: () => import('hyphen/patterns/sv.js'),
+  no: () => import('hyphen/patterns/no.js'),
+  da: () => import('hyphen/patterns/da.js'),
+  fi: () => import('hyphen/patterns/fi.js'),
+  hu: () => import('hyphen/patterns/hu.js'),
+  cs: () => import('hyphen/patterns/cs.js'),
+  sk: () => import('hyphen/patterns/sk.js'),
+  ro: () => import('hyphen/patterns/ro.js'),
+  hr: () => import('hyphen/patterns/hr.js'),
+  sl: () => import('hyphen/patterns/sl.js'),
+  lt: () => import('hyphen/patterns/lt.js'),
+  lv: () => import('hyphen/patterns/lv.js'),
+  et: () => import('hyphen/patterns/et.js'),
 };
 
 // ─── Hyphenator cache ─────────────────────────────────────────────────────────

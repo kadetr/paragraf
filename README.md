@@ -1,5 +1,7 @@
 # paragraf
 
+[![CI](https://github.com/kadetr/paragraf/actions/workflows/ci.yml/badge.svg)](https://github.com/kadetr/paragraf/actions/workflows/ci.yml)
+
 **Publication-quality typesetting in JavaScript.** Knuth-Plass optimal line breaking, OpenType shaping via Rust/WASM, 22-language hyphenation, Unicode BiDi, optical margin alignment, and multi-frame document composition — outputting SVG, Canvas, or PDF.
 
 **[→ Live demo](https://kadetr.github.io/paragraf/)**
@@ -129,7 +131,7 @@ document.getElementById('output').innerHTML = renderToSvg(rendered, engine, { wi
 
 ```bash
 npm install        # install all workspace dependencies
-npm test           # 533 tests across all packages
+npm test           # 483 tests across all packages
 npm run build      # build all packages to dist/
 ```
 

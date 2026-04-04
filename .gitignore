@@ -1,5 +1,6 @@
 node_modules/
 dist/
+*.tgz
 *.zip
 .DS_Store
 2a-shaping-wasm/wasm/target/
