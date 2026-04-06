@@ -6,6 +6,7 @@
 - `defineCharStyles` factory with `CharStyleRegistry` (flat character overrides)
 - Types: `ParagraphStyleDef`, `CharStyleDef`, `ResolvedParagraphStyle`, `ResolvedCharStyle`
 - `FontSpec` sourced from `@paragraf/types` v0.5.0 (re-exported for convenience); no longer defined inline
+- Re-exports `FontWeight`, `FontStyle`, `FontStretch`, `FontVariant`, `resolveWeight` from `@paragraf/types` — consumers need no separate `@paragraf/types` import
 - `StyleRegistry.has(name)` — check existence without throwing
 - `CharStyleRegistry.has(name)` — check existence without throwing
 - Built-in defaults expanded: `stretch: 'normal'`, `variant: 'normal'` added alongside existing fields

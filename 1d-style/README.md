@@ -105,6 +105,18 @@ Creates a `CharStyleRegistry` from a map of named `CharStyleDef` objects. No inh
 | `has(name)` | Returns `true` if a char style with this name exists. |
 | `names()` | Returns all defined char style names. |
 
+### Re-exported font types
+
+`@paragraf/style` re-exports the following from `@paragraf/types` so that consumers do not need a separate `@paragraf/types` import:
+
+| Export | Kind | Description |
+|---|---|---|
+| `FontWeight` | type | `number \| 'thin' \| 'light' \| 'bold'` … — authoring weight |
+| `FontStyle` | type | `'normal' \| 'italic' \| 'oblique'` |
+| `FontStretch` | type | `'condensed' \| 'normal' \| 'expanded'` … |
+| `FontVariant` | type | `'normal' \| 'superscript' \| 'subscript'` |
+| `resolveWeight(w)` | function | Converts a `FontWeight` to its numeric equivalent |
+
 ---
 
 ### `ParagraphStyleDef` fields
