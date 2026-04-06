@@ -19,6 +19,7 @@
     "2b-render-core",
     "3a-typography",
     "3b-render-pdf",
+    "4a-template",
     "demo"
   ],
   "devDependencies": {

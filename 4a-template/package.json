@@ -1,0 +1,53 @@
+{
+  "name": "@paragraf/template",
+  "version": "0.1.0",
+  "description": "Document schema and content slot definitions for the paragraf typesetter.",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/kadetr/paragraf.git",
+    "directory": "4a-template"
+  },
+  "homepage": "https://github.com/kadetr/paragraf/tree/main/4a-template#readme",
+  "keywords": [
+    "typography",
+    "typesetting",
+    "template",
+    "paragraf"
+  ],
+  "type": "module",
+  "files": [
+    "dist/",
+    "README.md"
+  ],
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "publishConfig": {
+    "exports": {
+      ".": {
+        "import": "./dist/index.js",
+        "types": "./dist/index.d.ts"
+      }
+    }
+  },
+  "scripts": {
+    "build": "tsup",
+    "prepublishOnly": "npm run build",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "typecheck": "tsc --noEmit",
+    "prepack": "node ../scripts/publishconfig-swap.mjs apply",
+    "postpack": "node ../scripts/publishconfig-swap.mjs restore"
+  },
+  "dependencies": {
+    "@paragraf/layout": "^0.4.0",
+    "@paragraf/style": "^0.4.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.19.15",
+    "tsup": "^8.5.1",
+    "typescript": "^5.4.0",
+    "vitest": "^3.2.4"
+  }
+}
