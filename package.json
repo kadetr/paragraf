@@ -13,6 +13,7 @@
     "0-types",
     "1a-linebreak",
     "1b-font-engine",
+    "1c-layout",
     "1d-style",
     "2a-shaping-wasm",
     "2b-render-core",

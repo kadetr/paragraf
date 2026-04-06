@@ -1,19 +1,20 @@
 {
-  "name": "@paragraf/font-engine",
-  "version": "0.3.0",
-  "description": "Font metrics abstraction, fontkit adapter, and measurer factory for the paragraf typesetter.",
+  "name": "@paragraf/layout",
+  "version": "0.4.0",
+  "description": "Page geometry, unit converters, and named page sizes for the paragraf typesetter.",
   "license": "MIT",
   "repository": {
     "type": "git",
     "url": "https://github.com/kadetr/paragraf.git",
-    "directory": "1b-font-engine"
+    "directory": "1c-layout"
   },
-  "homepage": "https://github.com/kadetr/paragraf/tree/main/1b-font-engine#readme",
+  "homepage": "https://github.com/kadetr/paragraf/tree/main/1c-layout#readme",
   "keywords": [
     "typography",
     "typesetting",
-    "font",
-    "fontkit",
+    "layout",
+    "page",
+    "geometry",
     "paragraf"
   ],
   "type": "module",
@@ -42,13 +43,11 @@
     "postpack": "node ../scripts/publishconfig-swap.mjs restore"
   },
   "dependencies": {
-    "@paragraf/types": "^0.4.0",
-    "fontkit": "^2.0.4"
+    "@paragraf/types": "^0.4.0"
   },
   "devDependencies": {
-    "@types/fontkit": "^2.0.9",
     "@types/node": "^22.19.15",
-    "tsx": "^4.21.0",
+    "tsup": "^8.5.1",
     "typescript": "^5.4.0",
     "vitest": "^3.2.4"
   }
