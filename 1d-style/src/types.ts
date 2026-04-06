@@ -3,7 +3,7 @@ import type { AlignmentMode, FontStyle, Language } from '@paragraf/types';
 // ─── FontSpec — human-readable font description ───────────────────────────────
 
 export interface FontSpec {
-  family: string; // e.g. 'SourceSerif4'
+  family?: string; // e.g. 'SourceSerif4'; inherited from parent chain if absent
   size?: number; // points
   weight?: number; // 100–900; default 400
   style?: FontStyle; // 'normal' | 'italic' | 'oblique'; default 'normal'

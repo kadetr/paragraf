@@ -126,7 +126,7 @@ Creates a `CharStyleRegistry` from a map of named `CharStyleDef` objects. No inh
 
 | Field | Type | Default | Description |
 |---|---|---|---|
-| `family` | `string` | `''` | Font family name |
+| `family` | `string` | `''` | Font family name; inherited from parent chain if absent |
 | `size` | `number` | `10` | Size in points |
 | `weight` | `number` | `400` | Weight (100–900) |
 | `style` | `FontStyle` | `'normal'` | `'normal'` \| `'italic'` \| `'oblique'` |
