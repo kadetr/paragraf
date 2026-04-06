@@ -219,3 +219,58 @@ describe('FontSpec — stretch field', () => {
     expect(styles.resolve('child').font.stretch).toBe('condensed');
   });
 });
+
+describe('FontSpec — variant field', () => {
+  it('variant defaults to normal when not set', () => {
+    const styles = defineStyles({ body: {} });
+    expect(styles.resolve('body').font.variant).toBe('normal');
+  });
+
+  it('variant set on style survives to resolved output', () => {
+    const styles = defineStyles({
+      sups: { font: { variant: 'superscript' } },
+    });
+    expect(styles.resolve('sups').font.variant).toBe('superscript');
+  });
+
+  it('variant is inherited field-by-field through chain', () => {
+    const styles = defineStyles({
+      root: { font: { variant: 'subscript' } },
+      child: { extends: 'root', font: { size: 8 } },
+    });
+    expect(styles.resolve('child').font.variant).toBe('subscript');
+  });
+
+  it('child can override variant set by parent', () => {
+    const styles = defineStyles({
+      root: { font: { variant: 'superscript' } },
+      child: { extends: 'root', font: { variant: 'normal' } },
+    });
+    expect(styles.resolve('child').font.variant).toBe('normal');
+  });
+});
+
+describe('FontSpec — named FontWeight', () => {
+  it("named weight 'bold' is preserved through resolve()", () => {
+    const styles = defineStyles({
+      heading: { font: { weight: 'bold' } },
+    });
+    expect(styles.resolve('heading').font.weight).toBe('bold');
+  });
+
+  it("named weight 'light' is inherited through chain", () => {
+    const styles = defineStyles({
+      root: { font: { weight: 'light' } },
+      child: { extends: 'root', font: { size: 12 } },
+    });
+    expect(styles.resolve('child').font.weight).toBe('light');
+  });
+
+  it('child can override named weight with numeric weight', () => {
+    const styles = defineStyles({
+      root: { font: { weight: 'bold' } },
+      child: { extends: 'root', font: { weight: 400 } },
+    });
+    expect(styles.resolve('child').font.weight).toBe(400);
+  });
+});

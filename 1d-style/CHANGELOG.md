@@ -1,8 +1,12 @@
 # Changelog
 
-## 0.4.0 — Initial release
+## 0.4.0 — 2026-04-06
 
 - `defineStyles` factory with `StyleRegistry` (paragraph style inheritance, field-by-field font merging, circular dependency detection)
 - `defineCharStyles` factory with `CharStyleRegistry` (flat character overrides)
-- Types: `FontSpec`, `ParagraphStyleDef`, `CharStyleDef`, `ResolvedParagraphStyle`, `ResolvedCharStyle`
-- Built-in defaults: family `''`, size `10`, weight `400`, style `'normal'`, language `'en-us'`, alignment `'justified'`, lineHeight `14`, hyphenation `true`, all spacings `0`, tolerance `2`, looseness `0`
+- Types: `ParagraphStyleDef`, `CharStyleDef`, `ResolvedParagraphStyle`, `ResolvedCharStyle`
+- `FontSpec` sourced from `@paragraf/types` v0.5.0 (re-exported for convenience); no longer defined inline
+- `StyleRegistry.has(name)` — check existence without throwing
+- `CharStyleRegistry.has(name)` — check existence without throwing
+- Built-in defaults expanded: `stretch: 'normal'`, `variant: 'normal'` added alongside existing fields
+- `mergeFont()` now merges `stretch` and `variant` fields through the inheritance chain

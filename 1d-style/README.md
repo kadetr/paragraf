@@ -133,7 +133,7 @@ Creates a `CharStyleRegistry` from a map of named `CharStyleDef` objects. No inh
 | `weight` | `FontWeight` | `400` | Numeric (100–900) or named keyword — see `resolveWeight()` |
 | `style` | `FontStyle` | `'normal'` | `'normal'` \| `'italic'` \| `'oblique'` |
 | `stretch` | `FontStretch` | `'normal'` | `'condensed'` \| `'normal'` \| `'expanded'` etc. |
-| `variant` | `FontVariant` | `'normal'` | `'normal'` \| `'small-caps'` |
+| `variant` | `FontVariant` | `'normal'` | `'normal'` \| `'superscript'` \| `'subscript'` |
 | `letterSpacing` | `number` | `0` | Extra tracking in points |
 
 ### `CharStyleDef` fields
@@ -148,7 +148,7 @@ Creates a `CharStyleRegistry` from a map of named `CharStyleDef` objects. No inh
 ## Notes
 
 - **No FontId assignment** — `ResolvedParagraphStyle.font.family` is a plain string. The calling layer (`@paragraf/compile`) is responsible for mapping family names to font IDs.
-- **Font merging is field-by-field** — a child that sets `font: { size: 18 }` inherits `family`, `weight`, `style`, and `letterSpacing` from its parent chain.
+- **Font merging is field-by-field** — a child that sets `font: { size: 18 }` inherits `family`, `weight`, `style`, `stretch`, `letterSpacing`, and `variant` from its parent chain.
 - **Character styles have no inheritance** — they are flat overrides applied on top of the resolved paragraph style.
 - **`resolveWeight()` required at the engine boundary** — `ResolvedParagraphStyle.font.weight` is typed as `FontWeight` (which includes named strings like `'bold'`). Before passing to a shaping engine or WASM layer that expects a plain `number`, call `resolveWeight(font.weight)` from `@paragraf/types`.
 
