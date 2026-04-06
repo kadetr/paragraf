@@ -173,7 +173,10 @@ describe('defineTemplate — validation errors', () => {
   // ── Layout Dimension validation (issue 3) ──────────────────────────────────
   it('throws on invalid margin Dimension string', () => {
     expect(() =>
-      defineTemplate({ ...MINIMAL, layout: { size: 'A4', margins: '20badunit' } }),
+      defineTemplate({
+        ...MINIMAL,
+        layout: { size: 'A4', margins: '20badunit' },
+      }),
     ).toThrow(/layout:/);
   });
 
@@ -200,7 +203,10 @@ describe('defineTemplate — validation errors', () => {
 
   it('throws on invalid bleed Dimension string', () => {
     expect(() =>
-      defineTemplate({ ...MINIMAL, layout: { size: 'A4', margins: '20mm', bleed: 'Xmm' } }),
+      defineTemplate({
+        ...MINIMAL,
+        layout: { size: 'A4', margins: '20mm', bleed: 'Xmm' },
+      }),
     ).toThrow(/layout:/);
   });
 
@@ -226,7 +232,12 @@ describe('defineTemplate — validation errors', () => {
       defineTemplate({
         ...MINIMAL,
         content: [
-          { style: 'body', text: '{{x}}', onMissing: 'skip', fallbackText: 'oops' },
+          {
+            style: 'body',
+            text: '{{x}}',
+            onMissing: 'skip',
+            fallbackText: 'oops',
+          },
         ],
       }),
     ).toThrow(/fallbackText.*ignored|ignored.*fallbackText/i);

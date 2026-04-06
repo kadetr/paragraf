@@ -113,7 +113,7 @@ Creates a `CharStyleRegistry` from a map of named `CharStyleDef` objects. No inh
 |---|---|---|
 | `FontWeight` | type | `number \| 'thin' \| 'light' \| 'bold'` … — authoring weight |
 | `FontStyle` | type | `'normal' \| 'italic' \| 'oblique'` |
-| `FontStretch` | type | `'condensed' \| 'normal' \| 'expanded'` … |
+| `FontStretch` | type | `'condensed' \| 'semi-condensed' \| 'normal' \| 'semi-expanded' \| 'expanded'` |
 | `FontVariant` | type | `'normal' \| 'superscript' \| 'subscript'` |
 | `resolveWeight(w)` | function | Converts a `FontWeight` to its numeric equivalent |
 
@@ -144,7 +144,7 @@ Creates a `CharStyleRegistry` from a map of named `CharStyleDef` objects. No inh
 | `size` | `number` | `10` | Size in points |
 | `weight` | `FontWeight` | `400` | Numeric (100–900) or named keyword — see `resolveWeight()` |
 | `style` | `FontStyle` | `'normal'` | `'normal'` \| `'italic'` \| `'oblique'` |
-| `stretch` | `FontStretch` | `'normal'` | `'condensed'` \| `'normal'` \| `'expanded'` etc. |
+| `stretch` | `FontStretch` | `'normal'` | `'condensed'` \| `'semi-condensed'` \| `'normal'` \| `'semi-expanded'` \| `'expanded'` |
 | `variant` | `FontVariant` | `'normal'` | `'normal'` \| `'superscript'` \| `'subscript'` |
 | `letterSpacing` | `number` | `0` | Extra tracking in points |
 
@@ -162,7 +162,7 @@ Creates a `CharStyleRegistry` from a map of named `CharStyleDef` objects. No inh
 - **No FontId assignment** — `ResolvedParagraphStyle.font.family` is a plain string. The calling layer (`@paragraf/compile`) is responsible for mapping family names to font IDs.
 - **Font merging is field-by-field** — a child that sets `font: { size: 18 }` inherits `family`, `weight`, `style`, `stretch`, `letterSpacing`, and `variant` from its parent chain.
 - **Character styles have no inheritance** — they are flat overrides applied on top of the resolved paragraph style.
-- **`resolveWeight()` required at the engine boundary** — `ResolvedParagraphStyle.font.weight` is typed as `FontWeight` (which includes named strings like `'bold'`). Before passing to a shaping engine or WASM layer that expects a plain `number`, call `resolveWeight(font.weight)` from `@paragraf/types`.
+- **`resolveWeight()` required at the engine boundary** — `ResolvedParagraphStyle.font.weight` is typed as `FontWeight` (which includes named strings like `'bold'`). Before passing to a shaping engine or WASM layer that expects a plain `number`, call `resolveWeight(font.weight)` from `@paragraf/style`.
 
 ## License
 

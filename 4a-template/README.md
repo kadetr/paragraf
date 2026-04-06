@@ -145,6 +145,9 @@ File path resolution (relative vs absolute) is handled by `@paragraf/compile`.
 ### `defineTemplate(input)`
 
 Validates a `Template` object and returns it unchanged. Throws with a descriptive message if:
+- a layout `Dimension` value (`margins`, `gutter`, `bleed`) is not a valid unit string (e.g. `'20badunit'`) — error is prefixed `layout: …`
+- a content slot's `text` is empty
+- a content slot has `fallbackText` set but `onMissing` is not `'fallback'` (the value would be silently ignored)
 - style inheritance chains have cycles or missing `extends`/`next` references
 - a content slot's `style` is not defined in `template.styles`
 - a content slot has `onMissing: 'fallback'` but no `fallbackText`
@@ -167,7 +170,7 @@ parseTokens('Article: {{product.sku}}')
 |---|---|---|
 | `layout` | `TemplateLayout` | Page geometry configuration |
 | `fonts` | `TemplateFonts` | Font family declarations |
-| `styles` | `Record<string, ParagraphStyleDef>` | Paragraph style definitions (same shape as `@paragraf/style`'s `defineStyles()` input) |
+| `styles` | `Record<string, ParagraphStyleDef>` | Paragraph style definitions (same shape as `@paragraf/style`'s `defineStyles()` input). `ParagraphStyleDef` is re-exported from this package — no separate `@paragraf/style` import needed |
 | `content` | `ContentSlot[]` | Ordered list of content slots |
 
 ### `TemplateLayout` fields
@@ -185,9 +188,9 @@ parseTokens('Article: {{product.sku}}')
 | Field | Type | Default | Description |
 |---|---|---|---|
 | `style` | `string` | — | Style name from `template.styles` |
-| `text` | `string` | — | Literal text or `{{binding.path}}` template string |
+| `text` | `string` | — | Literal text or `{{binding.path}}` template string; must be non-empty |
 | `onMissing` | `OnMissing` | `'skip'` | Behaviour when a binding resolves to missing |
-| `fallbackText` | `string` | — | Required when `onMissing` is `'fallback'` |
+| `fallbackText` | `string` | — | Required when `onMissing` is `'fallback'`; `defineTemplate()` throws if set when `onMissing` is not `'fallback'` |
 
 ### `Token` (from `parseTokens`)
 
@@ -204,7 +207,7 @@ type Token =
 - **No file I/O** — `@paragraf/template` does not read font files. Path resolution and font loading are handled by `@paragraf/compile`.
 - **No rendering** — this package is geometry and schema only. Passing a validated template to `@paragraf/compile` triggers the full typography pipeline.
 - **Styles are the same shape as `@paragraf/style`** — you can define and test styles independently with `defineStyles()` from `@paragraf/style`, then use the same definitions object in your template.
-- **Dimension resolution happens at compile time** — `TemplateLayout` stores human-readable strings; `@paragraf/compile` calls `parseDimension()` from `@paragraf/layout` before constructing `PageLayout`.
+- **Dimension syntax validated at define-time, values resolved at compile time** — `defineTemplate()` validates that all `margins`/`gutter`/`bleed` Dimension strings are parseable (throwing with a `layout: …` prefix if not). The actual conversion to points (via `parseDimension()` from `@paragraf/layout`) happens in `@paragraf/compile` before constructing `PageLayout`.
 
 ## Layer
 
