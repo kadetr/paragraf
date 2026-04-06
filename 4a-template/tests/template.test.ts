@@ -165,7 +165,74 @@ describe('defineTemplate — valid templates', () => {
 
 // ─── Validation errors ───────────────────────────────────────────────────────
 
+// NOTE: tests for circular inheritance and missing extends/next refs match against
+// error messages produced by @paragraf/style's defineStyles(). If that package
+// changes its error wording, those tests will break even if template logic is correct.
+
 describe('defineTemplate — validation errors', () => {
+  // ── Layout Dimension validation (issue 3) ──────────────────────────────────
+  it('throws on invalid margin Dimension string', () => {
+    expect(() =>
+      defineTemplate({ ...MINIMAL, layout: { size: 'A4', margins: '20badunit' } }),
+    ).toThrow(/layout:/);
+  });
+
+  it('throws on invalid per-side margin Dimension string', () => {
+    expect(() =>
+      defineTemplate({
+        ...MINIMAL,
+        layout: {
+          size: 'A4',
+          margins: { top: '20mm', right: '20mm', bottom: '20mm', left: '5em' },
+        },
+      }),
+    ).toThrow(/layout:/);
+  });
+
+  it('throws on invalid gutter Dimension string', () => {
+    expect(() =>
+      defineTemplate({
+        ...MINIMAL,
+        layout: { size: 'A4', margins: '20mm', columns: 2, gutter: '5???' },
+      }),
+    ).toThrow(/layout:/);
+  });
+
+  it('throws on invalid bleed Dimension string', () => {
+    expect(() =>
+      defineTemplate({ ...MINIMAL, layout: { size: 'A4', margins: '20mm', bleed: 'Xmm' } }),
+    ).toThrow(/layout:/);
+  });
+
+  // ── Empty text (issue 6) ───────────────────────────────────────────────────
+  it('throws when content slot text is empty', () => {
+    expect(() =>
+      defineTemplate({ ...MINIMAL, content: [{ style: 'body', text: '' }] }),
+    ).toThrow(/content\[0\]\.text is empty/);
+  });
+
+  // ── fallbackText without onMissing:'fallback' (issue 7) ───────────────────
+  it('throws when fallbackText is set but onMissing is not fallback', () => {
+    expect(() =>
+      defineTemplate({
+        ...MINIMAL,
+        content: [{ style: 'body', text: '{{x}}', fallbackText: 'oops' }],
+      }),
+    ).toThrow(/fallbackText.*ignored|ignored.*fallbackText/i);
+  });
+
+  it('throws when fallbackText is set with onMissing: skip', () => {
+    expect(() =>
+      defineTemplate({
+        ...MINIMAL,
+        content: [
+          { style: 'body', text: '{{x}}', onMissing: 'skip', fallbackText: 'oops' },
+        ],
+      }),
+    ).toThrow(/fallbackText.*ignored|ignored.*fallbackText/i);
+  });
+
+  // ── Style reference errors ─────────────────────────────────────────────────
   it('throws when content slot references undefined style', () => {
     expect(() =>
       defineTemplate({

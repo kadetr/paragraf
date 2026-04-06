@@ -215,3 +215,5 @@ Layer 0   @paragraf/types
 Layer 1   @paragraf/layout  @paragraf/style
 Layer 4   @paragraf/template   ← this package
 ```
+
+Layers 2 and 3 (`@paragraf/shaping-wasm`, `@paragraf/render-core`, `@paragraf/typography`, `@paragraf/render-pdf`) are not required by this package — `@paragraf/template` is a pure data/validation layer with no rendering dependencies.
