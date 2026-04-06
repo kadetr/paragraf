@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { PageLayout } from '../src/page-layout.js';
+import { PageLayout, columnWidths } from '../src/page-layout.js';
 import { mm } from '../src/units.js';
 import { PAGE_SIZES } from '../src/sizes.js';
 
@@ -156,5 +156,51 @@ describe('PageLayout — per-side margins object', () => {
     const frame = layout.frames(1)[0];
     expect(frame.x).toBeCloseTo(mm(20), 5);
     expect(frame.y).toBeCloseTo(mm(25), 5);
+  });
+});
+
+describe('columnWidths', () => {
+  it('single-column frame returns [frame.width]', () => {
+    const layout = new PageLayout({ size: 'A4', margins: MARGIN });
+    const frame = layout.frames(1)[0];
+    const widths = columnWidths(frame);
+    expect(widths).toHaveLength(1);
+    expect(widths[0]).toBeCloseTo(frame.width, 5);
+  });
+
+  it('two-column frame distributes width minus gutter', () => {
+    const gutter = mm(5);
+    const layout = new PageLayout({
+      size: 'A4',
+      margins: MARGIN,
+      columns: 2,
+      gutter,
+    });
+    const frame = layout.frames(1)[0];
+    const widths = columnWidths(frame);
+    const expected = (frame.width - gutter) / 2;
+    expect(widths).toHaveLength(2);
+    expect(widths[0]).toBeCloseTo(expected, 5);
+    expect(widths[1]).toBeCloseTo(expected, 5);
+  });
+
+  it('three-column frame returns three equal widths', () => {
+    const gutter = mm(4);
+    const layout = new PageLayout({
+      size: 'A4',
+      margins: MARGIN,
+      columns: 3,
+      gutter,
+    });
+    const frame = layout.frames(1)[0];
+    const widths = columnWidths(frame);
+    const expected = (frame.width - 2 * gutter) / 3;
+    expect(widths).toHaveLength(3);
+    for (const w of widths) expect(w).toBeCloseTo(expected, 5);
+  });
+
+  it('frame with no columnCount/gutter treated as single column', () => {
+    const frame = { page: 0, x: 0, y: 0, width: 400, height: 600 };
+    expect(columnWidths(frame)).toEqual([400]);
   });
 });

@@ -1,15 +1,25 @@
 import { describe, it, expect } from 'vitest';
-import { PAGE_SIZES, resolvePageSize } from '../src/sizes.js';
+import {
+  PAGE_SIZES,
+  resolvePageSize,
+  landscape,
+  portrait,
+} from '../src/sizes.js';
 
 describe('PAGE_SIZES', () => {
   it('contains all expected names', () => {
     const expected = [
+      'A0',
+      'A1',
+      'A2',
       'A3',
       'A4',
       'A5',
       'A6',
       'B4',
       'B5',
+      'SRA3',
+      'SRA4',
       'Letter',
       'Legal',
       'Tabloid',
@@ -49,8 +59,12 @@ describe('resolvePageSize', () => {
     expect(resolvePageSize([400, 600])).toEqual([400, 600]);
   });
 
-  it('passes through zero-based custom size', () => {
+  // Intentionally unguarded: resolvePageSize passes zero-dimension tuples through.
+  // Zero-width pages will cause division-by-zero at the compositor — callers are
+  // responsible for validating page dimensions before passing to PageLayout.
+  it('passes through a custom tuple with any dimensions (including zero)', () => {
     expect(resolvePageSize([0, 0])).toEqual([0, 0]);
+    expect(resolvePageSize([100, 0])).toEqual([100, 0]);
   });
 
   it('resolves all named sizes without error', () => {
@@ -58,5 +72,42 @@ describe('resolvePageSize', () => {
     for (const name of names) {
       expect(() => resolvePageSize(name)).not.toThrow();
     }
+  });
+});
+
+describe('landscape / portrait', () => {
+  it('landscape(A4) returns width > height', () => {
+    const [w, h] = landscape('A4');
+    expect(w).toBeGreaterThan(h);
+  });
+
+  it('portrait(A4) returns height > width', () => {
+    const [w, h] = portrait('A4');
+    expect(h).toBeGreaterThan(w);
+  });
+
+  it('landscape of an already-landscape size is unchanged', () => {
+    const [w, h] = landscape('Tabloid'); // Tabloid is already landscape (792 × 1224 — portrait)
+    const [lw, lh] = landscape([1224, 792]); // already landscape tuple
+    expect(lw).toBeGreaterThanOrEqual(lh);
+  });
+
+  it('portrait(A4) equals A4 (already portrait)', () => {
+    expect(portrait('A4')).toEqual([PAGE_SIZES.A4[0], PAGE_SIZES.A4[1]]);
+  });
+
+  it('landscape and portrait are inverses', () => {
+    const [lw, lh] = landscape('A3');
+    const [pw, ph] = portrait('A3');
+    expect(lw).toBe(ph);
+    expect(lh).toBe(pw);
+  });
+
+  it('landscape works with a tuple', () => {
+    expect(landscape([595, 842])).toEqual([842, 595]);
+  });
+
+  it('portrait works with a tuple', () => {
+    expect(portrait([842, 595])).toEqual([595, 842]);
   });
 });

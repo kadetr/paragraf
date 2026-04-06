@@ -12,6 +12,7 @@ const DEFAULTS: ResolvedParagraphStyle = {
     size: 10,
     weight: 400,
     style: 'normal',
+    stretch: 'normal',
     letterSpacing: 0,
   },
   language: 'en-us',
@@ -39,7 +40,17 @@ function validateInheritance(defs: Record<string, ParagraphStyleDef>): void {
     }
   }
 
-  // Pass 2: cycle detection — walk each chain linearly
+  // Pass 2: all next refs must point to defined names
+  for (const name of Object.keys(defs)) {
+    const next = defs[name].next;
+    if (next !== undefined && !(next in defs)) {
+      throw new Error(
+        `Style "${name}": next "${next}" which is not defined in the registry`,
+      );
+    }
+  }
+
+  // Pass 3: cycle detection — walk each chain linearly
   for (const startName of Object.keys(defs)) {
     const seen = new Set<string>();
     let current: string | undefined = startName;
@@ -67,6 +78,7 @@ function mergeFont(
     size: override.size !== undefined ? override.size : base.size,
     weight: override.weight !== undefined ? override.weight : base.weight,
     style: override.style !== undefined ? override.style : base.style,
+    stretch: override.stretch !== undefined ? override.stretch : base.stretch,
     letterSpacing:
       override.letterSpacing !== undefined
         ? override.letterSpacing
@@ -124,16 +136,25 @@ function resolveStyle(
 
 export class StyleRegistry {
   readonly #defs: Record<string, ParagraphStyleDef>;
+  readonly #cache = new Map<string, ResolvedParagraphStyle>();
 
   constructor(defs: Record<string, ParagraphStyleDef>) {
     this.#defs = defs;
   }
 
+  has(name: string): boolean {
+    return name in this.#defs;
+  }
+
   resolve(name: string): ResolvedParagraphStyle {
-    if (!(name in this.#defs)) {
+    if (!this.has(name)) {
       throw new Error(`Style "${name}" is not defined in the registry`);
     }
-    return resolveStyle(this.#defs, name);
+    const cached = this.#cache.get(name);
+    if (cached !== undefined) return cached;
+    const result = resolveStyle(this.#defs, name);
+    this.#cache.set(name, result);
+    return result;
   }
 
   get(name: string): ParagraphStyleDef | undefined {

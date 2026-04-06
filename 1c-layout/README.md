@@ -61,7 +61,36 @@ resolvePageSize('A4')   // [595.28, 841.89]
 resolvePageSize([300, 400])  // [300, 400] — pass-through
 ```
 
-Available names: `A3`, `A4`, `A5`, `A6`, `B4`, `B5`, `Letter`, `Legal`, `Tabloid`.
+Available names: `A0`, `A1`, `A2`, `A3`, `A4`, `A5`, `A6`, `B4`, `B5`, `SRA3`, `SRA4`, `Letter`, `Legal`, `Tabloid`.
+
+## Orientation helpers
+
+```ts
+import { landscape, portrait } from '@paragraf/layout';
+
+landscape('A4')        // [841.89, 595.28] — wider side as width
+portrait('A4')         // [595.28, 841.89] — taller side as height (unchanged)
+landscape([595, 842])  // [842, 595]
+```
+
+`landscape` and `portrait` also accept `[width, height]` tuples. Use them to rotate a named size before passing it to `PageLayout`:
+
+```ts
+const layout = new PageLayout({ size: landscape('A4'), margins: mm(20) });
+```
+
+## Column width helper
+
+```ts
+import { columnWidths } from '@paragraf/layout';
+import type { Frame } from '@paragraf/types';
+
+const widths = columnWidths(frame);
+// Single-column frame → [frame.width]
+// Two-column frame with 5mm gutter → [(frame.width - mm(5)) / 2, same]
+```
+
+`columnWidths` computes `(frame.width - (n-1) × gutter) / n` for each of the `n` columns and returns an array of equal widths.
 
 ## PageLayout API
 
@@ -95,6 +124,16 @@ layout.frames(pageCount: number): Frame[]
 ```
 
 Returns one `Frame` per page. Each frame covers the printable area (page minus margins), positioned within the bleed-expanded coordinate space. Multi-column frames carry `columnCount` and `gutter`.
+
+## Known limitations
+
+### Facing pages (recto/verso)
+
+`PageLayout` uses symmetric margins per frame — there is currently no way to declare different inner/outer margins for left (verso) and right (recto) pages. Professional book layouts commonly require this (e.g. wider inner margin for binding, wider outer for thumb tabs).
+
+**Current workaround:** call `frames()` separately for odd and even pages with two `PageLayout` instances using mirrored `Margins` objects, then interleave the resulting `Frame` arrays by page number.
+
+A first-class `facingPages: true` option, or a separate `FacingPageLayout` class, is planned for a future release. This limitation is tracked as a known design gap.
 
 ## Notes
 

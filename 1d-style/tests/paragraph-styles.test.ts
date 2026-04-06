@@ -46,6 +46,12 @@ describe('defineStyles — construction', () => {
     );
   });
 
+  it('throws when next targets an undefined style', () => {
+    expect(() => defineStyles({ body: {}, heading: { next: 'typo' } })).toThrow(
+      /next "typo" which is not defined/,
+    );
+  });
+
   it('throws on direct circular inheritance (a extends b, b extends a)', () => {
     expect(() =>
       defineStyles({
@@ -169,8 +175,47 @@ describe('registry.get and registry.names', () => {
     expect(styles.names().sort()).toEqual(['a', 'b', 'c']);
   });
 
+  it('.has returns true for defined style', () => {
+    const styles = defineStyles({ body: {} });
+    expect(styles.has('body')).toBe(true);
+  });
+
+  it('.has returns false for unknown style', () => {
+    const styles = defineStyles({ body: {} });
+    expect(styles.has('ghost')).toBe(false);
+  });
+
   it('resolve throws for unknown style name', () => {
     const styles = defineStyles({});
     expect(() => styles.resolve('ghost')).toThrow(/"ghost"/);
+  });
+});
+
+describe('resolve — memoization', () => {
+  it('resolving the same style twice returns the identical object reference', () => {
+    const styles = defineStyles({ body: { font: { family: 'Serif' } } });
+    expect(styles.resolve('body')).toBe(styles.resolve('body'));
+  });
+});
+
+describe('FontSpec — stretch field', () => {
+  it('stretch set on style survives to resolved output', () => {
+    const styles = defineStyles({
+      condensed: { font: { stretch: 'condensed' } },
+    });
+    expect(styles.resolve('condensed').font.stretch).toBe('condensed');
+  });
+
+  it('stretch defaults to normal when not set', () => {
+    const styles = defineStyles({ body: {} });
+    expect(styles.resolve('body').font.stretch).toBe('normal');
+  });
+
+  it('stretch is inherited field-by-field through chain', () => {
+    const styles = defineStyles({
+      root: { font: { stretch: 'condensed' } },
+      child: { extends: 'root', font: { size: 12 } },
+    });
+    expect(styles.resolve('child').font.stretch).toBe('condensed');
   });
 });

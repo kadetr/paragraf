@@ -19,7 +19,6 @@ export class CharStyleRegistry {
     return {
       font: def.font ?? {},
       color: def.color,
-      letterSpacing: def.letterSpacing,
     };
   }
 

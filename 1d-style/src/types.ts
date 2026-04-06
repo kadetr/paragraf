@@ -1,4 +1,9 @@
-import type { AlignmentMode, FontStyle, Language } from '@paragraf/types';
+import type {
+  AlignmentMode,
+  FontStretch,
+  FontStyle,
+  Language,
+} from '@paragraf/types';
 
 // ─── FontSpec — human-readable font description ───────────────────────────────
 
@@ -7,6 +12,7 @@ export interface FontSpec {
   size?: number; // points
   weight?: number; // 100–900; default 400
   style?: FontStyle; // 'normal' | 'italic' | 'oblique'; default 'normal'
+  stretch?: FontStretch; // 'condensed' | 'normal' | 'expanded' | …; default 'normal'
   letterSpacing?: number; // extra tracking in points; default 0
 }
 
@@ -38,9 +44,8 @@ export interface ParagraphStyleDef {
 // ─── CharStyleDef — character-level overrides ────────────────────────────────
 
 export interface CharStyleDef {
-  font?: Partial<FontSpec>;
+  font?: Partial<FontSpec>; // use font.letterSpacing for tracking overrides
   color?: string; // CSS hex/rgb string — stored, not rendered here
-  letterSpacing?: number;
 }
 
 // ─── ResolvedParagraphStyle — flat, fully-merged output ──────────────────────
@@ -71,7 +76,6 @@ export interface ResolvedParagraphStyle {
 // ─── ResolvedCharStyle — flat, fully-merged character override ────────────────
 
 export interface ResolvedCharStyle {
-  font: Partial<FontSpec>;
+  font: Partial<FontSpec>; // font.letterSpacing is the authoritative tracking override
   color?: string;
-  letterSpacing?: number;
 }

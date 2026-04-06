@@ -24,9 +24,9 @@ describe('charRegistry.resolve', () => {
     expect(r.resolve('red').color).toBe('#ff0000');
   });
 
-  it('letterSpacing is preserved', () => {
-    const r = defineCharStyles({ spaced: { letterSpacing: 0.5 } });
-    expect(r.resolve('spaced').letterSpacing).toBe(0.5);
+  it('letterSpacing is preserved via font.letterSpacing', () => {
+    const r = defineCharStyles({ spaced: { font: { letterSpacing: 0.5 } } });
+    expect(r.resolve('spaced').font.letterSpacing).toBe(0.5);
   });
 
   it('font with size override is preserved', () => {
@@ -38,7 +38,6 @@ describe('charRegistry.resolve', () => {
     const r = defineCharStyles({ plain: {} });
     expect(r.resolve('plain').font).toEqual({});
     expect(r.resolve('plain').color).toBeUndefined();
-    expect(r.resolve('plain').letterSpacing).toBeUndefined();
   });
 
   it('.resolve throws with descriptive error for unknown name', () => {

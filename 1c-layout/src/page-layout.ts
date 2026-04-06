@@ -137,3 +137,17 @@ export class PageLayout {
     return result;
   }
 }
+
+/**
+ * Compute the width of each text column within a frame.
+ *
+ * For frames with no `columnCount` (single-column), returns `[frame.width]`.
+ * For multi-column frames, distributes `frame.width` evenly after subtracting
+ * the total gutter space: `(frame.width - (n-1) × gutter) / n` for each column.
+ */
+export function columnWidths(frame: Frame): number[] {
+  const count = frame.columnCount ?? 1;
+  const gutter = frame.gutter ?? 0;
+  const colWidth = (frame.width - (count - 1) * gutter) / count;
+  return Array.from({ length: count }, () => colWidth);
+}
