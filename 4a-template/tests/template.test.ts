@@ -132,9 +132,7 @@ describe('defineTemplate — valid templates', () => {
   });
 
   it('empty content array is valid', () => {
-    expect(() =>
-      defineTemplate({ ...MINIMAL, content: [] }),
-    ).not.toThrow();
+    expect(() => defineTemplate({ ...MINIMAL, content: [] })).not.toThrow();
   });
 
   it('open font variant key is valid', () => {

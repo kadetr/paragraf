@@ -33,7 +33,12 @@ import {
   resolveWeight,
 } from '@paragraf/style';
 
-import { defineTemplate, parseTokens, type Template } from '@paragraf/template';
+import {
+  defineTemplate,
+  parseTokens,
+  type Template,
+  type DimensionMargins,
+} from '@paragraf/template';
 
 import type { Frame } from '@paragraf/types';
 
@@ -394,10 +399,9 @@ describe('@paragraf/template — defineTemplate integration', () => {
 
   it('layout Dimension strings are stored verbatim (resolved by compile layer)', () => {
     const t = defineTemplate(FULL_TEMPLATE);
-    expect(typeof (t.layout.margins as Record<string, unknown>).top).toBe(
-      'string',
-    );
-    expect((t.layout.margins as Record<string, unknown>).top).toBe('20mm');
+    const margins = t.layout.margins as DimensionMargins;
+    expect(typeof margins.top).toBe('string');
+    expect(margins.top).toBe('20mm');
     expect(t.layout.bleed).toBe('3mm');
   });
 
@@ -434,7 +438,7 @@ describe('@paragraf/template — defineTemplate integration', () => {
 describe('@paragraf/template + @paragraf/layout — Dimension round-trip', () => {
   it('margin Dimension strings in template resolve via parseDimension', () => {
     const t = defineTemplate(FULL_TEMPLATE);
-    const margins = t.layout.margins as Record<string, Dimension>;
+    const margins = t.layout.margins as DimensionMargins;
 
     // simulate what @paragraf/compile will do
     const top = parseDimension(margins.top);
@@ -466,7 +470,7 @@ describe('@paragraf/template + @paragraf/layout — Dimension round-trip', () =>
   it('template style sheet feeds PageLayout → Frame pipeline', () => {
     const t = defineTemplate(FULL_TEMPLATE);
     const bleedPts = parseDimension(t.layout.bleed as Dimension);
-    const margins = t.layout.margins as Record<string, Dimension>;
+    const margins = t.layout.margins as DimensionMargins;
 
     const layout = new PageLayout({
       size: t.layout.size,

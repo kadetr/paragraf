@@ -54,9 +54,7 @@ export function parseTokens(text: string): Token[] {
 
     const close = text.indexOf('}}', open + 2);
     if (close === -1) {
-      throw new Error(
-        `Unclosed '{{' in template text: "${text}"`,
-      );
+      throw new Error(`Unclosed '{{' in template text: "${text}"`);
     }
 
     const path = text.slice(open + 2, close).trim();
