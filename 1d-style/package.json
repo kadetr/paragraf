@@ -1,0 +1,52 @@
+{
+  "name": "@paragraf/style",
+  "version": "0.4.0",
+  "description": "Paragraph and character style definitions with inheritance resolution for the paragraf typography library",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/kadetr/paragraf.git",
+    "directory": "1d-style"
+  },
+  "homepage": "https://github.com/kadetr/paragraf/tree/main/1d-style#readme",
+  "keywords": [
+    "typography",
+    "typesetting",
+    "styles",
+    "paragraph",
+    "paragraf"
+  ],
+  "type": "module",
+  "files": [
+    "dist/",
+    "README.md"
+  ],
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "publishConfig": {
+    "exports": {
+      ".": {
+        "import": "./dist/index.js",
+        "types": "./dist/index.d.ts"
+      }
+    }
+  },
+  "scripts": {
+    "build": "tsup",
+    "prepublishOnly": "npm run build",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "typecheck": "tsc --noEmit",
+    "prepack": "node ../scripts/publishconfig-swap.mjs apply",
+    "postpack": "node ../scripts/publishconfig-swap.mjs restore"
+  },
+  "dependencies": {
+    "@paragraf/types": "^0.3.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.4.0",
+    "tsup": "^8.5.1",
+    "vitest": "^3.2.4"
+  }
+}
