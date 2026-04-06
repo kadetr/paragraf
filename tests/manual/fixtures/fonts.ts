@@ -18,7 +18,7 @@ export const serifRegistry = (): FontRegistry =>
       'serif-regular',
       {
         id: 'serif-regular',
-        face: 'Liberation Serif',
+        family: 'Liberation Serif',
         filePath: path.join(FONTS_DIR, 'LiberationSerif-Regular.ttf'),
       },
     ],
@@ -26,7 +26,7 @@ export const serifRegistry = (): FontRegistry =>
       'serif-bold',
       {
         id: 'serif-bold',
-        face: 'Liberation Serif Bold',
+        family: 'Liberation Serif Bold',
         filePath: path.join(FONTS_DIR, 'LiberationSerif-Bold.ttf'),
       },
     ],
@@ -34,7 +34,7 @@ export const serifRegistry = (): FontRegistry =>
       'serif-italic',
       {
         id: 'serif-italic',
-        face: 'Liberation Serif Italic',
+        family: 'Liberation Serif Italic',
         filePath: path.join(FONTS_DIR, 'LiberationSerif-Italic.ttf'),
       },
     ],
@@ -47,7 +47,7 @@ export const hebrewRegistry = (): FontRegistry =>
       'hebrew-regular',
       {
         id: 'hebrew-regular',
-        face: 'Noto Sans Hebrew',
+        family: 'Noto Sans Hebrew',
         filePath: path.join(FONTS_DIR, 'NotoSansHebrew-Regular.ttf'),
       },
     ],
@@ -60,7 +60,7 @@ export const arabicRegistry = (): FontRegistry =>
       'arabic-regular',
       {
         id: 'arabic-regular',
-        face: 'Noto Sans Arabic',
+        family: 'Noto Sans Arabic',
         filePath: path.join(FONTS_DIR, 'NotoSansArabic-Regular.ttf'),
       },
     ],

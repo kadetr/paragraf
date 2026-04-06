@@ -40,7 +40,7 @@ const TEST_REGISTRY: FontRegistry = new Map([
     'liberation-serif-regular',
     {
       id: 'liberation-serif-regular',
-      face: 'Liberation Serif',
+      family: 'Liberation Serif',
       filePath: REGULAR_FONT_PATH,
     },
   ],
@@ -48,7 +48,7 @@ const TEST_REGISTRY: FontRegistry = new Map([
     'liberation-serif-bold',
     {
       id: 'liberation-serif-bold',
-      face: 'Liberation Serif Bold',
+      family: 'Liberation Serif Bold',
       filePath: BOLD_FONT_PATH,
     },
   ],
@@ -56,7 +56,7 @@ const TEST_REGISTRY: FontRegistry = new Map([
     'roboto-regular',
     {
       id: 'roboto-regular',
-      face: 'Roboto',
+      family: 'Roboto',
       filePath: ROBOTO_REGULAR_PATH,
     },
   ],
@@ -159,7 +159,7 @@ describe('createMeasurer — real font metrics', () => {
     const badRegistry: FontRegistry = new Map([
       [
         'bad-font',
-        { id: 'bad-font', face: 'Bad', filePath: '/nonexistent/font.ttf' },
+        { id: 'bad-font', family: 'Bad', filePath: '/nonexistent/font.ttf' },
       ],
     ]);
     const badFont: Font = { ...TEST_FONT_REGULAR, id: 'bad-font' };

@@ -1,8 +1,5 @@
-import type {
-  ParagraphStyleDef,
-  FontSpec,
-  ResolvedParagraphStyle,
-} from './types.js';
+import type { FontSpec } from '@paragraf/types';
+import type { ParagraphStyleDef, ResolvedParagraphStyle } from './types.js';
 
 // ─── Built-in defaults ────────────────────────────────────────────────────────
 
@@ -14,6 +11,7 @@ const DEFAULTS: ResolvedParagraphStyle = {
     style: 'normal',
     stretch: 'normal',
     letterSpacing: 0,
+    variant: 'normal',
   },
   language: 'en-us',
   alignment: 'justified',
@@ -83,6 +81,7 @@ function mergeFont(
       override.letterSpacing !== undefined
         ? override.letterSpacing
         : base.letterSpacing,
+    variant: override.variant !== undefined ? override.variant : base.variant,
   };
 }
 

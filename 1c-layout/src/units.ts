@@ -28,3 +28,40 @@ export function inch(value: number): number {
 export function px(value: number, dpi: number = 96): number {
   return (value * PT_PER_INCH) / dpi;
 }
+
+/**
+ * A dimension value: either a number (already in points) or a string with a
+ * unit suffix — '20mm', '2cm', '0.5in', '100px', '36pt'.
+ * Use parseDimension() to resolve to points before passing to layout APIs.
+ */
+export type Dimension = number | string;
+
+/**
+ * Resolve a Dimension to points.
+ * - number → pass-through (already in points)
+ * - '20mm' → mm(20), '2cm' → cm(2), '0.5in' → inch(0.5), '100px' → px(100), '36pt' → 36
+ * @throws if the string format is unrecognised
+ */
+export function parseDimension(d: Dimension): number {
+  if (typeof d === 'number') return d;
+  const m = d.trim().match(/^(-?[\d.]+)(mm|cm|in|pt|px)$/i);
+  if (!m)
+    throw new Error(
+      `Unrecognised dimension: "${d}" — expected format like "20mm", "2cm", "0.5in", "36pt", "100px"`,
+    );
+  const value = parseFloat(m[1]);
+  switch (m[2].toLowerCase()) {
+    case 'mm':
+      return mm(value);
+    case 'cm':
+      return cm(value);
+    case 'in':
+      return inch(value);
+    case 'pt':
+      return value;
+    case 'px':
+      return px(value);
+    default:
+      throw new Error(`Unknown unit: "${m[2]}"`);
+  }
+}

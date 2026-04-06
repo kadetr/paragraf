@@ -22,6 +22,10 @@ export class CharStyleRegistry {
     };
   }
 
+  has(name: string): boolean {
+    return name in this.#defs;
+  }
+
   names(): string[] {
     return Object.keys(this.#defs);
   }

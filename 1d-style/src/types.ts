@@ -1,20 +1,6 @@
-import type {
-  AlignmentMode,
-  FontStretch,
-  FontStyle,
-  Language,
-} from '@paragraf/types';
+import type { AlignmentMode, FontSpec, Language } from '@paragraf/types';
 
-// ─── FontSpec — human-readable font description ───────────────────────────────
-
-export interface FontSpec {
-  family?: string; // e.g. 'SourceSerif4'; inherited from parent chain if absent
-  size?: number; // points
-  weight?: number; // 100–900; default 400
-  style?: FontStyle; // 'normal' | 'italic' | 'oblique'; default 'normal'
-  stretch?: FontStretch; // 'condensed' | 'normal' | 'expanded' | …; default 'normal'
-  letterSpacing?: number; // extra tracking in points; default 0
-}
+export type { FontSpec };
 
 // ─── ParagraphStyleDef — raw user input ───────────────────────────────────────
 

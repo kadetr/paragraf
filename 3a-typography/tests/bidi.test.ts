@@ -26,7 +26,7 @@ const REGISTRY: FontRegistry = new Map([
     'noto-hebrew',
     {
       id: 'noto-hebrew',
-      face: 'Noto Sans Hebrew',
+      family: 'Noto Sans Hebrew',
       filePath: path.join(FONTS_DIR, 'NotoSansHebrew-Regular.ttf'),
     },
   ],
@@ -34,7 +34,7 @@ const REGISTRY: FontRegistry = new Map([
     'noto-arabic',
     {
       id: 'noto-arabic',
-      face: 'Noto Sans Arabic',
+      family: 'Noto Sans Arabic',
       filePath: path.join(FONTS_DIR, 'NotoSansArabic-Regular.ttf'),
     },
   ],
@@ -42,7 +42,7 @@ const REGISTRY: FontRegistry = new Map([
     'liberation-regular',
     {
       id: 'liberation-regular',
-      face: 'Liberation Serif',
+      family: 'Liberation Serif',
       filePath: path.join(FONTS_DIR, 'LiberationSerif-Regular.ttf'),
     },
   ],

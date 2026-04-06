@@ -23,7 +23,7 @@ const SERIF_PATH = path.join(FONTS_DIR, 'LiberationSerif-Regular.ttf');
 const REGISTRY: FontRegistry = new Map([
   [
     'lib-reg',
-    { id: 'lib-reg', face: 'Liberation Serif', filePath: SERIF_PATH },
+    { id: 'lib-reg', family: 'Liberation Serif', filePath: SERIF_PATH },
   ],
 ]);
 
