@@ -35,9 +35,13 @@
     "prepublishOnly": "npm run build",
     "typecheck": "tsc --noEmit",
     "prepack": "node ../scripts/publishconfig-swap.mjs apply",
-    "postpack": "node ../scripts/publishconfig-swap.mjs restore"
+    "postpack": "node ../scripts/publishconfig-swap.mjs restore",
+    "test": "vitest run",
+    "test:watch": "vitest"
   },
   "devDependencies": {
-    "typescript": "^5.4.0"
+    "typescript": "^5.4.0",
+    "vitest": "^3.2.4",
+    "tsup": "^8.5.1"
   }
 }

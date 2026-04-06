@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { mm, cm, inch, px } from '../src/units.js';
+import { mm, cm, inch, px, parseDimension } from '../src/units.js';
 
 describe('mm', () => {
   it('converts millimetres to points', () => {
@@ -58,5 +58,62 @@ describe('px', () => {
 
   it('px(0) === 0', () => {
     expect(px(0)).toBe(0);
+  });
+});
+
+describe('parseDimension', () => {
+  describe('string units', () => {
+    it("'20mm' → mm(20)", () => {
+      expect(parseDimension('20mm')).toBeCloseTo(mm(20), 10);
+    });
+
+    it("'2cm' → cm(2)", () => {
+      expect(parseDimension('2cm')).toBeCloseTo(cm(2), 10);
+    });
+
+    it("'0.5in' → inch(0.5)", () => {
+      expect(parseDimension('0.5in')).toBeCloseTo(inch(0.5), 10);
+    });
+
+    it("'36pt' → 36", () => {
+      expect(parseDimension('36pt')).toBe(36);
+    });
+
+    it("'100px' → px(100)", () => {
+      expect(parseDimension('100px')).toBeCloseTo(px(100), 10);
+    });
+
+    it('is case-insensitive for unit suffix', () => {
+      expect(parseDimension('10MM')).toBeCloseTo(mm(10), 10);
+      expect(parseDimension('10PT')).toBe(10);
+    });
+
+    it('trims leading/trailing whitespace', () => {
+      expect(parseDimension('  10mm  ')).toBeCloseTo(mm(10), 10);
+    });
+  });
+
+  describe('numeric pass-through', () => {
+    it('number → same number', () => {
+      expect(parseDimension(36)).toBe(36);
+    });
+
+    it('0 → 0', () => {
+      expect(parseDimension(0)).toBe(0);
+    });
+  });
+
+  describe('error cases', () => {
+    it('throws on unknown unit', () => {
+      expect(() => parseDimension('10em')).toThrow(/Unrecognised dimension/i);
+    });
+
+    it('throws on bare number string', () => {
+      expect(() => parseDimension('100')).toThrow(/Unrecognised dimension/i);
+    });
+
+    it('throws on empty string', () => {
+      expect(() => parseDimension('')).toThrow(/Unrecognised dimension/i);
+    });
   });
 });

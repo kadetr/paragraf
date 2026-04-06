@@ -86,10 +86,10 @@ describe('landscape / portrait', () => {
     expect(h).toBeGreaterThan(w);
   });
 
-  it('landscape of an already-landscape size is unchanged', () => {
-    const [w, h] = landscape('Tabloid'); // Tabloid is already landscape (792 × 1224 — portrait)
-    const [lw, lh] = landscape([1224, 792]); // already landscape tuple
-    expect(lw).toBeGreaterThanOrEqual(lh);
+  it('landscape of a tuple that is already landscape returns it unchanged', () => {
+    const [lw, lh] = landscape([1224, 792]); // [1224, 792] is already w > h
+    expect(lw).toBe(1224);
+    expect(lh).toBe(792);
   });
 
   it('portrait(A4) equals A4 (already portrait)', () => {

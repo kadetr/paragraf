@@ -90,6 +90,7 @@ Creates a `StyleRegistry` from a map of named `ParagraphStyleDef` objects. Valid
 |---|---|
 | `resolve(name)` | Returns a fully-resolved `ResolvedParagraphStyle`. Throws if name not found. |
 | `get(name)` | Returns the raw (unresolved) `ParagraphStyleDef`, or `undefined`. |
+| `has(name)` | Returns `true` if a style with this name exists. |
 | `names()` | Returns all defined style names. |
 
 ### `defineCharStyles(defs)`
@@ -101,6 +102,7 @@ Creates a `CharStyleRegistry` from a map of named `CharStyleDef` objects. No inh
 | Method | Description |
 |---|---|
 | `resolve(name)` | Returns a `ResolvedCharStyle`. Throws if name not found. |
+| `has(name)` | Returns `true` if a char style with this name exists. |
 | `names()` | Returns all defined char style names. |
 
 ---
@@ -128,17 +130,18 @@ Creates a `CharStyleRegistry` from a map of named `CharStyleDef` objects. No inh
 |---|---|---|---|
 | `family` | `string` | `''` | Font family name; inherited from parent chain if absent |
 | `size` | `number` | `10` | Size in points |
-| `weight` | `number` | `400` | Weight (100–900) |
+| `weight` | `FontWeight` | `400` | Numeric (100–900) or named keyword — see `resolveWeight()` |
 | `style` | `FontStyle` | `'normal'` | `'normal'` \| `'italic'` \| `'oblique'` |
+| `stretch` | `FontStretch` | `'normal'` | `'condensed'` \| `'normal'` \| `'expanded'` etc. |
+| `variant` | `FontVariant` | `'normal'` | `'normal'` \| `'small-caps'` |
 | `letterSpacing` | `number` | `0` | Extra tracking in points |
 
 ### `CharStyleDef` fields
 
 | Field | Type | Description |
 |---|---|---|
-| `font` | `Partial<FontSpec>` | Font overrides |
+| `font` | `Partial<FontSpec>` | Font overrides (use `font.letterSpacing` for tracking) |
 | `color` | `string` | CSS hex/rgb string (stored, not rendered) |
-| `letterSpacing` | `number` | Extra tracking override |
 
 ---
 
@@ -147,6 +150,7 @@ Creates a `CharStyleRegistry` from a map of named `CharStyleDef` objects. No inh
 - **No FontId assignment** — `ResolvedParagraphStyle.font.family` is a plain string. The calling layer (`@paragraf/compile`) is responsible for mapping family names to font IDs.
 - **Font merging is field-by-field** — a child that sets `font: { size: 18 }` inherits `family`, `weight`, `style`, and `letterSpacing` from its parent chain.
 - **Character styles have no inheritance** — they are flat overrides applied on top of the resolved paragraph style.
+- **`resolveWeight()` required at the engine boundary** — `ResolvedParagraphStyle.font.weight` is typed as `FontWeight` (which includes named strings like `'bold'`). Before passing to a shaping engine or WASM layer that expects a plain `number`, call `resolveWeight(font.weight)` from `@paragraf/types`.
 
 ## License
 

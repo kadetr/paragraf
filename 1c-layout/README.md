@@ -51,6 +51,24 @@ px(100, 300)   // → 24 pt   (300 dpi print)
 | `inch(v)` | `v × 72` |
 | `px(v, dpi?)` | `v × 72 / dpi` (default dpi = 96) |
 
+## Dimension strings
+
+Some layout helpers accept a `Dimension` value — either a raw number (already in points) or a string with a unit suffix:
+
+```ts
+import { parseDimension } from '@paragraf/layout';
+import type { Dimension } from '@paragraf/layout';
+
+parseDimension(36)        // → 36  (pass-through)
+parseDimension('20mm')    // → mm(20) ≈ 56.69 pt
+parseDimension('2cm')     // → cm(2)  ≈ 56.69 pt
+parseDimension('0.5in')   // → 36 pt
+parseDimension('36pt')    // → 36 pt
+parseDimension('100px')   // → px(100) ≈ 75 pt
+```
+
+Supported suffixes: `mm`, `cm`, `in`, `pt`, `px` (case-insensitive). Throws if the string format is unrecognised.
+
 ## Named page sizes
 
 ```ts
