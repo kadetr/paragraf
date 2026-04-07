@@ -20,6 +20,7 @@
     "3a-typography",
     "3b-render-pdf",
     "4a-template",
+    "4b-compile",
     "demo"
   ],
   "devDependencies": {

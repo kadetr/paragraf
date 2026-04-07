@@ -1,0 +1,124 @@
+// types.ts — Public option and result interfaces for @paragraf/compile.
+
+import type { Template } from '@paragraf/template';
+import type { RenderedDocument } from '@paragraf/typography';
+
+export type { Template };
+
+/** Output format produced by compile(). */
+export type OutputFormat = 'pdf' | 'svg' | 'rendered';
+
+/** Overflow handling strategy. */
+export type OverflowBehavior = 'silent' | 'throw';
+
+/** Font shaping engine selection. */
+export type ShapingMode = 'auto' | 'wasm' | 'fontkit';
+
+/**
+ * Options for compiling a single document.
+ */
+export interface CompileOptions<T = unknown> {
+  /** Validated template produced by defineTemplate(). */
+  template: Template;
+  /** Data record to interpolate into content slots. */
+  data: T;
+  /**
+   * Optional normalizer applied to data before binding resolution.
+   * Use to flatten or reshape raw data into the shape the template expects.
+   */
+  normalize?: (raw: T) => Record<string, unknown>;
+  /**
+   * Output format.
+   * - 'pdf'      — Returns a Buffer containing a PDF file.
+   * - 'svg'      — Returns a string containing one SVG element per page, joined by newlines.
+   * - 'rendered' — Returns the RenderedDocument directly (for custom rendering).
+   * @default 'pdf'
+   */
+  output?: OutputFormat;
+  /**
+   * Base path for resolving relative font file paths declared in the template.
+   * @default process.cwd()
+   */
+  basePath?: string;
+  /**
+   * Behaviour when composed content overflows the maximum page count.
+   * - 'silent' — truncate silently; `metadata.overflowLines` reports the count.
+   * - 'throw'  — throw an Error describing the overflow.
+   * @default 'silent'
+   */
+  onOverflow?: OverflowBehavior;
+  /**
+   * Font shaping engine.
+   * - 'auto'    — use WASM when available, fall back to fontkit (recommended).
+   * - 'wasm'    — force WASM (falls back silently to fontkit when not built).
+   * - 'fontkit' — always use the TypeScript/fontkit path.
+   * @default 'auto'
+   */
+  shaping?: ShapingMode;
+  /** PDF document title stored in the Info dictionary. */
+  title?: string;
+  /** BCP 47 language tag stored in the Info dictionary. */
+  lang?: string;
+  /** Add an invisible searchable text layer to the PDF. Requires `output: 'pdf'`. */
+  selectable?: boolean;
+  /**
+   * Maximum number of pages to generate. Content that exceeds this limit is
+   * silently truncated (or throws if `onOverflow: 'throw'`).
+   * @default 100
+   */
+  maxPages?: number;
+}
+
+/** Result returned by compile(). */
+export interface CompileResult {
+  /**
+   * The rendered output:
+   * - `Buffer`           when `output` is `'pdf'`
+   * - `string`           when `output` is `'svg'`
+   * - `RenderedDocument` when `output` is `'rendered'`
+   */
+  data: Buffer | string | RenderedDocument;
+  metadata: {
+    /** Number of pages in the output document. */
+    pageCount: number;
+    /**
+     * Number of composed lines that did not fit within the page limit.
+     * Zero when all content was placed.
+     */
+    overflowLines: number;
+    /** Which font shaping engine was actually used for this compile. */
+    shapingEngine: 'wasm' | 'fontkit';
+  };
+}
+
+/** Options for compiling a batch of documents. */
+export interface CompileBatchOptions<T> extends Omit<
+  CompileOptions<T>,
+  'data'
+> {
+  /** Records to compile; each record produces one CompileResult. */
+  records: T[];
+  /**
+   * Maximum number of compile() calls running concurrently in-process.
+   * @default 4
+   */
+  concurrency?: number;
+  /**
+   * Called after each record finishes (successfully or with an error).
+   * @param completed Number of records finished so far.
+   * @param total     Total number of records.
+   */
+  onProgress?: (completed: number, total: number) => void;
+}
+
+/** One entry in a compileBatch result array. Either `result` or `error` is set. */
+export interface CompileBatchResult<T> {
+  /** The record that was compiled. */
+  record: T;
+  /** 0-based index into the original `records` array. */
+  index: number;
+  /** Set when compilation succeeded. */
+  result?: CompileResult;
+  /** Set when compilation threw. */
+  error?: Error;
+}
