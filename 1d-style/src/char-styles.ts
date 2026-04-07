@@ -26,6 +26,10 @@ export class CharStyleRegistry {
     return name in this.#defs;
   }
 
+  get(name: string): CharStyleDef | undefined {
+    return this.#defs[name];
+  }
+
   names(): string[] {
     return Object.keys(this.#defs);
   }

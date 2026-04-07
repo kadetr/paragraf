@@ -126,15 +126,17 @@ Supported unit suffixes: `mm`, `cm`, `in`, `pt`, `px`.
 ```ts
 fonts: {
   Serif: {
-    regular:    './fonts/Serif-Regular.ttf',    // standard variant keys
+    regular:    './fonts/Serif-Regular.ttf',    // string shorthand (standard variants)
     bold:       './fonts/Serif-Bold.ttf',
     italic:     './fonts/Serif-Italic.ttf',
     boldItalic: './fonts/Serif-BoldItalic.ttf',
-    light:      './fonts/Serif-Light.ttf',      // custom variant keys also allowed
-    semiBold:   './fonts/Serif-SemiBold.ttf',
+    light:    { path: './fonts/Serif-Light.ttf',   weight: 300 },  // object form for custom variants
+    semiBold: { path: './fonts/Serif-SemiBold.ttf', weight: 600 },
   },
 }
 ```
+
+The four standard keys (`regular`, `bold`, `italic`, `boldItalic`) accept plain strings — `@paragraf/compile` applies conventional weight/style defaults (regular → 400/normal, bold → 700/normal, italic → 400/italic, boldItalic → 700/italic). Custom keys use the object form `{ path, weight?, style?, stretch? }` to supply metadata so the compile layer can select the correct variant when resolving a style's `font: { family, weight, style }` against the registry.
 
 File path resolution (relative vs absolute) is handled by `@paragraf/compile`.
 
@@ -182,6 +184,16 @@ parseTokens('Article: {{product.sku}}')
 | `columns` | `number` | `1` | Number of text columns |
 | `gutter` | `Dimension` | `0` | Space between columns |
 | `bleed` | `Dimension` | `0` | Bleed on all four sides |
+
+### `FontVariantEntry`
+
+```ts
+type FontVariantEntry =
+  | string                                          // plain file path (shorthand)
+  | { path: string; weight?: number; style?: FontStyle; stretch?: FontStretch; };
+```
+
+The four standard keys (`regular`, `bold`, `italic`, `boldItalic`) accept plain strings. `@paragraf/compile` applies conventional defaults for those. Custom keys (e.g. `light`, `semiBold`) should use the object form so the weight/style/stretch metadata is available for variant selection.
 
 ### `ContentSlot` fields
 

@@ -7,6 +7,7 @@ export type {
   DimensionMargins,
   TemplateFonts,
   TemplateFontVariants,
+  FontVariantEntry,
   ContentSlot,
   OnMissing,
   PageSize,

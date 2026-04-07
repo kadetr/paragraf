@@ -102,6 +102,7 @@ Creates a `CharStyleRegistry` from a map of named `CharStyleDef` objects. No inh
 | Method | Description |
 |---|---|
 | `resolve(name)` | Returns a `ResolvedCharStyle`. Throws if name not found. |
+| `get(name)` | Returns the raw `CharStyleDef`, or `undefined` if not found. |
 | `has(name)` | Returns `true` if a char style with this name exists. |
 | `names()` | Returns all defined char style names. |
 

@@ -45,3 +45,16 @@ describe('charRegistry.resolve', () => {
     expect(() => r.resolve('ghost')).toThrow(/Character style "ghost"/);
   });
 });
+
+describe('charRegistry.get', () => {
+  it('returns the raw definition for a known name', () => {
+    const def = { font: { style: 'italic' as const } };
+    const r = defineCharStyles({ em: def });
+    expect(r.get('em')).toEqual(def);
+  });
+
+  it('returns undefined for an unknown name', () => {
+    const r = defineCharStyles({ em: {} });
+    expect(r.get('ghost')).toBeUndefined();
+  });
+});

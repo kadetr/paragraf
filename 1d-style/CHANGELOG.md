@@ -9,5 +9,6 @@
 - Re-exports `FontWeight`, `FontStyle`, `FontStretch`, `FontVariant`, `resolveWeight` from `@paragraf/types` — consumers need no separate `@paragraf/types` import
 - `StyleRegistry.has(name)` — check existence without throwing
 - `CharStyleRegistry.has(name)` — check existence without throwing
+- `CharStyleRegistry.get(name)` — returns the raw `CharStyleDef` or `undefined`; mirrors `StyleRegistry.get(name)` for API symmetry
 - Built-in defaults expanded: `stretch: 'normal'`, `variant: 'normal'` added alongside existing fields
 - `mergeFont()` now merges `stretch` and `variant` fields through the inheritance chain

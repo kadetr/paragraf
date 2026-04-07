@@ -1,7 +1,11 @@
 // types.ts — Template schema types for @paragraf/template.
 // Pure data types; no functions, no side effects.
 
-import type { ParagraphStyleDef } from '@paragraf/style';
+import type {
+  ParagraphStyleDef,
+  FontStyle,
+  FontStretch,
+} from '@paragraf/style';
 import type { PageSize, Dimension } from '@paragraf/layout';
 
 export type { PageSize, Dimension };
@@ -43,27 +47,52 @@ export interface TemplateLayout {
 // ─── Fonts ───────────────────────────────────────────────────────────────────
 
 /**
+ * A font variant entry: either a file path string (shorthand) or an object
+ * with explicit path and optional weight/style/stretch metadata.
+ *
+ * The four standard keys (regular, bold, italic, boldItalic) have conventional
+ * defaults applied by @paragraf/compile:
+ *   regular    → weight 400, style 'normal'
+ *   bold       → weight 700, style 'normal'
+ *   italic     → weight 400, style 'italic'
+ *   boldItalic → weight 700, style 'italic'
+ *
+ * Custom keys (e.g. 'light', 'semiBold') require the object form with explicit
+ * metadata so @paragraf/compile can select the correct variant when resolving
+ * a style's font: { family, weight, style } against the registry.
+ */
+export type FontVariantEntry =
+  | string
+  | {
+      path: string;
+      weight?: number;
+      style?: FontStyle;
+      stretch?: FontStretch;
+    };
+
+/**
  * File paths for each named variant of a font family.
- * The four common variants are typed explicitly; additional weight/stretch
- * variants can be added as arbitrary string keys.
+ * Use a plain string for the four standard variants; use the object form
+ * with metadata for custom weight/style/stretch variants.
  *
  * @example
  * ```ts
  * {
- *   regular:    './fonts/Serif-Regular.ttf',
+ *   regular:    './fonts/Serif-Regular.ttf',          // string shorthand
  *   bold:       './fonts/Serif-Bold.ttf',
  *   italic:     './fonts/Serif-Italic.ttf',
  *   boldItalic: './fonts/Serif-BoldItalic.ttf',
- *   light:      './fonts/Serif-Light.ttf',   // custom variant
+ *   light: { path: './fonts/Serif-Light.ttf', weight: 300 },  // object form
+ *   semiBold: { path: './fonts/Serif-SemiBold.ttf', weight: 600 },
  * }
  * ```
  */
 export interface TemplateFontVariants {
-  regular?: string;
-  bold?: string;
-  italic?: string;
-  boldItalic?: string;
-  [variant: string]: string | undefined;
+  regular?: FontVariantEntry;
+  bold?: FontVariantEntry;
+  italic?: FontVariantEntry;
+  boldItalic?: FontVariantEntry;
+  [variant: string]: FontVariantEntry | undefined;
 }
 
 /**

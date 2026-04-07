@@ -34,7 +34,14 @@ export type PageSize = PageSizeName | [number, number];
  */
 export function resolvePageSize(size: PageSize): [number, number] {
   if (Array.isArray(size)) return size;
-  return PAGE_SIZES[size];
+  const result = (PAGE_SIZES as Record<string, [number, number] | undefined>)[
+    size
+  ];
+  if (result === undefined)
+    throw new Error(
+      `Unknown page size: "${String(size)}" — valid sizes: ${Object.keys(PAGE_SIZES).join(', ')}`,
+    );
+  return result;
 }
 
 /**

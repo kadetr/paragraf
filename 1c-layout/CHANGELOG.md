@@ -11,6 +11,9 @@ All notable changes to `@paragraf/layout` are documented here.
 - `Dimension` type — `number | string`; string form accepts `'20mm'`, `'2cm'`, `'0.5in'`, `'36pt'`, `'100px'`
 - `parseDimension(d)` — resolves a `Dimension` value to points; throws on unrecognised format
 
+### Fixed
+- `resolvePageSize()` now throws with a descriptive error for unknown named sizes instead of returning `undefined` (which would cause silent `NaN` geometry downstream)
+
 ## 0.4.0 — Initial release
 
 - `PageLayout` class: page geometry, bleed/trim box calculation, `frames()` generator
