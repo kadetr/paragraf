@@ -28,12 +28,12 @@ const template = defineTemplate({
     heading: {
       font: { family: 'Source Serif 4', size: 24, weight: 700 },
       alignment: 'left',
-      lineHeight: 32,
+      lineHeight: 32,  // \u2190 not yet applied (see known limitations)
     },
     body: {
       font: { family: 'Source Serif 4', size: 11 },
       alignment: 'justified',
-      lineHeight: 16,
+      lineHeight: 16,  // \u2190 not yet applied (see known limitations)
     },
   },
   content: [

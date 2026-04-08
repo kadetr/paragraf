@@ -1,11 +1,8 @@
 // types.ts — Template schema types for @paragraf/template.
 // Pure data types; no functions, no side effects.
 
-import type {
-  ParagraphStyleDef,
-  FontStyle,
-  FontStretch,
-} from '@paragraf/style';
+import type { ParagraphStyleDef } from '@paragraf/style';
+import type { FontStyle, FontStretch } from '@paragraf/types';
 import type { PageSize, Dimension } from '@paragraf/layout';
 
 export type { PageSize, Dimension };

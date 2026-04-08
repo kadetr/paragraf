@@ -1,6 +1,6 @@
 {
   "name": "@paragraf/font-engine",
-  "version": "0.3.0",
+  "version": "0.5.0",
   "description": "Font metrics abstraction, fontkit adapter, and measurer factory for the paragraf typesetter.",
   "license": "MIT",
   "repository": {

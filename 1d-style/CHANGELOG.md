@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.5.0 — 2026-04-08
+
+Version alignment with the 0.5.0 milestone release. No API changes.
+
 ## 0.4.0 — 2026-04-06
 
 - `defineStyles` factory with `StyleRegistry` (paragraph style inheritance, field-by-field font merging, circular dependency detection)

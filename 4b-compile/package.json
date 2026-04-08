@@ -44,9 +44,9 @@
   "dependencies": {
     "@paragraf/types": "^0.5.0",
     "@paragraf/layout": "^0.5.0",
-    "@paragraf/style": "^0.4.0",
+    "@paragraf/style": "^0.5.0",
     "@paragraf/template": "^0.5.0",
-    "@paragraf/font-engine": "^0.3.0",
+    "@paragraf/font-engine": "^0.5.0",
     "@paragraf/typography": "^0.3.0",
     "@paragraf/render-core": "^0.3.0",
     "@paragraf/render-pdf": "^0.3.0"
