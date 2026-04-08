@@ -51,6 +51,9 @@
     "@paragraf/render-core": "^0.3.0",
     "@paragraf/render-pdf": "^0.3.0"
   },
+  "optionalDependencies": {
+    "@paragraf/shaping-wasm": "^0.3.0"
+  },
   "devDependencies": {
     "@types/node": "^22.19.15",
     "tsup": "^8.5.1",

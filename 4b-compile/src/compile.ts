@@ -1,4 +1,4 @@
-// compile.ts — 10-step compile pipeline for @paragraf/compile.
+// compile.ts — 11-step compile pipeline for @paragraf/compile.
 //
 // Steps:
 //  1. Resolve fonts        — TemplateFonts → FontRegistry
@@ -9,8 +9,9 @@
 //  6. Interpolate slots    — per slot: resolve bindings, apply onMissing
 //  7. Build ParagraphInputs — style + font for each resolved slot
 //  8. Ensure languages     — call ensureLanguage for any non-default languages
-//  9. Compose + layout     — composeDocument / layoutDocument; count overflow
-// 10. Render output        — PDF / SVG / RenderedDocument
+//  9. Compose             — composeDocument
+// 10. Layout              — layoutDocument; count overflow
+// 11. Render output       — PDF / SVG / RenderedDocument
 
 import type {
   Font,
@@ -24,12 +25,7 @@ import { parseDimension, PageLayout } from '@paragraf/layout';
 import type { Margins } from '@paragraf/layout';
 import { defineStyles } from '@paragraf/style';
 import type { ResolvedParagraphStyle } from '@paragraf/style';
-import type {
-  Template,
-  ContentSlot,
-  Dimension,
-  DimensionMargins,
-} from '@paragraf/template';
+import type { Template, Dimension, DimensionMargins } from '@paragraf/template';
 import { createMeasurer } from '@paragraf/font-engine';
 import {
   createParagraphComposer,
@@ -39,7 +35,6 @@ import {
 } from '@paragraf/typography';
 import type {
   ParagraphInput,
-  ParagraphComposer,
   Document,
   RenderedDocument,
 } from '@paragraf/typography';
@@ -78,6 +73,12 @@ export async function compile<T = unknown>(
     selectable = false,
     maxPages = DEFAULT_MAX_PAGES,
   } = options;
+
+  if (selectable && output !== 'pdf') {
+    console.warn(
+      '[paragraf/compile] selectable: true has no effect when output is not "pdf".',
+    );
+  }
 
   // ── 1. Resolve fonts ───────────────────────────────────────────────────────
   const registry = buildFontRegistry(template.fonts, basePath);
@@ -118,7 +119,6 @@ export async function compile<T = unknown>(
         paragraphs.push(
           buildInput(
             slot.fallbackText,
-            slot.style,
             styleRegistry.resolve(slot.style),
             registry,
           ),
@@ -129,25 +129,17 @@ export async function compile<T = unknown>(
       // 'placeholder' or 'fallback' without fallbackText → render a visible placeholder
       const placeholder = `[${slot.style}]`;
       paragraphs.push(
-        buildInput(
-          placeholder,
-          slot.style,
-          styleRegistry.resolve(slot.style),
-          registry,
-        ),
+        buildInput(placeholder, styleRegistry.resolve(slot.style), registry),
       );
       continue;
     }
 
+    // Skip whitespace-only resolved text (e.g. a binding that resolved to spaces).
+    // Intentional spacer slots should use a non-whitespace character or explicit paragraph breaks.
     if (resolved.trim().length === 0) continue;
 
     paragraphs.push(
-      buildInput(
-        resolved,
-        slot.style,
-        styleRegistry.resolve(slot.style),
-        registry,
-      ),
+      buildInput(resolved, styleRegistry.resolve(slot.style), registry),
     );
   }
 
@@ -177,7 +169,7 @@ export async function compile<T = unknown>(
   const doc: Document = { paragraphs, frames };
   const composedDoc = composeDocument(doc, composer);
 
-  // ── 9b. Layout document ───────────────────────────────────────────────────
+  // ── 10. Layout document ──────────────────────────────────────────────────
   const measurer = createMeasurer(registry);
   const renderedDoc = layoutDocument(composedDoc, frames, measurer);
 
@@ -199,7 +191,7 @@ export async function compile<T = unknown>(
 
   const pageCount = renderedDoc.pages.length;
 
-  // ── 10. Render output ─────────────────────────────────────────────────────
+  // ── 11. Render output ─────────────────────────────────────────────────────
   if (output === 'rendered') {
     return {
       data: renderedDoc,
@@ -210,7 +202,9 @@ export async function compile<T = unknown>(
   if (output === 'svg') {
     const svgPages = renderedDoc.pages.map((page) => {
       // Flatten all items on the page into a single RenderedParagraph (array of RenderedLine)
-      // to call renderToSvg once per page. Coordinates are already absolute.
+      // to call renderToSvg once per page.
+      // Line segment coordinates are page-absolute (layoutDocument applies item.origin
+      // while placing lines into RenderedPage.items — no further offset is needed here).
       const allLines: RenderedParagraph = page.items.flatMap(
         (item) => item.rendered,
       );
@@ -305,7 +299,6 @@ function buildFont(
 
 function buildInput(
   text: string,
-  _styleName: string,
   style: ResolvedParagraphStyle,
   registry: FontRegistry,
 ): ParagraphInput {

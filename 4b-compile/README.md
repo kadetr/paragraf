@@ -159,6 +159,7 @@ When no exact weight match is found for a style, `@paragraf/compile` selects the
 
 ## Known limitations (v0.5)
 
+- **`lineHeight` on paragraph styles** — the `lineHeight` value in a style definition is not passed to the line compositor. The compositor derives leading from font metrics per line. As a result, adjusting `lineHeight` in a style currently has no effect on the output. Per-line leading control is planned for v0.6 when the compositor gains a `lineHeight` field on `ParagraphInput`.
 - **`spaceBefore` / `spaceAfter` on paragraph styles** — per-paragraph spacing is not yet passed to the compositor (the underlying `ParagraphInput` type does not have these fields). Use the frame-level `paragraphSpacing` on `Frame` for uniform spacing. Per-paragraph spacing is planned for v0.6.
 - **`hyphenation: false`** — this style property is not yet propagated to the compositor in v0.5.
 

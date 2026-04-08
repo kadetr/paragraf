@@ -200,6 +200,34 @@ describe('compile() — onMissing behaviour', () => {
     });
     expect(result.metadata.pageCount).toBeGreaterThanOrEqual(1);
   });
+
+  it('renders a visible placeholder when onMissing is placeholder', async () => {
+    const result = await compile({
+      template: defineTemplate({
+        layout: { size: 'A4', margins: 72 },
+        fonts: {
+          'Liberation Serif': {
+            regular: path.join(FONTS_DIR, 'LiberationSerif-Regular.ttf'),
+          },
+        },
+        styles: {
+          body: {
+            font: { family: 'Liberation Serif', size: 12 },
+            lineHeight: 18,
+            alignment: 'left',
+          },
+        },
+        content: [
+          { style: 'body', text: '{{missing}}', onMissing: 'placeholder' },
+        ],
+      }),
+      data: {},
+      output: 'rendered',
+      shaping: 'fontkit',
+    });
+    // placeholder '[body]' is rendered — document has content
+    expect(result.metadata.pageCount).toBeGreaterThanOrEqual(1);
+  });
 });
 
 // ─── compile() — onOverflow ───────────────────────────────────────────────────
@@ -322,49 +350,30 @@ describe('compileBatch()', () => {
   });
 
   it('collects errors without aborting the batch', async () => {
-    const badRecords = [
-      { title: 'Good', body: 'Body.' },
-      // This will cause selectVariant to throw (family not in template)
-      null as unknown as { title: string; body: string },
-      { title: 'Also Good', body: 'More body.' },
-    ];
-
-    // Make the null record fail by providing it to a compile that will error
-    // We use a separate template that references the data directly — null will fail
-    // during normalize() with a type error or during resolveText with empty bindings.
-    // Instead, trigger a real error by using a template with a bad font reference.
-    const badTemplate = defineTemplate({
-      layout: { size: 'A4', margins: 72 },
-      fonts: {
-        'Liberation Serif': {
-          regular: path.join(FONTS_DIR, 'LiberationSerif-Regular.ttf'),
-        },
-      },
-      styles: {
-        body: {
-          font: { family: 'Liberation Serif', size: 12 },
-          lineHeight: 18,
-          alignment: 'left',
-        },
-      },
-      content: [{ style: 'body', text: '{{body}}' }],
-    });
-
+    // Use onOverflow: 'throw' + maxPages: 1 so the middle record (very long)
+    // genuinely throws while the surrounding short records succeed.
     const mixedRecords = [
-      { body: 'Good record.' },
-      { body: 'Another good record.' },
+      { title: 'Short 1', body: 'First short record.' },
+      { title: 'Long', body: 'word '.repeat(5000) }, // overflows maxPages: 1
+      { title: 'Short 2', body: 'Third short record.' },
     ];
 
     const results = await compileBatch({
-      template: badTemplate,
+      template: makeTemplate(),
       output: 'rendered',
       shaping: 'fontkit',
+      maxPages: 1,
+      onOverflow: 'throw',
       records: mixedRecords,
     });
 
-    expect(results).toHaveLength(2);
-    // All succeed — just verify the batch doesn't abort
-    expect(results.every((r) => r.result !== undefined)).toBe(true);
+    expect(results).toHaveLength(3);
+    expect(results[0]!.error).toBeUndefined();
+    expect(results[0]!.result).toBeDefined();
+    expect(results[1]!.error).toBeDefined();
+    expect(results[1]!.error!.message).toMatch(/overflow/i);
+    expect(results[2]!.error).toBeUndefined();
+    expect(results[2]!.result).toBeDefined();
   });
 
   it('calls onProgress after each record', async () => {

@@ -60,11 +60,15 @@ describe('resolvePageSize', () => {
   });
 
   it('throws on unknown named size with helpful message', () => {
-    expect(() => resolvePageSize('A99' as any)).toThrow(/Unknown page size.*A99/);
+    expect(() => resolvePageSize('A99' as any)).toThrow(
+      /Unknown page size.*A99/,
+    );
   });
 
   it('error message lists valid size names', () => {
-    expect(() => resolvePageSize('XXX' as any)).toThrow(/A4.*Letter|Letter.*A4/);
+    expect(() => resolvePageSize('XXX' as any)).toThrow(
+      /A4.*Letter|Letter.*A4/,
+    );
   });
 
   // Intentionally unguarded: resolvePageSize passes zero-dimension tuples through.
