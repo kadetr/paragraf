@@ -1,11 +1,14 @@
 // pdf.ts
 
 import { createRequire } from 'module';
-import { RenderedParagraph, RenderedDocument } from '@paragraf/render-core';
+import {
+  RenderedParagraph,
+  RenderedDocument,
+  getAndSubstituteGlyphs,
+} from '@paragraf/render-core';
 import { FontEngine } from '@paragraf/font-engine';
 import { FontRegistry } from '@paragraf/types';
 import { emitInvisibleSegment, applyMetadata } from './selectable.js';
-import { getAndSubstituteGlyphs } from '@paragraf/render-core';
 
 let _PDFDocument: any = null;
 const getPDFDocument = (): any => {

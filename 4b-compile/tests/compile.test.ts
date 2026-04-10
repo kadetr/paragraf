@@ -336,6 +336,22 @@ describe('compile() — font validation', () => {
   });
 });
 
+// ─── compile() — maxPages validation ─────────────────────────────────────────
+
+describe('compile() — maxPages validation', () => {
+  it('throws RangeError when maxPages is 0', async () => {
+    await expect(
+      compile({ template: makeTemplate(), data: SAMPLE_DATA, maxPages: 0 }),
+    ).rejects.toThrow(RangeError);
+  });
+
+  it('throws RangeError when maxPages is negative', async () => {
+    await expect(
+      compile({ template: makeTemplate(), data: SAMPLE_DATA, maxPages: -5 }),
+    ).rejects.toThrow(/maxPages must be >= 1/);
+  });
+});
+
 // ─── compileBatch() ───────────────────────────────────────────────────────────
 
 describe('compileBatch()', () => {
