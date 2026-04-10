@@ -144,6 +144,7 @@ export async function compile<T = unknown>(
           buildInput(
             slot.fallbackText,
             styleRegistry.resolve(slot.style),
+            slot.style,
             registry,
           ),
         );
@@ -153,7 +154,12 @@ export async function compile<T = unknown>(
       // 'placeholder' or 'fallback' without fallbackText → render a visible placeholder
       const placeholder = `[${slot.style}]`;
       paragraphs.push(
-        buildInput(placeholder, styleRegistry.resolve(slot.style), registry),
+        buildInput(
+          placeholder,
+          styleRegistry.resolve(slot.style),
+          slot.style,
+          registry,
+        ),
       );
       continue;
     }
@@ -163,7 +169,12 @@ export async function compile<T = unknown>(
     if (resolved.trim().length === 0) continue;
 
     paragraphs.push(
-      buildInput(resolved, styleRegistry.resolve(slot.style), registry),
+      buildInput(
+        resolved,
+        styleRegistry.resolve(slot.style),
+        slot.style,
+        registry,
+      ),
     );
   }
 
@@ -290,10 +301,11 @@ function resolveMargins(m: Dimension | DimensionMargins): number | Margins {
 
 function buildFont(
   style: ResolvedParagraphStyle,
+  styleName: string,
   registry: FontRegistry,
 ): Font {
   const {
-    family = 'serif',
+    family,
     size = 12,
     weight = 'normal',
     style: fontStyle = 'normal',
@@ -301,6 +313,13 @@ function buildFont(
     letterSpacing,
     variant,
   } = style.font;
+
+  if (!family) {
+    throw new Error(
+      `[paragraf/compile] Style "${styleName}": font.family is not set. ` +
+        `Add a font.family that matches a key declared in template.fonts.`,
+    );
+  }
 
   const numericWeight = resolveWeight(weight);
   const id: FontId = selectVariant(
@@ -324,11 +343,12 @@ function buildFont(
 function buildInput(
   text: string,
   style: ResolvedParagraphStyle,
+  styleName: string,
   registry: FontRegistry,
 ): ParagraphInput {
   return {
     text,
-    font: buildFont(style, registry),
+    font: buildFont(style, styleName, registry),
     // lineWidth is overridden by composeDocument; 0 is a valid placeholder
     lineWidth: 0,
     alignment: style.alignment,

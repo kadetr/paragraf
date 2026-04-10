@@ -70,7 +70,7 @@ export interface Font {
   letterSpacing?: number; // extra space between characters, same unit as size
   // default 0 — no tracking
   // applied to (glyphCount-1) gaps after GSUB substitution
-  variant?: FontVariant; // triggers GSUB sups/sbs measurement; default 'normal'
+  variant?: FontVariant; // triggers GSUB sups/subs measurement; default 'normal'
 }
 
 /**

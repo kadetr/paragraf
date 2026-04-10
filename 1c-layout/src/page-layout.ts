@@ -64,10 +64,37 @@ export class PageLayout {
     this._columns = opts.columns ?? 1;
     this._gutter = opts.gutter ?? 0;
 
-    // Validate that columns and gutter don't consume the entire text area.
+    if (this._bleed < 0) {
+      throw new Error(
+        `PageLayout: bleed must be >= 0pt; received ${this._bleed}pt.`,
+      );
+    }
+    if (this._columns < 1) {
+      throw new Error(
+        `PageLayout: columns must be >= 1; received ${this._columns}.`,
+      );
+    }
+    if (this._gutter < 0) {
+      throw new Error(
+        `PageLayout: gutter must be >= 0pt; received ${this._gutter}pt.`,
+      );
+    }
+    const horizontalMargins = this._margins.left + this._margins.right;
+    if (horizontalMargins >= this._trimWidth) {
+      throw new Error(
+        `PageLayout: left + right margins (${this._margins.left}pt + ${this._margins.right}pt = ${horizontalMargins}pt) ` +
+          `must be less than the trim width (${this._trimWidth}pt).`,
+      );
+    }
+    const verticalMargins = this._margins.top + this._margins.bottom;
+    if (verticalMargins >= this._trimHeight) {
+      throw new Error(
+        `PageLayout: top + bottom margins (${this._margins.top}pt + ${this._margins.bottom}pt = ${verticalMargins}pt) ` +
+          `must be less than the trim height (${this._trimHeight}pt).`,
+      );
+    }
     if (this._columns > 1) {
-      const textWidth =
-        this._trimWidth - this._margins.left - this._margins.right;
+      const textWidth = this._trimWidth - horizontalMargins;
       const totalGutter = this._gutter * (this._columns - 1);
       if (totalGutter >= textWidth) {
         throw new Error(

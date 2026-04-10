@@ -27,10 +27,17 @@ export async function compileBatch<T = unknown>(
 ): Promise<CompileBatchResult<T>[]> {
   const {
     records,
-    concurrency = DEFAULT_CONCURRENCY,
+    concurrency: rawConcurrency = DEFAULT_CONCURRENCY,
     onProgress,
     ...sharedOptions
   } = options;
+
+  if (rawConcurrency < 1) {
+    throw new RangeError(
+      `compileBatch: concurrency must be ≥ 1 (got ${rawConcurrency})`,
+    );
+  }
+  const concurrency = rawConcurrency;
 
   const total = records.length;
   const results: CompileBatchResult<T>[] = new Array(total);

@@ -56,6 +56,34 @@ describe('compileBatch — result ordering', () => {
   });
 });
 
+// ─── concurrency validation ───────────────────────────────────────────────────
+
+describe('compileBatch — concurrency validation', () => {
+  it('throws RangeError when concurrency is 0', async () => {
+    await expect(
+      compileBatch({
+        template: makeTemplate(),
+        output: 'rendered',
+        shaping: 'fontkit',
+        records: [{ body: 'A.' }],
+        concurrency: 0,
+      }),
+    ).rejects.toThrow(RangeError);
+  });
+
+  it('throws RangeError when concurrency is negative', async () => {
+    await expect(
+      compileBatch({
+        template: makeTemplate(),
+        output: 'rendered',
+        shaping: 'fontkit',
+        records: [{ body: 'A.' }],
+        concurrency: -1,
+      }),
+    ).rejects.toThrow(/concurrency must be ≥ 1/);
+  });
+});
+
 // ─── onProgress ───────────────────────────────────────────────────────────────
 
 describe('compileBatch — onProgress', () => {

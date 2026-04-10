@@ -309,6 +309,33 @@ describe('compile() — empty content', () => {
   });
 });
 
+// ─── compile() — font validation ─────────────────────────────────────────────
+
+describe('compile() — font validation', () => {
+  it('throws a clear error when a style has no font.family set', async () => {
+    await expect(
+      compile({
+        template: defineTemplate({
+          layout: { size: 'A4', margins: 72 },
+          fonts: {
+            'Liberation Serif': {
+              regular: path.join(FONTS_DIR, 'LiberationSerif-Regular.ttf'),
+            },
+          },
+          styles: {
+            // font.family intentionally omitted — resolves to '' from DEFAULTS
+            body: { font: { size: 12 }, lineHeight: 18, alignment: 'left' },
+          },
+          content: [{ style: 'body', text: 'Hello world.' }],
+        }),
+        data: {},
+        output: 'rendered',
+        shaping: 'fontkit',
+      }),
+    ).rejects.toThrow(/Style "body": font\.family is not set/);
+  });
+});
+
 // ─── compileBatch() ───────────────────────────────────────────────────────────
 
 describe('compileBatch()', () => {

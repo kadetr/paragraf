@@ -204,3 +204,67 @@ describe('columnWidths', () => {
     expect(columnWidths(frame)).toEqual([400]);
   });
 });
+
+// ─── PageLayout — constructor validation ──────────────────────────────────────
+
+describe('PageLayout — constructor validation', () => {
+  it('throws when bleed is negative', () => {
+    expect(
+      () => new PageLayout({ size: 'A4', margins: MARGIN, bleed: -1 }),
+    ).toThrow(/bleed must be >= 0pt/);
+  });
+
+  it('throws when columns is 0', () => {
+    expect(
+      () => new PageLayout({ size: 'A4', margins: MARGIN, columns: 0 }),
+    ).toThrow(/columns must be >= 1/);
+  });
+
+  it('throws when columns is negative', () => {
+    expect(
+      () => new PageLayout({ size: 'A4', margins: MARGIN, columns: -2 }),
+    ).toThrow(/columns must be >= 1/);
+  });
+
+  it('throws when gutter is negative', () => {
+    expect(
+      () =>
+        new PageLayout({ size: 'A4', margins: MARGIN, columns: 2, gutter: -5 }),
+    ).toThrow(/gutter must be >= 0pt/);
+  });
+
+  it('throws when horizontal margins meet or exceed trim width', () => {
+    // A4 is 595.28pt wide; margins of 300pt each → 600pt total > 595.28pt
+    expect(
+      () =>
+        new PageLayout({
+          size: 'A4',
+          margins: { top: 10, right: 300, bottom: 10, left: 300 },
+        }),
+    ).toThrow(/left \+ right margins.*must be less than the trim width/);
+  });
+
+  it('throws when vertical margins meet or exceed trim height', () => {
+    // A4 is 841.89pt tall; margins of 430pt each → 860pt total > 841.89pt
+    expect(
+      () =>
+        new PageLayout({
+          size: 'A4',
+          margins: { top: 430, right: 10, bottom: 430, left: 10 },
+        }),
+    ).toThrow(/top \+ bottom margins.*must be less than the trim height/);
+  });
+
+  it('throws when gutter fills the text area', () => {
+    // text width = 595.28 - 2*MARGIN; gutter set larger than that
+    expect(
+      () =>
+        new PageLayout({
+          size: 'A4',
+          margins: MARGIN,
+          columns: 2,
+          gutter: 9999,
+        }),
+    ).toThrow(/gutter.*is wider than the available text area/);
+  });
+});

@@ -100,6 +100,7 @@ export interface CompileBatchOptions<T> extends Omit<
   records: T[];
   /**
    * Maximum number of compile() calls running concurrently in-process.
+   * Must be ≥ 1. Throws a RangeError if set to 0 or a negative value.
    * @default 4
    */
   concurrency?: number;
