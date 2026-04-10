@@ -63,6 +63,20 @@ export class PageLayout {
     this._margins = resolveMargins(opts.margins);
     this._columns = opts.columns ?? 1;
     this._gutter = opts.gutter ?? 0;
+
+    // Validate that columns and gutter don't consume the entire text area.
+    if (this._columns > 1) {
+      const textWidth =
+        this._trimWidth - this._margins.left - this._margins.right;
+      const totalGutter = this._gutter * (this._columns - 1);
+      if (totalGutter >= textWidth) {
+        throw new Error(
+          `PageLayout: gutter (${this._gutter}pt × ${this._columns - 1} gaps = ${totalGutter}pt) ` +
+            `is wider than the available text area (${textWidth}pt). ` +
+            `Reduce the gutter or increase the page width / reduce the margins.`,
+        );
+      }
+    }
   }
 
   /**

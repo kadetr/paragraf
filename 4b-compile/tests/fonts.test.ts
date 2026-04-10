@@ -1,5 +1,6 @@
 import { describe, it, expect, vi } from 'vitest';
 import * as path from 'path';
+import { existsSync } from 'fs';
 import type { FontRegistry } from '@paragraf/types';
 import {
   VARIANT_CONVENTIONS,
@@ -7,6 +8,14 @@ import {
   buildFontRegistry,
   selectVariant,
 } from '../src/fonts.js';
+
+// Stub existsSync so unit tests don't require real font files on disk.
+// Individual tests can override with mockReturnValueOnce(false) to test the
+// file-not-found error path.
+vi.mock('fs', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('fs')>();
+  return { ...actual, existsSync: vi.fn(() => true) };
+});
 
 const BASE = '/base';
 
@@ -164,6 +173,13 @@ describe('buildFontRegistry', () => {
     expect(reg.has('Serif/regular')).toBe(true);
     expect(reg.has('Sans/regular')).toBe(true);
     expect(reg.has('Sans/bold')).toBe(true);
+  });
+
+  it('throws when a font file does not exist', () => {
+    vi.mocked(existsSync).mockReturnValueOnce(false);
+    expect(() =>
+      buildFontRegistry({ Serif: { regular: './missing.ttf' } }, BASE),
+    ).toThrow('[paragraf/compile] Font file not found for "Serif/regular"');
   });
 });
 

@@ -4,6 +4,7 @@
 // and CSS-style nearest-weight selection for family + weight + style queries.
 
 import * as pathModule from 'path';
+import { existsSync } from 'fs';
 import type {
   FontId,
   FontStyle,
@@ -112,6 +113,11 @@ export function buildFontRegistry(
     for (const [variantKey, entry] of Object.entries(variants)) {
       if (entry === undefined) continue;
       const resolved = resolveVariantEntry(variantKey, entry, basePath);
+      if (!existsSync(resolved.filePath)) {
+        throw new Error(
+          `[paragraf/compile] Font file not found for "${family}/${variantKey}": ${resolved.filePath}`,
+        );
+      }
       const id: FontId = `${family}/${variantKey}`;
       registry.set(id, {
         id,

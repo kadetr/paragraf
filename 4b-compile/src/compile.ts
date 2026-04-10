@@ -50,6 +50,11 @@ import { resolveComposerOptions, detectActualShaping } from './shaping.js';
 
 const DEFAULT_MAX_PAGES = 100;
 
+// Module-level sets to deduplicate development-time warnings (one warn per style
+// name per process, avoiding spam in high-volume compileBatch runs).
+const _warnedSpacing = new Set<string>();
+const _warnedHyphenation = new Set<string>();
+
 // ─── Main entry point ─────────────────────────────────────────────────────────
 
 /**
@@ -99,6 +104,25 @@ export async function compile<T = unknown>(
 
   // ── 4. Resolve styles ──────────────────────────────────────────────────────
   const styleRegistry = defineStyles(template.styles);
+
+  // Warn once per style name when properties are declared but not yet implemented.
+  for (const name of styleRegistry.names()) {
+    const s = styleRegistry.resolve(name);
+    if ((s.spaceBefore > 0 || s.spaceAfter > 0) && !_warnedSpacing.has(name)) {
+      _warnedSpacing.add(name);
+      console.warn(
+        `[paragraf/compile] Style "${name}": spaceBefore/spaceAfter are not yet ` +
+          `implemented and will be ignored. (planned v0.6)`,
+      );
+    }
+    if (s.hyphenation === false && !_warnedHyphenation.has(name)) {
+      _warnedHyphenation.add(name);
+      console.warn(
+        `[paragraf/compile] Style "${name}": hyphenation: false is not yet supported; ` +
+          `paragraphs will still be hyphenated according to their language setting. (planned v0.6)`,
+      );
+    }
+  }
 
   // ── 5. Resolve data ────────────────────────────────────────────────────────
   const record: Record<string, unknown> = normalize

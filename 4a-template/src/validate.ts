@@ -74,6 +74,10 @@ export function validateTemplate(t: Template): void {
         `content[${i}].text is empty — provide literal text or a {{binding}}`,
       );
     }
-    parseTokens(slot.text);
+    try {
+      parseTokens(slot.text);
+    } catch (e) {
+      throw new Error(`content[${i}].text: ${(e as Error).message}`);
+    }
   }
 }

@@ -87,7 +87,7 @@ export const layoutParagraph = (
 
 // ─── Helper: Render glyphs with GSUB features ─────────────────────────────────
 
-const getAndSubstituteGlyphs = (
+export const getAndSubstituteGlyphs = (
   fontEngine: FontEngine,
   fontId: string,
   text: string,

@@ -5,6 +5,7 @@ import { RenderedParagraph, RenderedDocument } from '@paragraf/render-core';
 import { FontEngine } from '@paragraf/font-engine';
 import { FontRegistry } from '@paragraf/types';
 import { emitInvisibleSegment, applyMetadata } from './selectable.js';
+import { getAndSubstituteGlyphs } from '@paragraf/render-core';
 
 let _PDFDocument: any = null;
 const getPDFDocument = (): any => {
@@ -82,21 +83,12 @@ function drawRenderedParagraph(
       if (!seg.text) continue;
 
       // Get glyphs with GSUB features
-      let glyphs = fontEngine.glyphsForString(seg.font.id, seg.text, seg.font);
-      glyphs = fontEngine.applyLigatures(seg.font.id, glyphs);
-      if (seg.font.variant === 'superscript') {
-        glyphs = fontEngine.applySingleSubstitution(
-          seg.font.id,
-          glyphs,
-          'sups',
-        );
-      } else if (seg.font.variant === 'subscript') {
-        glyphs = fontEngine.applySingleSubstitution(
-          seg.font.id,
-          glyphs,
-          'subs',
-        );
-      }
+      const glyphs = getAndSubstituteGlyphs(
+        fontEngine,
+        seg.font.id,
+        seg.text,
+        seg.font,
+      );
 
       const unitsPerEm = getUnitsPerEm(fontEngine, seg.font.id, seg.font.size);
       const scale = seg.font.size / unitsPerEm;

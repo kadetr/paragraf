@@ -4,7 +4,7 @@
 // Tests the acquire/release/queue logic by instrumenting the compile calls
 // to track in-flight concurrency, independent of font loading time.
 
-import { describe, it, expect, vi, beforeAll } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import * as path from 'path';
 import { defineTemplate } from '@paragraf/template';
 import { compileBatch } from '../src/batch.js';

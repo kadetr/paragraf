@@ -8,6 +8,7 @@ export {
   renderToSvg,
   renderToCanvas,
   clearRenderCaches,
+  getAndSubstituteGlyphs,
 } from './render.js';
 
 export type {
