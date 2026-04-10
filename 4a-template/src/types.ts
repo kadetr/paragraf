@@ -1,0 +1,153 @@
+// types.ts — Template schema types for @paragraf/template.
+// Pure data types; no functions, no side effects.
+
+import type { ParagraphStyleDef } from '@paragraf/style';
+import type { FontStyle, FontStretch } from '@paragraf/types';
+import type { PageSize, Dimension } from '@paragraf/layout';
+
+export type { PageSize, Dimension };
+
+// ─── Layout ──────────────────────────────────────────────────────────────────
+
+/**
+ * Per-side margin object accepting Dimension values.
+ * Each side can be a number (points) or a string like '20mm', '1in', '36pt'.
+ */
+export interface DimensionMargins {
+  top: Dimension;
+  right: Dimension;
+  bottom: Dimension;
+  left: Dimension;
+}
+
+/**
+ * Page layout configuration for a template.
+ * Accepts Dimension strings throughout — @paragraf/compile resolves them to
+ * points before constructing PageLayout.
+ */
+export interface TemplateLayout {
+  /** Named page size or explicit [width, height] tuple in points. */
+  size: PageSize;
+  /**
+   * Margins in points or Dimension strings.
+   * Single value → equal on all sides. Per-side object for independent control.
+   */
+  margins: Dimension | DimensionMargins;
+  /** Number of text columns per page. Defaults to 1. */
+  columns?: number;
+  /** Space between columns — number (points) or Dimension string. */
+  gutter?: Dimension;
+  /** Bleed on all four sides — number (points) or Dimension string. */
+  bleed?: Dimension;
+}
+
+// ─── Fonts ───────────────────────────────────────────────────────────────────
+
+/**
+ * A font variant entry: either a file path string (shorthand) or an object
+ * with explicit path and optional weight/style/stretch metadata.
+ *
+ * The four standard keys (regular, bold, italic, boldItalic) have conventional
+ * defaults applied by @paragraf/compile:
+ *   regular    → weight 400, style 'normal'
+ *   bold       → weight 700, style 'normal'
+ *   italic     → weight 400, style 'italic'
+ *   boldItalic → weight 700, style 'italic'
+ *
+ * Custom keys (e.g. 'light', 'semiBold') require the object form with explicit
+ * metadata so @paragraf/compile can select the correct variant when resolving
+ * a style's font: { family, weight, style } against the registry.
+ */
+export type FontVariantEntry =
+  | string
+  | {
+      path: string;
+      weight?: number;
+      style?: FontStyle;
+      stretch?: FontStretch;
+    };
+
+/**
+ * File paths for each named variant of a font family.
+ * Use a plain string for the four standard variants; use the object form
+ * with metadata for custom weight/style/stretch variants.
+ *
+ * @example
+ * ```ts
+ * {
+ *   regular:    './fonts/Serif-Regular.ttf',          // string shorthand
+ *   bold:       './fonts/Serif-Bold.ttf',
+ *   italic:     './fonts/Serif-Italic.ttf',
+ *   boldItalic: './fonts/Serif-BoldItalic.ttf',
+ *   light: { path: './fonts/Serif-Light.ttf', weight: 300 },  // object form
+ *   semiBold: { path: './fonts/Serif-SemiBold.ttf', weight: 600 },
+ * }
+ * ```
+ */
+export interface TemplateFontVariants {
+  regular?: FontVariantEntry;
+  bold?: FontVariantEntry;
+  italic?: FontVariantEntry;
+  boldItalic?: FontVariantEntry;
+  [variant: string]: FontVariantEntry | undefined;
+}
+
+/**
+ * Font registry for a template: family name → variant → file path.
+ * Family names must match those used in style definitions.
+ */
+export type TemplateFonts = Record<string, TemplateFontVariants>;
+
+// ─── Content ─────────────────────────────────────────────────────────────────
+
+/**
+ * How to handle a content slot when a data binding resolves to undefined/null.
+ * - 'skip'        — omit the slot entirely
+ * - 'placeholder' — render a visible placeholder string (handled by compile layer)
+ * - 'fallback'    — render fallbackText (must be set when this value is used)
+ */
+export type OnMissing = 'skip' | 'placeholder' | 'fallback';
+
+/**
+ * A single content slot in a template.
+ * `text` may contain `{{binding.path}}` interpolations; literal text is also valid.
+ * Multiple bindings and mixed literal+binding strings are supported.
+ */
+export interface ContentSlot {
+  /** Style name from this template's styles map. */
+  style: string;
+  /**
+   * Text content — literal or with `{{path.to.field}}` bindings.
+   * @example 'Article: {{product.sku}}'
+   * @example '{{product.description}}'
+   * @example 'Static heading text'
+   */
+  text: string;
+  /** Behaviour when any binding in this slot resolves to missing. Defaults to 'skip'. */
+  onMissing?: OnMissing;
+  /** Required when onMissing is 'fallback'. Rendered as-is by the compile layer. */
+  fallbackText?: string;
+}
+
+// ─── Template ────────────────────────────────────────────────────────────────
+
+/**
+ * A complete document template.
+ * Pass to defineTemplate() to validate; pass the result to @paragraf/compile.
+ */
+export interface Template {
+  /** Page geometry configuration. */
+  layout: TemplateLayout;
+  /**
+   * Font family declarations. Keys are family names; values map variant
+   * names to file paths. File path resolution is handled by @paragraf/compile.
+   */
+  fonts: TemplateFonts;
+  /**
+   * Paragraph style definitions, using the same shape as @paragraf/style's
+   * defineStyles() input. Inheritance chains are fully supported.
+   */
+  styles: Record<string, ParagraphStyleDef>;
+  /** Ordered list of content slots. */
+  content: ContentSlot[];
+}

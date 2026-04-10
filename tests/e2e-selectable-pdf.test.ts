@@ -30,10 +30,10 @@ const SERIF_PATH = path.join(FONTS_DIR, 'LiberationSerif-Regular.ttf');
 const BOLD_PATH = path.join(FONTS_DIR, 'LiberationSerif-Bold.ttf');
 
 const REGISTRY: FontRegistry = new Map([
-  ['serif', { id: 'serif', face: 'Liberation Serif', filePath: SERIF_PATH }],
+  ['serif', { id: 'serif', family: 'Liberation Serif', filePath: SERIF_PATH }],
   [
     'serif-bold',
-    { id: 'serif-bold', face: 'Liberation Serif Bold', filePath: BOLD_PATH },
+    { id: 'serif-bold', family: 'Liberation Serif Bold', filePath: BOLD_PATH },
   ],
 ]);
 

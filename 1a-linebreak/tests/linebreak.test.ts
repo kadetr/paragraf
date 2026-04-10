@@ -28,7 +28,7 @@ const REGISTRY: FontRegistry = new Map([
     'liberation-serif-regular',
     {
       id: 'liberation-serif-regular',
-      face: 'Liberation Serif',
+      family: 'Liberation Serif',
       filePath: REGULAR_PATH,
     },
   ],

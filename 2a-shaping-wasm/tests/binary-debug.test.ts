@@ -33,7 +33,7 @@ const REGISTRY: FontRegistry = new Map([
     'lib-reg',
     {
       id: 'lib-reg',
-      face: 'Liberation Serif',
+      family: 'Liberation Serif',
       filePath: path.join(FONTS_DIR, 'LiberationSerif-Regular.ttf'),
     },
   ],

@@ -48,7 +48,7 @@ const REGISTRY: FontRegistry = new Map([
     'liberation-serif-regular',
     {
       id: 'liberation-serif-regular',
-      face: 'Liberation Serif',
+      family: 'Liberation Serif',
       filePath: REGULAR_PATH,
     },
   ],
@@ -56,7 +56,7 @@ const REGISTRY: FontRegistry = new Map([
     'liberation-serif-bold',
     {
       id: 'liberation-serif-bold',
-      face: 'Liberation Serif Bold',
+      family: 'Liberation Serif Bold',
       filePath: BOLD_PATH,
     },
   ],

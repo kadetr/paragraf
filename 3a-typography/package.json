@@ -42,9 +42,9 @@
     "postpack": "node ../scripts/publishconfig-swap.mjs restore"
   },
   "dependencies": {
-    "@paragraf/types": "^0.3.0",
-    "@paragraf/linebreak": "^0.3.0",
-    "@paragraf/font-engine": "^0.3.0",
+    "@paragraf/types": "^0.5.0",
+    "@paragraf/linebreak": "^0.5.0",
+    "@paragraf/font-engine": "^0.5.0",
     "@paragraf/shaping-wasm": "^0.3.0",
     "@paragraf/render-core": "^0.3.0"
   },

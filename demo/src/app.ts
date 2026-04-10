@@ -174,7 +174,7 @@ export async function startApp(engine: BrowserWasmFontEngine): Promise<void> {
     };
     const descriptor: FontDescriptor = {
       id: fontOpt.id,
-      face: fontOpt.family,
+      family: fontOpt.family,
       filePath: '',
     };
     const registry: FontRegistry = new Map([[fontOpt.id, descriptor]]);

@@ -1,6 +1,6 @@
 {
   "name": "@paragraf/linebreak",
-  "version": "0.3.0",
+  "version": "0.5.0",
   "description": "Knuth-Plass line-breaking algorithm + hyphenation. Browser-safe, zero font dependencies.",
   "license": "MIT",
   "repository": {
@@ -43,7 +43,7 @@
     "postpack": "node ../scripts/publishconfig-swap.mjs restore"
   },
   "dependencies": {
-    "@paragraf/types": "^0.3.0",
+    "@paragraf/types": "^0.5.0",
     "hyphen": "^1.14.1"
   },
   "devDependencies": {

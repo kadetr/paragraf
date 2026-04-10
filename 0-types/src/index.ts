@@ -12,6 +12,51 @@ export type FontStretch =
   | 'semi-expanded'
   | 'expanded';
 
+/**
+ * Authoring weight — named keywords or numeric values (100–900).
+ * Named values are authoring-only: they must be resolved to a number via
+ * resolveWeight() before being passed to any engine type (Font.weight: number).
+ */
+export type FontWeight =
+  | number
+  | 'thin'
+  | 'extra-light'
+  | 'light'
+  | 'normal'
+  | 'medium'
+  | 'semi-bold'
+  | 'bold'
+  | 'extra-bold'
+  | 'black';
+
+/**
+ * Resolve a FontWeight authoring value to its numeric equivalent.
+ * Numeric values pass through unchanged.
+ */
+export function resolveWeight(w: FontWeight): number {
+  if (typeof w === 'number') return w;
+  switch (w) {
+    case 'thin':
+      return 100;
+    case 'extra-light':
+      return 200;
+    case 'light':
+      return 300;
+    case 'normal':
+      return 400;
+    case 'medium':
+      return 500;
+    case 'semi-bold':
+      return 600;
+    case 'bold':
+      return 700;
+    case 'extra-bold':
+      return 800;
+    case 'black':
+      return 900;
+  }
+}
+
 export type FontId = string;
 
 export type FontVariant = 'normal' | 'superscript' | 'subscript';
@@ -19,7 +64,7 @@ export type FontVariant = 'normal' | 'superscript' | 'subscript';
 export interface Font {
   id: FontId;
   size: number;
-  weight: number;
+  weight: number; // always numeric — use resolveWeight() on FontSpec.weight before constructing
   style: FontStyle;
   stretch: FontStretch;
   letterSpacing?: number; // extra space between characters, same unit as size
@@ -28,14 +73,30 @@ export interface Font {
   variant?: FontVariant; // triggers GSUB sups/subs measurement; default 'normal'
 }
 
+/**
+ * Authoring-time font description used in style definitions.
+ * All fields are optional to support partial overrides in inheritance chains.
+ * Use resolveWeight() on weight before constructing a Font for the engine.
+ */
+export interface FontSpec {
+  family?: string; // e.g. 'SourceSerif4'; inherited from parent chain if absent
+  size?: number; // points
+  weight?: FontWeight; // named or numeric; default 400 ('normal')
+  style?: FontStyle; // 'normal' | 'italic' | 'oblique'; default 'normal'
+  stretch?: FontStretch; // 'condensed' | 'normal' | 'expanded' | …; default 'normal'
+  letterSpacing?: number; // extra tracking in points; default 0
+  variant?: FontVariant; // 'normal' | 'superscript' | 'subscript'; default 'normal'
+}
+
 export interface FontDescriptor {
   id: FontId;
-  /**
-   * Human-readable font family name. Provided for identification purposes only.
-   * @remarks Not currently read by any engine for glyph lookup or substitution.
-   */
-  face: string;
+  /** Human-readable font family name (e.g. 'Source Serif 4'). */
+  family: string;
   filePath: string;
+  /** Optional variant metadata — used by the compile layer for family+variant → FontId resolution. */
+  weight?: number;
+  style?: FontStyle;
+  stretch?: FontStretch;
 }
 
 export type FontRegistry = Map<FontId, FontDescriptor>;
@@ -201,4 +262,47 @@ export interface Measurer {
   space: GlueSpaceFn;
   metrics: GetFontMetrics;
   registry: FontRegistry;
+}
+
+// ─── Layout geometry ──────────────────────────────────────────────────────────
+// Defined here (Layer 0) so both @paragraf/layout (Layer 1) and
+// @paragraf/render-core (Layer 2) can reference them without a cross-layer dep.
+
+/**
+ * Baseline grid for a frame. When set on a Frame, every line placed inside
+ * that frame is snapped so its baseline lands on a grid line.
+ *
+ * Grid lines are at: frame.y + first + n * interval  (n = 0, 1, 2, …)
+ */
+export interface BaselineGrid {
+  /** Y-offset from frame.y where the first baseline lands. Typically = font ascender. */
+  first: number;
+  /** Distance between baseline grid lines in points. */
+  interval: number;
+}
+
+/** A rectangular region on a specific page where text flows. */
+export interface Frame {
+  /** 0-based page index this frame lives on. */
+  page: number;
+  /** Left edge of the frame in points. */
+  x: number;
+  /** Top edge of the frame in points. */
+  y: number;
+  /** Total width of the frame (including gutters between columns) in points. */
+  width: number;
+  /** Total height of the frame in points. */
+  height: number;
+  /** Number of columns. Defaults to 1. */
+  columnCount?: number;
+  /** Space between columns in points. Defaults to 0. */
+  gutter?: number;
+  /** Optional baseline grid. When set, line placement snaps to grid. */
+  grid?: BaselineGrid;
+  /**
+   * Vertical gap in points inserted after each paragraph placed in this frame.
+   * Applied after every paragraph (including the last).
+   * Defaults to 0.
+   */
+  paragraphSpacing?: number;
 }

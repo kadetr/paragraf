@@ -48,7 +48,7 @@ const SERIF_FONT: Font = {
 const SERIF_REGISTRY: FontRegistry = new Map([
   [
     'liberation-serif',
-    { id: 'liberation-serif', face: 'Liberation Serif', filePath: SERIF_PATH },
+    { id: 'liberation-serif', family: 'Liberation Serif', filePath: SERIF_PATH },
   ],
 ]);
 

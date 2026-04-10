@@ -15,7 +15,7 @@ const REGISTRY: FontRegistry = new Map([
     'liberation-regular',
     {
       id: 'liberation-regular',
-      face: 'Liberation Serif',
+      family: 'Liberation Serif',
       filePath: path.join(FONTS_DIR, 'LiberationSerif-Regular.ttf'),
     },
   ],
@@ -23,7 +23,7 @@ const REGISTRY: FontRegistry = new Map([
     'liberation-bold',
     {
       id: 'liberation-bold',
-      face: 'Liberation Serif Bold',
+      family: 'Liberation Serif Bold',
       filePath: path.join(FONTS_DIR, 'LiberationSerif-Bold.ttf'),
     },
   ],
@@ -31,7 +31,7 @@ const REGISTRY: FontRegistry = new Map([
     'roboto-regular',
     {
       id: 'roboto-regular',
-      face: 'Roboto',
+      family: 'Roboto',
       filePath: path.join(FONTS_DIR, 'Roboto-Regular.ttf'),
     },
   ],
@@ -39,7 +39,7 @@ const REGISTRY: FontRegistry = new Map([
     'roboto-bold',
     {
       id: 'roboto-bold',
-      face: 'Roboto Bold',
+      family: 'Roboto Bold',
       filePath: path.join(FONTS_DIR, 'Roboto-Bold.ttf'),
     },
   ],
