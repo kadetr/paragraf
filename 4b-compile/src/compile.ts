@@ -85,6 +85,12 @@ export async function compile<T = unknown>(
     );
   }
 
+  if (maxPages < 1) {
+    throw new RangeError(
+      `[paragraf/compile] maxPages must be >= 1 (got ${maxPages}).`,
+    );
+  }
+
   // ── 1. Resolve fonts ───────────────────────────────────────────────────────
   const registry = buildFontRegistry(template.fonts, basePath);
 

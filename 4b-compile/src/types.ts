@@ -62,8 +62,9 @@ export interface CompileOptions<T = unknown> {
   /** Add an invisible searchable text layer to the PDF. Requires `output: 'pdf'`. */
   selectable?: boolean;
   /**
-   * Maximum number of pages to generate. Content that exceeds this limit is
-   * silently truncated (or throws if `onOverflow: 'throw'`).
+   * Maximum number of pages to generate. Must be >= 1. Content that exceeds
+   * this limit is silently truncated (or throws if `onOverflow: 'throw'`).
+   * Throws a RangeError if set to 0 or a negative value.
    * @default 100
    */
   maxPages?: number;
