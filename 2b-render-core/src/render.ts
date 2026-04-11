@@ -60,8 +60,23 @@ export const layoutParagraph = (
         rightEdge = wordStart - (wi > 0 ? line.wordSpacing : 0);
       }
     } else {
-      // LTR layout (original behavior); xOffset shifts the line for OMA
-      let wordX = origin.x + (line.xOffset ?? 0);
+      // LTR layout; xOffset shifts the line for OMA; alignOffset for right/center
+      const totalWordWidth = line.wordRuns.reduce(
+        (sum, segs) =>
+          sum +
+          segs.reduce((s, seg) => s + measurer.measure(seg.text, seg.font), 0),
+        0,
+      );
+      const contentWidth =
+        totalWordWidth +
+        Math.max(0, line.wordRuns.length - 1) * line.wordSpacing;
+      let alignOffset = 0;
+      if (line.alignment === 'right') {
+        alignOffset = line.lineWidth - contentWidth;
+      } else if (line.alignment === 'center') {
+        alignOffset = (line.lineWidth - contentWidth) / 2;
+      }
+      let wordX = origin.x + (line.xOffset ?? 0) + alignOffset;
       for (let wi = 0; wi < line.wordRuns.length; wi++) {
         for (const seg of line.wordRuns[wi]) {
           segments.push({

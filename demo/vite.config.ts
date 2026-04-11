@@ -1,11 +1,11 @@
 import { defineConfig } from 'vite';
 import wasm from 'vite-plugin-wasm';
 
-export default defineConfig({
+export default defineConfig(({ command }) => ({
   plugins: [wasm()],
-  // base is set to /paragraf/ for GitHub Pages hosting at kadetr.github.io/paragraf/
-  base: '/paragraf/',
-  // D1: serve the root fonts/ directory as static assets
+  // In build mode: /paragraf/ for GitHub Pages. In dev: / so publicDir fonts are
+  // served at the root (Vite always serves publicDir at server root, not at base).
+  base: command === 'build' ? '/paragraf/' : '/',
   publicDir: '../fonts',
   build: {
     outDir: 'dist',
@@ -16,4 +16,4 @@ export default defineConfig({
     // prevent Vite from pre-bundling the WASM module — vite-plugin-wasm handles it
     exclude: ['knuth_plass_wasm'],
   },
-});
+}));

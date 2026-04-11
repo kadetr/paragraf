@@ -4,8 +4,11 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "vite build",
-    "preview": "vite preview"
+    "build": "npm run build:svgs && vite build",
+    "build:svgs": "tsx scripts/bake-svgs.ts",
+    "preview": "vite preview",
+    "test": "vitest run --passWithNoTests",
+    "test:watch": "vitest"
   },
   "dependencies": {
     "@paragraf/linebreak": "*",
@@ -16,6 +19,11 @@
   "devDependencies": {
     "vite": "^5.0.0",
     "vite-plugin-wasm": "^3.3.0",
-    "typescript": "^5.4.0"
+    "typescript": "^5.4.0",
+    "vitest": "^2.0.0",
+    "@vitest/coverage-v8": "^2.0.0",
+    "happy-dom": "^14.0.0",
+    "@paragraf/typography": "*",
+    "tsx": "^4.0.0"
   }
 }

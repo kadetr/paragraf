@@ -1,8 +1,13 @@
 // demo/src/compose-kp.ts
 // Knuth-Plass composition pipeline — uses pure-TS @paragraf/linebreak (browser-safe).
-// loadHyphenator('en-us') must have been awaited before calling composeKP().
+// loadHyphenator(language) must have been awaited before calling composeKP().
 
-import type { Font, ComposedParagraph, FontRegistry } from '@paragraf/types';
+import type {
+  Font,
+  ComposedParagraph,
+  FontRegistry,
+  AlignmentMode,
+} from '@paragraf/types';
 import type { HyphenatedWordWithFont } from '@paragraf/linebreak';
 import {
   hyphenateParagraph,
@@ -13,17 +18,31 @@ import {
 } from '@paragraf/linebreak';
 import { createBrowserMeasurer } from './measurer.js';
 
+export interface ComposeKPOptions {
+  tolerance?: number; // default: 2
+  looseness?: number; // default: 0
+  alignment?: AlignmentMode; // default: 'justified'
+  language?: string; // default: 'en-us'
+}
+
 export function composeKP(
   text: string,
   font: Font,
   lineWidth: number,
   registry: FontRegistry,
+  opts: ComposeKPOptions = {},
 ): ComposedParagraph {
+  const {
+    tolerance = 2,
+    looseness = 0,
+    alignment = 'justified',
+    language = 'en-us',
+  } = opts;
+
   const measurer = createBrowserMeasurer(registry);
 
-  // hyphenateParagraph uses the already-loaded hyphenator cache (sync after loadHyphenator)
   const hyphenated = hyphenateParagraph(text, {
-    language: 'en-us',
+    language,
     fontSize: font.size,
     minWordLength: 5,
     preserveSoftHyphens: true,
@@ -39,20 +58,14 @@ export function composeKP(
   const breakpointResult = computeBreakpoints({
     nodes,
     lineWidth,
-    tolerance: 2,
+    tolerance,
     emergencyStretch: 20,
-    looseness: 0,
+    looseness,
   });
 
   const breaks = traceback(breakpointResult.node);
 
-  return composeParagraph(
-    nodes,
-    breaks,
-    'justified',
-    false,
-    lineWidth,
-    [],
-    (font) => measurer.metrics(font),
+  return composeParagraph(nodes, breaks, alignment, false, lineWidth, [], (f) =>
+    measurer.metrics(f),
   );
 }

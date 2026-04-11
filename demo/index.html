@@ -3,136 +3,27 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>paragraf — Knuth-Plass vs Greedy</title>
+    <title>paragraf</title>
     <link rel="stylesheet" href="/src/style.css" />
   </head>
   <body>
     <header>
-      <div class="header-inner">
-        <h1>paragraf</h1>
-        <p class="tagline">
-          Knuth-Plass optimal line breaking vs. greedy word-wrap — live, in the
-          browser.
-        </p>
-        <div id="status" class="status loading">● initialising…</div>
-      </div>
+      <span class="logo">paragraf</span>
+      <nav role="tablist" aria-label="Demo pages">
+        <button role="tab" data-page="layout" aria-selected="false">
+          Layout
+        </button>
+        <button role="tab" data-page="linebreak" aria-selected="true">
+          Line Breaking
+        </button>
+        <button role="tab" data-page="typography" aria-selected="false">
+          Typography
+        </button>
+        <button role="tab" data-page="i18n" aria-selected="false">i18n</button>
+      </nav>
+      <div id="status" class="status loading">● initialising…</div>
     </header>
-
-    <div class="controls">
-      <label class="controls-text">
-        <span>Text</span>
-        <textarea id="input" rows="4" spellcheck="false"></textarea>
-      </label>
-      <div class="controls-right">
-        <div class="controls-row">
-          <label class="slider-label">
-            <span>Line width: <strong id="lw-display">350</strong> pt</span>
-            <input
-              type="range"
-              id="linewidth"
-              min="180"
-              max="540"
-              value="350"
-              step="5"
-            />
-          </label>
-          <label class="slider-label">
-            <span>Font size: <strong id="fs-display">14</strong> pt</span>
-            <input
-              type="range"
-              id="fontsize"
-              min="8"
-              max="24"
-              value="14"
-              step="1"
-            />
-          </label>
-        </div>
-        <div class="controls-row">
-          <label class="select-label">
-            <span>Font</span>
-            <select id="fontselect"></select>
-          </label>
-          <label class="slider-label">
-            <span>Leading: <strong id="lh-display">1.00</strong>×</span>
-            <input
-              type="range"
-              id="leading"
-              min="0.8"
-              max="2.0"
-              value="1"
-              step="0.05"
-            />
-          </label>
-        </div>
-      </div>
-    </div>
-
-    <div class="comparison">
-      <div class="panel">
-        <div class="panel-header">
-          <span class="badge kp">KP</span>
-          <h2>Knuth-Plass (Paragraf)</h2>
-          <span class="panel-desc"
-            >Optimal — minimises total badness across all lines
-            simultaneously</span
-          >
-        </div>
-        <div id="kp-output" class="panel-output"></div>
-      </div>
-      <div class="panel">
-        <div class="panel-header">
-          <span class="badge greedy">GR</span>
-          <h2>Greedy</h2>
-          <span class="panel-desc"
-            >First-fit — fills each line as full as possible, no lookahead</span
-          >
-        </div>
-        <div id="greedy-output" class="panel-output"></div>
-      </div>
-      <div class="panel">
-        <div class="panel-header">
-          <span class="badge css">CSS</span>
-          <h2>Browser CSS</h2>
-          <span class="panel-desc"
-            ><code>text-align: justify</code> — browser's built-in
-            algorithm</span
-          >
-        </div>
-        <div id="css-output" class="panel-output">
-          <div id="css-text" class="css-text"></div>
-        </div>
-      </div>
-      <div class="panel">
-        <div class="panel-header">
-          <span class="badge css-hy">CSS</span>
-          <h2>Browser CSS + Hyphens</h2>
-          <span class="panel-desc"
-            ><code>text-align: justify; hyphens: auto</code></span
-          >
-        </div>
-        <div id="css-hy-output" class="panel-output">
-          <div id="css-hy-text" class="css-text css-hyphens"></div>
-        </div>
-      </div>
-    </div>
-
-    <footer>
-      <a
-        href="https://github.com/kadetr/paragraf"
-        target="_blank"
-        rel="noopener"
-        >GitHub</a
-      >
-      &nbsp;·&nbsp;
-      <a
-        href="https://www.npmjs.com/package/@paragraf/typography"
-        target="_blank"
-        rel="noopener"
-        >npm</a
-      >
-    </footer>
-
+    <main id="page-root"></main>
     <script type="module" src="/src/main.ts"></script>
   </body>
 </html>

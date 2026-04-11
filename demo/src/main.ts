@@ -1,29 +1,80 @@
 // demo/src/main.ts
-// Entry point — initialises WASM (via vite-plugin-wasm side effect),
-// fetches the font bytes, registers them, then starts the app.
+// Entry point — initialises WASM, loads hyphenation patterns, then starts router.
 
-// vite-plugin-wasm transforms this import so the WASM binary is
-// fetched and instantiated before any function in this module runs.
-// By the time we call register_font() below, the WASM is ready.
 import '../../2a-shaping-wasm/wasm/pkg-bundler/knuth_plass_wasm.js';
 
 import { BrowserWasmFontEngine } from './browser-engine.js';
 import { loadHyphenator } from '@paragraf/linebreak';
-import { startApp } from './app.js';
+import { createRouter } from './router.js';
+import type { Page, PageKey, BootContext } from './router.js';
 import './style.css';
+
+// Lazy-import page modules so they only load when first navigated to.
+// Each returns a `Page` with mount() / unmount().
+async function importPage(key: PageKey): Promise<Page> {
+  switch (key) {
+    case 'linebreak':
+      return (await import('./pages/linebreak.js')).linebreakPage;
+    case 'layout':
+      return (await import('./pages/layout.js')).layoutPage;
+    case 'typography':
+      return (await import('./pages/typography.js')).typographyPage;
+    case 'i18n':
+      return (await import('./pages/i18n.js')).i18nPage;
+  }
+}
+
+// Thin proxy that lazy-loads the real page module on first mount.
+function lazyPage(key: PageKey): Page {
+  let real: Page | null = null;
+  return {
+    async mount(container: HTMLElement, ctx: BootContext) {
+      if (!real) real = await importPage(key);
+      real.mount(container, ctx);
+    },
+    unmount() {
+      real?.unmount();
+    },
+  };
+}
 
 async function boot(): Promise<void> {
   const statusEl = document.getElementById('status')!;
 
   try {
-    // 1. Create WASM font engine
     const engine = new BrowserWasmFontEngine();
-
-    // 2. Pre-load English hyphenation patterns (one-time async op)
     await loadHyphenator('en-us');
 
-    // 3. Start the interactive UI — font loading is managed inside startApp
-    await startApp(engine);
+    const ctx: BootContext = {
+      engine,
+      loadFont: async () => {
+        /* font cache managed per-page */
+      },
+    };
+
+    const pageRoot = document.getElementById('page-root')!;
+    const pages = {
+      layout: lazyPage('layout'),
+      linebreak: lazyPage('linebreak'),
+      typography: lazyPage('typography'),
+      i18n: lazyPage('i18n'),
+    };
+
+    const router = createRouter(pages, pageRoot, ctx);
+
+    // Wire nav tab clicks
+    document
+      .querySelectorAll<HTMLButtonElement>('[role="tab"][data-page]')
+      .forEach((btn) => {
+        btn.addEventListener('click', () => {
+          router.navigateTo(btn.dataset['page'] as PageKey);
+        });
+      });
+
+    statusEl.textContent = '● ready';
+    statusEl.className = 'status ready';
+
+    router.start();
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);
     statusEl.textContent = `● error: ${msg}`;
