@@ -240,6 +240,7 @@ export interface ComposedLine {
   baseline: number; // ascender from OS/2, relative to line top
   direction?: 'ltr' | 'rtl'; // paragraph text direction; undefined treated as 'ltr'
   xOffset?: number; // left shift in points for Optical Margin Alignment; negative = hang into left margin
+  rightProtrusion?: number; // right overhang in points for OMA; last word protrudes this many points into right margin
 }
 
 export type ComposedParagraph = ComposedLine[];

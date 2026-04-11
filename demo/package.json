@@ -11,10 +11,7 @@
     "test:watch": "vitest"
   },
   "dependencies": {
-    "@paragraf/linebreak": "*",
-    "@paragraf/render-core": "*",
-    "@paragraf/types": "*",
-    "@paragraf/font-engine": "*"
+    "@paragraf/compile": "*"
   },
   "devDependencies": {
     "vite": "^5.0.0",

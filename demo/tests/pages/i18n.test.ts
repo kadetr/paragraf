@@ -7,7 +7,6 @@ import {
   forcedDirection,
   buildLocaleLabel,
   extractLocaleIds,
-  type LocaleDirection,
 } from '../../src/pages/i18n.js';
 
 describe('LOCALE_MAP', () => {

@@ -286,11 +286,39 @@ Supported languages: `en-us`, `en-gb`, `de`, `fr`, `tr`, `nl`, `pl`, `it`,
 The following packages are browser-safe (no Node.js dependencies):
 
 - `@paragraf/types`
+- `@paragraf/color`
+- `@paragraf/layout`
+- `@paragraf/style`
 - `@paragraf/linebreak`
 - `@paragraf/render-core`
 
 For browser use, provide font data as `ArrayBuffer` and wire up your own
 measurer using the low-level `@paragraf/linebreak` API.
 
-`@paragraf/typography`, `@paragraf/shaping-wasm`, and `@paragraf/render-pdf`
-are currently Node.js only.
+`@paragraf/typography`, `@paragraf/shaping-wasm`, `@paragraf/render-pdf`,
+`@paragraf/template`, and `@paragraf/compile` are currently Node.js only.
+
+---
+
+## 11. High-level compile pipeline
+
+For most documents you can skip the manual `composeDocument` / `layoutDocument`
+assembly and use `@paragraf/compile` instead:
+
+```ts
+import { compile } from '@paragraf/compile';
+import { writeFileSync } from 'fs';
+
+const result = await compile({
+  template: myTemplate,
+  data: myData,
+  registry,
+});
+
+writeFileSync('output.pdf', result.pdf);
+```
+
+`compile()` internally calls `composeDocument`, `layoutDocument`, and
+`renderDocumentToPdf` in sequence. For cases where you need to inspect
+composed lines or re-layout into a different frame geometry, use the
+manual pipeline documented in steps 4–9 above.

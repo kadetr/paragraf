@@ -7,10 +7,11 @@ import type {
   FontRegistry,
   AlignmentMode,
   ComposedParagraph,
-} from '@paragraf/types';
-import type { FontEngine } from '@paragraf/font-engine';
-import type { ComposedLine } from '@paragraf/types';
-import { layoutParagraph, renderToSvg } from '@paragraf/render-core';
+  Language,
+} from '@paragraf/compile';
+import type { FontEngine } from '@paragraf/compile';
+import type { ComposedLine } from '@paragraf/compile';
+import { layoutParagraph, renderToSvg } from '@paragraf/compile';
 import { composeKP } from '../compose-kp.js';
 import { composeGreedy } from '../compose-greedy.js';
 import { createBrowserMeasurer } from '../measurer.js';
@@ -22,9 +23,10 @@ export interface PipelineParams {
   tolerance: number;
   looseness: number;
   alignment: AlignmentMode;
-  language: string;
+  language: Language;
   registry: FontRegistry;
   engine: FontEngine;
+  opticalMarginAlignment?: boolean;
 }
 
 export interface PipelineResult {
@@ -96,6 +98,7 @@ export function runPipeline(params: PipelineParams): PipelineResult {
     language,
     registry,
     engine,
+    opticalMarginAlignment = false,
   } = params;
 
   const paraTexts = splitParagraphs(text);
@@ -110,6 +113,7 @@ export function runPipeline(params: PipelineParams): PipelineResult {
         looseness,
         alignment,
         language,
+        opticalMarginAlignment,
       });
     } catch {
       kpPara = composeGreedy(para, font, lineWidth, registry, alignment);

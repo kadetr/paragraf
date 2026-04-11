@@ -8,7 +8,7 @@
 //
 // References: InDesign Optical Margin Alignment; Hàn Thế Thành's pdfTeX docs.
 
-import { ComposedParagraph } from '@paragraf/types';
+import { ComposedParagraph, Measurer } from '@paragraf/types';
 import { ParagraphInput } from './paragraph.js';
 
 // ─── Protrusion table ─────────────────────────────────────────────────────────
@@ -80,38 +80,52 @@ export function lookupProtrusion(char: string): {
 export function buildOmaAdjustments(
   lines: ComposedParagraph,
   baseWidth: number,
-): { lineWidths: number[]; xOffsets: number[] } {
+  measurer?: Measurer,
+): { lineWidths: number[]; xOffsets: number[]; rightProtrusions: number[] } {
   const lineWidths: number[] = [];
   const xOffsets: number[] = [];
+  const rightProtrusions: number[] = [];
 
   for (const line of lines) {
     if (line.words.length === 0 || line.fonts.length === 0) {
       lineWidths.push(baseWidth);
       xOffsets.push(0);
+      rightProtrusions.push(0);
       continue;
     }
 
-    // Scale each protrusion by the font size of the word at that margin.
-    const leftFontSize = line.fonts[0].size;
-    const rightFontSize = line.fonts[line.fonts.length - 1].size;
+    const leftFont = line.fonts[0];
+    const rightFont = line.fonts[line.fonts.length - 1];
 
     // First character of the first word
     const firstWord = line.words[0] ?? '';
     const firstChar = firstWord[0] ?? '';
     const leftFraction = lookupProtrusion(firstChar).left;
-    const leftProt = leftFraction * leftFontSize;
+    // Prefer charWidth-based protrusion (pdfTeX-style): only the punctuation
+    // character itself hangs into the margin. Fall back to fontSize-based when
+    // no measurer is available (e.g. unit tests with mock lines).
+    const leftCharWidth =
+      measurer && firstChar
+        ? measurer.measure(firstChar, leftFont)
+        : leftFont.size;
+    const leftProt = leftFraction * leftCharWidth;
 
     // Last character of the last word
     const lastWord = line.words[line.words.length - 1] ?? '';
     const lastChar = lastWord[lastWord.length - 1] ?? '';
     const rightFraction = lookupProtrusion(lastChar).right;
-    const rightProt = rightFraction * rightFontSize;
+    const rightCharWidth =
+      measurer && lastChar
+        ? measurer.measure(lastChar, rightFont)
+        : rightFont.size;
+    const rightProt = rightFraction * rightCharWidth;
 
     lineWidths.push(baseWidth + leftProt + rightProt);
     xOffsets.push(-leftProt);
+    rightProtrusions.push(rightProt);
   }
 
-  return { lineWidths, xOffsets };
+  return { lineWidths, xOffsets, rightProtrusions };
 }
 
 // ─── buildOmaInput ────────────────────────────────────────────────────────────
@@ -129,9 +143,14 @@ export function buildOmaAdjustments(
 export function buildOmaInput(
   input: ParagraphInput,
   firstPassLines: ComposedParagraph,
+  measurer?: Measurer,
 ): ParagraphInput {
   const baseWidth = input.lineWidth;
-  const { lineWidths } = buildOmaAdjustments(firstPassLines, baseWidth);
+  const { lineWidths } = buildOmaAdjustments(
+    firstPassLines,
+    baseWidth,
+    measurer,
+  );
   return {
     ...input,
     lineWidths,

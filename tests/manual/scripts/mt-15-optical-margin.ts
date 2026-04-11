@@ -14,7 +14,7 @@ import { createMeasurer } from '@paragraf/font-engine';
 import { layoutParagraph, renderToSvg } from '@paragraf/render-core';
 import { renderToPdf } from '@paragraf/render-pdf';
 import { serifRegistry, F12 } from '../fixtures/fonts.js';
-import { EN_BODY } from '../fixtures/text.js';
+import { EN_BODY, EN_BODY_2 } from '../fixtures/text.js';
 import {
   writeSvg,
   writePdf,

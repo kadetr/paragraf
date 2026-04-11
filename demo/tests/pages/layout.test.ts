@@ -8,7 +8,6 @@ import {
   computeTextArea,
   buildLayoutSvg,
   PAPER_SIZES,
-  type Orientation,
 } from '../../src/pages/layout.js';
 
 describe('PAPER_SIZES', () => {

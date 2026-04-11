@@ -4,7 +4,7 @@
 import '../../2a-shaping-wasm/wasm/pkg-bundler/knuth_plass_wasm.js';
 
 import { BrowserWasmFontEngine } from './browser-engine.js';
-import { loadHyphenator } from '@paragraf/linebreak';
+import { loadHyphenator } from '@paragraf/compile';
 import { createRouter } from './router.js';
 import type { Page, PageKey, BootContext } from './router.js';
 import './style.css';

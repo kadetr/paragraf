@@ -2,13 +2,13 @@
 // Browser-compatible FontEngine backed by the pkg-bundler WASM module.
 // No 'fs' import — fonts loaded via loadFontBytes() (fetch + ArrayBuffer).
 
-import type { Font, FontMetrics } from '@paragraf/types';
+import type { Font, FontMetrics } from '@paragraf/compile';
 import type {
   FontEngine,
   Glyph,
   GlyphPath,
   PathCommand,
-} from '@paragraf/font-engine';
+} from '@paragraf/compile';
 import {
   register_font,
   shape_text_wasm,

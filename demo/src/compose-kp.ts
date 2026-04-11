@@ -7,22 +7,25 @@ import type {
   ComposedParagraph,
   FontRegistry,
   AlignmentMode,
-} from '@paragraf/types';
-import type { HyphenatedWordWithFont } from '@paragraf/linebreak';
+  Language,
+} from '@paragraf/compile';
+import type { HyphenatedWordWithFont } from '@paragraf/compile';
 import {
   hyphenateParagraph,
   buildNodeSequence,
   computeBreakpoints,
   traceback,
   composeParagraph,
-} from '@paragraf/linebreak';
+  buildOmaAdjustments,
+} from '@paragraf/compile';
 import { createBrowserMeasurer } from './measurer.js';
 
 export interface ComposeKPOptions {
   tolerance?: number; // default: 2
   looseness?: number; // default: 0
   alignment?: AlignmentMode; // default: 'justified'
-  language?: string; // default: 'en-us'
+  language?: Language; // default: 'en-us'
+  opticalMarginAlignment?: boolean; // default: false
 }
 
 export function composeKP(
@@ -37,6 +40,7 @@ export function composeKP(
     looseness = 0,
     alignment = 'justified',
     language = 'en-us',
+    opticalMarginAlignment = false,
   } = opts;
 
   const measurer = createBrowserMeasurer(registry);
@@ -53,19 +57,39 @@ export function composeKP(
     font,
   }));
 
-  const nodes = buildNodeSequence(wordsWithFont, measurer);
+  function runKP(width: number, perLineWidths?: number[]): ComposedParagraph {
+    const nodes = buildNodeSequence(wordsWithFont, measurer);
+    const breakpointResult = computeBreakpoints({
+      nodes,
+      lineWidth: width,
+      lineWidths: perLineWidths,
+      tolerance,
+      emergencyStretch: 20,
+      looseness,
+    });
+    const breaks = traceback(breakpointResult.node);
+    return composeParagraph(nodes, breaks, alignment, false, width, [], (f) =>
+      measurer.metrics(f),
+    );
+  }
 
-  const breakpointResult = computeBreakpoints({
-    nodes,
+  if (!opticalMarginAlignment) {
+    return runKP(lineWidth);
+  }
+
+  // Two-pass OMA: first pass at base width, adjust line widths, second pass.
+  const firstPass = runKP(lineWidth);
+  const { lineWidths, xOffsets, rightProtrusions } = buildOmaAdjustments(
+    firstPass,
     lineWidth,
-    tolerance,
-    emergencyStretch: 20,
-    looseness,
-  });
-
-  const breaks = traceback(breakpointResult.node);
-
-  return composeParagraph(nodes, breaks, alignment, false, lineWidth, [], (f) =>
-    measurer.metrics(f),
+    measurer,
   );
+  const secondPass = runKP(lineWidth, lineWidths);
+
+  // Apply xOffsets and rightProtrusions from OMA onto the final composed lines.
+  return secondPass.map((line, i) => ({
+    ...line,
+    xOffset: (line.xOffset ?? 0) + (xOffsets[i] ?? 0),
+    rightProtrusion: rightProtrusions[i] ?? 0,
+  }));
 }

@@ -8,7 +8,7 @@ import type {
   ComposedLine,
   FontRegistry,
   AlignmentMode,
-} from '@paragraf/types';
+} from '@paragraf/compile';
 import { createBrowserMeasurer } from './measurer.js';
 
 export function composeGreedy(

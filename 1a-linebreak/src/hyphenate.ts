@@ -10,6 +10,10 @@ export interface HyphenateOptions {
   fontSize: number;
   language: Language;
   preserveSoftHyphens?: boolean; // default true — honour \u00AD in input
+  minLeft?: number; // override deriveMinLeft(fontSize); 1 = allow single-char left fragments
+  minRight?: number; // override deriveMinRight(fontSize); 1 = allow single-char right fragments
+  processCapitalized?: boolean; // default false — skip non-first capitalized words (proper noun heuristic)
+  // set true to hyphenate all words regardless of capitalisation
 }
 
 export interface HyphenatedWord {
@@ -114,7 +118,8 @@ const shouldSkip = (
   if (/\d/.test(clean)) return true;
   if (/^https?:\/\//.test(clean)) return true;
   if (/^[A-Z][A-Z]+$/.test(clean)) return true;
-  if (!isFirstWord && /^[A-Z]/.test(clean)) return true;
+  if (!opts.processCapitalized && !isFirstWord && /^[A-Z]/.test(clean))
+    return true;
   return false;
 };
 
@@ -182,8 +187,8 @@ export const hyphenateWord = (
     );
   }
 
-  const minLeft = deriveMinLeft(opts.fontSize);
-  const minRight = deriveMinRight(opts.fontSize);
+  const minLeft = opts.minLeft ?? deriveMinLeft(opts.fontSize);
+  const minRight = opts.minRight ?? deriveMinRight(opts.fontSize);
   const hyphenated = hyphenator(clean);
   const all = hyphenated.split(INPUT_SOFT_HYPHEN);
   const fragments = enforceMinBoundaries(all, minLeft, minRight);

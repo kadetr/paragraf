@@ -1,7 +1,7 @@
 // demo/src/pages/linebreak.ts
 // Page 2 — Line Breaking: side-by-side KP vs Greedy comparison.
 
-import type { AlignmentMode } from '@paragraf/types';
+import type { AlignmentMode } from '@paragraf/compile';
 import type { Page, BootContext } from '../router.js';
 import { createSlider } from '../components/slider.js';
 import { createToggleGroup } from '../components/toggle-group.js';
@@ -15,9 +15,11 @@ import { FONTS } from '../fonts.js';
 
 export const TOLERANCE_SLIDER = { min: 1, max: 10, step: 0.5 };
 export const LOOSENESS_SLIDER = { min: -2, max: 2, step: 1 };
+export const LETTER_SPACING_SLIDER = { min: -0.05, max: 0.1, step: 0.01 };
 export const DEFAULT_ALIGNMENT: AlignmentMode = 'justified';
 export const DEFAULT_TOLERANCE = 2;
 export const DEFAULT_LOOSENESS = 0;
+export const DEFAULT_LETTER_SPACING = 0;
 
 // ─── Pure helpers (exported for unit tests) ─────────────────────────────────────
 
@@ -57,6 +59,8 @@ type State = {
   text: string;
   tolerance: number;
   looseness: number;
+  letterSpacing: number;
+  opticalMarginAlignment: boolean;
   alignment: AlignmentMode;
   lineWidth: number;
   ctx: BootContext | null;
@@ -67,6 +71,8 @@ export const linebreakPage: Page = (() => {
     text: DEFAULT_TEXT,
     tolerance: DEFAULT_TOLERANCE,
     looseness: DEFAULT_LOOSENESS,
+    letterSpacing: DEFAULT_LETTER_SPACING,
+    opticalMarginAlignment: false,
     alignment: DEFAULT_ALIGNMENT,
     lineWidth: 350,
     ctx: null,
@@ -114,7 +120,7 @@ export const linebreakPage: Page = (() => {
 
     const font: import('@paragraf/types').Font = {
       id: fontOpt.id,
-      size: 12,
+      size: 20,
       weight: 400,
       style: 'normal',
       stretch: 'normal',
@@ -152,9 +158,11 @@ export const linebreakPage: Page = (() => {
 
     const { registry, font } = await loadDefaultFont(state.ctx);
 
+    const fontWithSpacing = { ...font, letterSpacing: state.letterSpacing };
+
     const result = runPipeline({
       text: state.text,
-      font,
+      font: fontWithSpacing,
       lineWidth: state.lineWidth,
       tolerance: state.tolerance,
       looseness: state.looseness,
@@ -162,6 +170,7 @@ export const linebreakPage: Page = (() => {
       language: 'en-us',
       registry,
       engine: state.ctx.engine as import('@paragraf/font-engine').FontEngine,
+      opticalMarginAlignment: state.opticalMarginAlignment,
     });
 
     kpPreview.setSvg(result.kp);
@@ -237,9 +246,47 @@ export const linebreakPage: Page = (() => {
         },
       });
 
+      const letterSpacingSlider = createSlider({
+        label: 'LETTER SPACING',
+        description:
+          'Global tracking in em units. 0 = default. Positive values space letters out; negative values tighten them.',
+        ...LETTER_SPACING_SLIDER,
+        value: state.letterSpacing,
+        format: (v) =>
+          v === 0 ? '0' : v > 0 ? `+${v.toFixed(2)}` : v.toFixed(2),
+        onChange: (v) => {
+          state.letterSpacing = v;
+          doRender();
+        },
+      });
+
+      // OMA toggle
+      const omaRow = document.createElement('div');
+      omaRow.className = 'control-row';
+      const omaLbl = document.createElement('span');
+      omaLbl.textContent = 'Optical Margins';
+      const omaBtn = document.createElement('button');
+      omaBtn.type = 'button';
+      omaBtn.className = 'toggle-btn';
+      omaBtn.textContent = state.opticalMarginAlignment ? 'On' : 'Off';
+      omaBtn.setAttribute('aria-pressed', String(state.opticalMarginAlignment));
+      omaBtn.addEventListener('click', () => {
+        state.opticalMarginAlignment = !state.opticalMarginAlignment;
+        omaBtn.textContent = state.opticalMarginAlignment ? 'On' : 'Off';
+        omaBtn.setAttribute(
+          'aria-pressed',
+          String(state.opticalMarginAlignment),
+        );
+        doRender();
+      });
+      omaRow.appendChild(omaLbl);
+      omaRow.appendChild(omaBtn);
+
       controls.appendChild(textarea.el);
       controls.appendChild(toleranceSlider.el);
       controls.appendChild(loosenessSlider.el);
+      controls.appendChild(letterSpacingSlider.el);
+      controls.appendChild(omaRow);
       controls.appendChild(alignmentGroup.el);
 
       // ── Preview (right panel) ─────────────────────────────────────────────
