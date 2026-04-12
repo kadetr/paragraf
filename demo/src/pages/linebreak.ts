@@ -45,7 +45,7 @@ export function buildStatusText(
   emergency: number,
 ): string {
   if (demerits === -1) return `${lineCount} lines`;
-  return `${lineCount} lines · ${fmtNum(demerits)} demerits · ${emergency} emergency`;
+  return `${lineCount} lines · ${emergency} emergency`;
 }
 
 // ─── Default text ──────────────────────────────────────────────────────────────
@@ -80,6 +80,7 @@ export const linebreakPage: Page = (() => {
 
   let container: HTMLElement | null = null;
   let mounted = false;
+  let lastKpSvg: string | null = null;
 
   // DOM refs created in mount
   let kpPreview: ReturnType<typeof createSvgPreview> | null = null;
@@ -123,7 +124,7 @@ export const linebreakPage: Page = (() => {
 
     const font: import('@paragraf/types').Font = {
       id: fontOpt.id,
-      size: 12,
+      size: 14,
       weight: 400,
       style: 'normal',
       stretch: 'normal',
@@ -177,6 +178,7 @@ export const linebreakPage: Page = (() => {
     });
 
     kpPreview.setSvg(result.kp);
+    lastKpSvg = result.kp;
     greedyPreview.setSvg(result.greedy);
     kpStatus.textContent = buildStatusText(
       result.kpLineCount,
@@ -340,7 +342,14 @@ export const linebreakPage: Page = (() => {
 
       // PDF button
       const pdfBtn = createPdfButton({
-        onDownload: async () => new Uint8Array(0), // placeholder until Phase 10
+        label: 'Download SVG',
+        subtitle: 'Knuth-Plass layout · vector, scalable',
+        mimeType: 'image/svg+xml',
+        filename: 'paragraf-kp.svg',
+        onDownload: () => {
+          if (!lastKpSvg) throw new Error('No render available yet');
+          return lastKpSvg;
+        },
       });
 
       el.appendChild(controls);
@@ -352,6 +361,7 @@ export const linebreakPage: Page = (() => {
 
     unmount(): void {
       mounted = false;
+      lastKpSvg = null;
       kpPreview?.destroy();
       greedyPreview?.destroy();
       kpPreview = null;

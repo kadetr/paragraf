@@ -6,11 +6,11 @@
 // Run: npm run build:svgs    (from demo/)
 //   or tsx demo/scripts/bake-svgs.ts  (from monorepo root)
 
-import { run as runMt04 } from '../../tests/manual/scripts/mt-04-superscript-subscript.js';
-import { run as runMt05 } from '../../tests/manual/scripts/mt-05-mixed-font.js';
-import { run as runMt15 } from '../../tests/manual/scripts/mt-15-optical-margin.js';
-import { run as runMt17 } from '../../tests/manual/scripts/mt-17-line-heights.js';
-import { run as runMt18 } from '../../tests/manual/scripts/mt-18-letter-spacing.js';
+import { run as runMt04 } from '../../tests/manual/scripts/mt-04-superscript-subscript';
+import { run as runMt05 } from '../../tests/manual/scripts/mt-05-mixed-font';
+import { run as runMt15 } from '../../tests/manual/scripts/mt-15-optical-margin';
+import { run as runMt17 } from '../../tests/manual/scripts/mt-17-line-heights';
+import { run as runMt18 } from '../../tests/manual/scripts/mt-18-letter-spacing';
 import * as fs from 'fs';
 import * as path from 'path';
 import { fileURLToPath } from 'url';

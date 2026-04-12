@@ -1,10 +1,12 @@
 // demo/src/components/pdf-button.ts
-// "Download PDF" button. Not unit-tested (requires Blob + createObjectURL).
+// Download button for rendered output. Not unit-tested (requires Blob + createObjectURL).
 
 export interface PdfButtonOptions {
   label?: string;
   subtitle?: string;
-  onDownload: () => Uint8Array | Promise<Uint8Array>;
+  mimeType?: string;
+  filename?: string;
+  onDownload: () => Uint8Array | string | Promise<Uint8Array | string>;
 }
 
 export interface PdfButtonHandle {
@@ -12,9 +14,10 @@ export interface PdfButtonHandle {
 }
 
 export function createPdfButton(opts: PdfButtonOptions): PdfButtonHandle {
-  const label = opts.label ?? 'Download PDF';
-  const subtitle =
-    opts.subtitle ?? 'rendered via PDFKit — selectable text, embedded glyphs';
+  const label = opts.label ?? 'Download';
+  const subtitle = opts.subtitle ?? '';
+  const mimeType = opts.mimeType ?? 'application/octet-stream';
+  const filename = opts.filename ?? 'download';
 
   const wrapper = document.createElement('div');
   wrapper.className = 'pdf-button-wrapper';
@@ -31,14 +34,16 @@ export function createPdfButton(opts: PdfButtonOptions): PdfButtonHandle {
   btn.addEventListener('click', async () => {
     btn.disabled = true;
     try {
-      const bytes = await opts.onDownload();
-      const blob = new Blob([bytes as Uint8Array<ArrayBuffer>], {
-        type: 'application/pdf',
-      });
+      const result = await opts.onDownload();
+      const blobPart =
+        typeof result === 'string'
+          ? result
+          : (result as Uint8Array<ArrayBuffer>);
+      const blob = new Blob([blobPart], { type: mimeType });
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = 'paragraf.pdf';
+      a.download = filename;
       a.click();
       setTimeout(() => URL.revokeObjectURL(url), 5000);
     } finally {
