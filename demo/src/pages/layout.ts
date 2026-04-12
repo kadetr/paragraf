@@ -173,8 +173,8 @@ export const layoutPage: Page = (() => {
       onChange(v);
       render();
     });
+    lbl.appendChild(input);
     wrap.appendChild(lbl);
-    wrap.appendChild(input);
     return wrap;
   }
 

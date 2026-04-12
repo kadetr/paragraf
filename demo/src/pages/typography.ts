@@ -125,8 +125,8 @@ export const typographyPage: Page = (() => {
       onChange(v);
       updatePreview();
     });
+    lbl.appendChild(input);
     row.appendChild(lbl);
-    row.appendChild(input);
     return row;
   }
 
