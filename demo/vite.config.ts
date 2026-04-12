@@ -16,6 +16,7 @@ export default defineConfig(({ command }) => ({
       // (it uses BrowserWasmFontEngine), so the stubs are never invoked at runtime.
       fontkit: path.resolve(__dirname, './src/fontkit-stub.ts'),
       fs: path.resolve(__dirname, './src/fs-stub.ts'),
+      path: path.resolve(__dirname, './src/path-stub.ts'),
       module: path.resolve(__dirname, './src/module-stub.ts'),
     },
   },

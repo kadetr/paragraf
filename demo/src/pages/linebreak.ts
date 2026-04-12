@@ -11,7 +11,7 @@ import type {
 import type { Page, BootContext } from '../router.js';
 import { createSlider } from '../components/slider.js';
 import { createToggleGroup } from '../components/toggle-group.js';
-import { createTextarea } from '../components/textarea.js';
+import { createTextarea, type TextareaHandle } from '../components/textarea.js';
 import { createSvgPreview } from '../components/svg-preview.js';
 import { createPdfButton } from '../components/pdf-button.js';
 import { runPipeline } from '../rendering/pipeline.js';
@@ -81,6 +81,7 @@ export const linebreakPage: Page = (() => {
   let greedyPreview: ReturnType<typeof createSvgPreview> | null = null;
   let kpStatus: HTMLElement | null = null;
   let greedyStatus: HTMLElement | null = null;
+  let textareaHandle: TextareaHandle | null = null;
 
   async function loadDefaultFont(ctx: BootContext): Promise<{
     registry: FontRegistry;
@@ -194,7 +195,7 @@ export const linebreakPage: Page = (() => {
       const controls = document.createElement('div');
       controls.className = 'controls-panel';
 
-      const textarea = createTextarea({
+      textareaHandle = createTextarea({
         label: 'TEXT (EDITABLE)',
         value: state.text,
         maxLength: 500,
@@ -288,7 +289,7 @@ export const linebreakPage: Page = (() => {
       omaRow.appendChild(omaLbl);
       omaRow.appendChild(omaBtn);
 
-      controls.appendChild(textarea.el);
+      controls.appendChild(textareaHandle.el);
       controls.appendChild(toleranceSlider.el);
       controls.appendChild(loosenessSlider.el);
       controls.appendChild(letterSpacingSlider.el);
@@ -356,6 +357,8 @@ export const linebreakPage: Page = (() => {
     unmount(): void {
       mounted = false;
       lastKpSvg = null;
+      textareaHandle?.destroy();
+      textareaHandle = null;
       kpPreview?.destroy();
       greedyPreview?.destroy();
       kpPreview = null;

@@ -12,6 +12,7 @@ export interface TextareaHandle {
   el: HTMLElement;
   getText(): string;
   setText(v: string): void;
+  destroy(): void;
 }
 
 export function createTextarea(opts: TextareaOptions): TextareaHandle {
@@ -57,6 +58,12 @@ export function createTextarea(opts: TextareaOptions): TextareaHandle {
     setText(v: string) {
       ta.value = v;
       counter.textContent = `${v.length} / ${opts.maxLength}`;
+    },
+    destroy() {
+      if (timer !== null) {
+        clearTimeout(timer);
+        timer = null;
+      }
     },
   };
 }

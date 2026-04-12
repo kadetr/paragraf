@@ -3,7 +3,7 @@
 
 import type { Page, BootContext } from '../router.js';
 import { FONTS } from '../fonts.js';
-import { createTextarea } from '../components/textarea.js';
+import { createTextarea, type TextareaHandle } from '../components/textarea.js';
 
 // ─── Slider constants (exported for unit tests) ──────────────────────────────────
 
@@ -80,6 +80,7 @@ export const typographyPage: Page = (() => {
 
   let specEl: HTMLElement | null = null;
   let previewEl: HTMLElement | null = null;
+  let textareaHandle: TextareaHandle | null = null;
 
   function updatePreview() {
     const font = FONTS.find((f) => f.id === currentFontId) ?? FONTS[0]!;
@@ -143,7 +144,7 @@ export const typographyPage: Page = (() => {
       controls.className = 'controls';
 
       // Textarea
-      const textarea = createTextarea({
+      textareaHandle = createTextarea({
         label: 'Text (editable)',
         value: currentText,
         maxLength: 500,
@@ -153,7 +154,7 @@ export const typographyPage: Page = (() => {
           updatePreview();
         },
       });
-      controls.appendChild(textarea.el);
+      controls.appendChild(textareaHandle.el);
 
       // Font select
       const fontRow = document.createElement('div');
@@ -245,6 +246,8 @@ export const typographyPage: Page = (() => {
     },
 
     unmount() {
+      textareaHandle?.destroy();
+      textareaHandle = null;
       if (host) {
         host.innerHTML = '';
         host = null;

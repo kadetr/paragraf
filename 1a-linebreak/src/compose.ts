@@ -173,7 +173,10 @@ const extractLine = (
     const penaltyWidth =
       breakNode?.type === 'penalty' && breakNode.flagged ? breakNode.width : 0;
     if (visibleGlues > 0) {
-      wordSpacing = (lineWidth - boxWidthSum - penaltyWidth) / visibleGlues;
+      wordSpacing = Math.max(
+        0,
+        (lineWidth - boxWidthSum - penaltyWidth) / visibleGlues,
+      );
     }
   }
 
