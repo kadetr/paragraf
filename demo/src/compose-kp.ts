@@ -68,8 +68,14 @@ export function composeKP(
       looseness,
     });
     const breaks = traceback(breakpointResult.node);
-    return composeParagraph(nodes, breaks, alignment, false, width, [], (f) =>
-      measurer.metrics(f),
+    return composeParagraph(
+      nodes,
+      breaks,
+      alignment,
+      false,
+      width,
+      perLineWidths ?? [],
+      (f) => measurer.metrics(f),
     );
   }
 
