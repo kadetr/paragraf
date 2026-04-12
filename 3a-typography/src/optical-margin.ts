@@ -13,7 +13,10 @@ import { ParagraphInput } from './paragraph.js';
 
 // ─── Protrusion table ─────────────────────────────────────────────────────────
 //
-// Values are fractions of font size.
+// Values are fractions of the protrusion character's own advance width
+// (when a Measurer is provided; pdfTeX-style — only the glyph itself hangs).
+// When no Measurer is available (e.g. unit tests with mock lines), fractions
+// are applied to the font size as a fallback.
 // left  = fraction that hangs into the LEFT margin (applied as negative xOffset)
 // right = fraction that hangs into the RIGHT margin (extends lineWidth)
 
@@ -70,12 +73,16 @@ export function lookupProtrusion(char: string): {
  * Compute per-line width extensions and x-offsets for optical margin alignment.
  *
  * For each line:
- *   - Inspect the first character of the first word → left protrusion, scaled by first word's font size
- *   - Inspect the last character of the last word → right protrusion, scaled by last word's font size
+ *   - Inspect the first character of the first word → left protrusion,
+ *     scaled by that character's advance width (via measurer, pdfTeX-style).
+ *   - Inspect the last character of the last word → right protrusion, same scale.
+ *   - Falls back to font.size scaling when no measurer is provided
+ *     (e.g. unit tests with mock lines).
  *
  * Returns:
- *   lineWidths[i] = baseWidth + leftProt + rightProt
- *   xOffsets[i]   = -leftProt   (shift line left so char hangs into margin)
+ *   lineWidths[i]      = baseWidth + leftProt + rightProt
+ *   xOffsets[i]        = -leftProt  (shift line left so the char hangs into margin)
+ *   rightProtrusions[i]= rightProt  (caller widens the line on the right)
  */
 export function buildOmaAdjustments(
   lines: ComposedParagraph,

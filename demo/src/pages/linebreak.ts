@@ -1,7 +1,13 @@
 // demo/src/pages/linebreak.ts
 // Page 2 — Line Breaking: side-by-side KP vs Greedy comparison.
 
-import type { AlignmentMode } from '@paragraf/compile';
+import type {
+  AlignmentMode,
+  Font,
+  FontRegistry,
+  FontDescriptor,
+  FontEngine,
+} from '@paragraf/compile';
 import type { Page, BootContext } from '../router.js';
 import { createSlider } from '../components/slider.js';
 import { createToggleGroup } from '../components/toggle-group.js';
@@ -89,14 +95,11 @@ export const linebreakPage: Page = (() => {
   let greedyStatus: HTMLElement | null = null;
 
   async function loadDefaultFont(ctx: BootContext): Promise<{
-    registry: import('@paragraf/types').FontRegistry;
-    font: import('@paragraf/types').Font;
+    registry: FontRegistry;
+    font: Font;
   }> {
     const fontOpt = FONTS[0]; // Roboto
-    const fontRegistry = new Map<
-      string,
-      import('@paragraf/types').FontDescriptor
-    >();
+    const fontRegistry = new Map<string, FontDescriptor>();
     fontRegistry.set(fontOpt.id, {
       id: fontOpt.id,
       family: fontOpt.family,
@@ -122,7 +125,7 @@ export const linebreakPage: Page = (() => {
       loadedFonts.add(fontOpt.id);
     }
 
-    const font: import('@paragraf/types').Font = {
+    const font: Font = {
       id: fontOpt.id,
       size: 14,
       weight: 400,
@@ -173,7 +176,7 @@ export const linebreakPage: Page = (() => {
       alignment: state.alignment,
       language: 'en-us',
       registry,
-      engine: state.ctx.engine as import('@paragraf/font-engine').FontEngine,
+      engine: state.ctx.engine as FontEngine,
       opticalMarginAlignment: state.opticalMarginAlignment,
     });
 

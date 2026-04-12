@@ -37,12 +37,12 @@ vi.mock(
 );
 
 describe('linebreak page logic', () => {
-  it('buildStatusText formats "12 lines · 3 420 demerits · 0 emergency"', () => {
+  it('buildStatusText formats "12 lines · 0 emergency"', () => {
     const text = buildStatusText(12, 3420, 0);
-    expect(text).toBe('12 lines · 3\u202f420 demerits · 0 emergency');
+    expect(text).toBe('12 lines · 0 emergency');
   });
 
-  it('buildStatusText omits demerits section for greedy (demerits = -1)', () => {
+  it('buildStatusText omits emergency section for greedy (demerits = -1)', () => {
     const text = buildStatusText(8, -1, 0);
     expect(text).toBe('8 lines');
   });
