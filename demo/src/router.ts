@@ -39,9 +39,8 @@ export function createRouter(
   let current: PageKey | null = null;
 
   function activate(key: PageKey): void {
-    if (current !== null && current !== key) {
-      pages[current].unmount();
-    }
+    if (key === current) return;
+    if (current !== null) pages[current].unmount();
     current = key;
     window.location.hash = `#/${key}`;
     pages[key].mount(container, ctx);

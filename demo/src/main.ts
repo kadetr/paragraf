@@ -25,14 +25,25 @@ async function importPage(key: PageKey): Promise<Page> {
 }
 
 // Thin proxy that lazy-loads the real page module on first mount.
+// mountVersion guards against stale mounts if the user navigates away
+// before the dynamic import resolves.
 function lazyPage(key: PageKey): Page {
   let real: Page | null = null;
+  let realPromise: Promise<Page> | null = null;
+  let mountVersion = 0;
+
   return {
-    async mount(container: HTMLElement, ctx: BootContext) {
-      if (!real) real = await importPage(key);
-      real.mount(container, ctx);
+    mount(container: HTMLElement, ctx: BootContext) {
+      const version = ++mountVersion;
+      realPromise ??= importPage(key);
+      void realPromise.then((page) => {
+        real = page;
+        if (version !== mountVersion) return; // navigated away
+        page.mount(container, ctx);
+      });
     },
     unmount() {
+      mountVersion++; // invalidate any in-flight mount
       real?.unmount();
     },
   };

@@ -67,53 +67,6 @@ const DEFAULT_SAMPLE_TEXT =
   'Pack my box with five dozen liquor jugs. ' +
   'How vexingly quick daft zebras jump!';
 
-// ─── Showcase cards (Zone B) ─────────────────────────────────────────────────
-
-interface ShowcaseCard {
-  slug: string;
-  title: string;
-  description: string;
-  stackblitzUrl: string;
-}
-
-const SHOWCASE_CARDS: ShowcaseCard[] = [
-  {
-    slug: 'mt-18-letter-spacing-0_05em',
-    title: 'Per-span letter spacing',
-    description:
-      'Each text span carries its own letter-spacing value. Measured per-glyph using OpenType advance widths.',
-    stackblitzUrl: '#',
-  },
-  {
-    slug: 'mt-05-mixed-font',
-    title: 'Mixed fonts in one paragraph',
-    description:
-      'Bold, italic, and display sizes flow together. Line height expands to fit the tallest glyph on each line.',
-    stackblitzUrl: '#',
-  },
-  {
-    slug: 'mt-04-superscript-subscript',
-    title: 'Superscript & Subscript',
-    description:
-      'Inline baseline shifts for chemical formulae (H₂O) and mathematical notation (x²). Measured with variant fonts.',
-    stackblitzUrl: '#',
-  },
-  {
-    slug: 'mt-17-line-height-2_0x',
-    title: 'Variable line heights',
-    description:
-      'A 5-step sweep from 1.0× to 2.0× leading shows how Paragraf scales line spacing uniformly across fonts.',
-    stackblitzUrl: '#',
-  },
-  {
-    slug: 'mt-15-optical-margin',
-    title: 'Optical margin alignment',
-    description:
-      'Punctuation and serifs protrude slightly into the margin, creating a visually even left edge on justified text.',
-    stackblitzUrl: '#',
-  },
-];
-
 // ─── Page implementation ─────────────────────────────────────────────────────────
 
 export const typographyPage: Page = (() => {

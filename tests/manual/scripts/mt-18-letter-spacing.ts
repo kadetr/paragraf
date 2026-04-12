@@ -35,7 +35,7 @@ export async function run(): Promise<{ name: string; svg: string }[]> {
 
   const results: { name: string; svg: string }[] = [];
   for (const spacing of SPACINGS) {
-    const f = { ...F12, letterSpacing: spacing };
+    const f = { ...F12, letterSpacing: spacing * F12.size };
     const out = composer.compose({
       text: EN_BODY,
       font: f,
@@ -79,7 +79,7 @@ if (process.argv[1]?.endsWith('mt-18-letter-spacing.ts')) {
   let prevAvgWords = Infinity;
 
   for (const spacing of SPACINGS) {
-    const f = { ...F12, letterSpacing: spacing };
+    const f = { ...F12, letterSpacing: spacing * F12.size };
 
     const t0 = performance.now();
     const out = composer.compose({

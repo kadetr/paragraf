@@ -60,7 +60,7 @@ export function computeTextArea(
 ): number[] {
   const totalText = pageWidth - marginLeft - marginRight;
   const totalGutter = (columns - 1) * gutter;
-  const colWidth = (totalText - totalGutter) / columns;
+  const colWidth = Math.max(0, (totalText - totalGutter) / columns);
   return Array.from({ length: columns }, () => colWidth);
 }
 

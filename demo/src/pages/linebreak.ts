@@ -29,18 +29,6 @@ export const DEFAULT_LETTER_SPACING = 0;
 
 // ─── Pure helpers (exported for unit tests) ─────────────────────────────────────
 
-const NARROW_SPACE = '\u202f'; // narrow no-break space for thousands separator
-
-/**
- * Format a 4-digit number with a narrow-space thousands separator.
- * e.g. 3420 → "3 420"
- */
-function fmtNum(n: number): string {
-  return n >= 1000
-    ? `${Math.floor(n / 1000)}${NARROW_SPACE}${String(n % 1000).padStart(3, '0')}`
-    : String(n);
-}
-
 /**
  * Build the status bar text for a column.
  * Pass demerits = -1 to omit the demerits section (greedy column).
@@ -165,7 +153,10 @@ export const linebreakPage: Page = (() => {
 
     const { registry, font } = await loadDefaultFont(state.ctx);
 
-    const fontWithSpacing = { ...font, letterSpacing: state.letterSpacing };
+    const fontWithSpacing = {
+      ...font,
+      letterSpacing: state.letterSpacing * font.size,
+    };
 
     const result = runPipeline({
       text: state.text,

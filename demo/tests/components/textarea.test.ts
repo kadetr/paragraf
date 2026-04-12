@@ -45,7 +45,7 @@ describe('textarea', () => {
     expect(counter.textContent).toBe('3 / 500');
   });
 
-  it('input beyond maxLength is truncated in counter display (does NOT block input)', () => {
+  it('counter shows actual character count even when it exceeds maxLength', () => {
     const { el } = createTextarea({
       label: 'Text',
       value: '',
@@ -56,7 +56,7 @@ describe('textarea', () => {
     const counter = el.querySelector('.char-counter') as HTMLElement;
     ta.value = 'abcdefgh';
     ta.dispatchEvent(new Event('input'));
-    // shows actual char count / max — capped at max in display
+    // shows actual char count / max — NOT capped, raw count is displayed
     expect(counter.textContent).toBe('8 / 5');
   });
 
