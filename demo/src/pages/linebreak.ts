@@ -51,7 +51,7 @@ export function buildStatusText(
 // ─── Default text ──────────────────────────────────────────────────────────────
 
 export const DEFAULT_TEXT =
-  "In olden times when wishing still helped one, there lived a king whose daughters were all beautiful; and the youngest was so beautiful that the sun itself, which has seen so much, was astonished whenever it shone in her face. Close by the king's castle lay a great dark forest, and under an old lime-tree in the forest was a well, and when the day was very warm, the king's child went out into the forest and sat down by the side of the cool fountain.";
+  'The Knuth–Plass algorithm finds the globally optimal set of line breaks for a paragraph, minimising a cost function based on how tightly or loosely each line is fitted. Unlike first-fit greedy algorithms, it considers all feasible breakpoints simultaneously. The result is a more even "colour" across the paragraph — no very loose lines followed by very tight ones, no unsightly rivers of white space running through the justified text. Difficult ligatures such as "fi", "fl", and "ffi" are resolved automatically through GSUB lookup tables. Hyphenation is applied using language-specific dictionaries, and consecutive hyphenated lines are limited to avoid a distracting ladder effect at the right-hand margin. Widow and orphan control ensures that a single short word never appears alone on the last line of a paragraph, and a single line never stands isolated at the top of a column. The algorithm was described by Donald Knuth and Michael Plass in their 1981 paper "Breaking Paragraphs into Lines".';
 
 // ─── Page implementation ──────────────────────────────────────────────────────
 
@@ -120,7 +120,7 @@ export const linebreakPage: Page = (() => {
 
     const font: import('@paragraf/types').Font = {
       id: fontOpt.id,
-      size: 20,
+      size: 12,
       weight: 400,
       style: 'normal',
       stretch: 'normal',
@@ -196,7 +196,7 @@ export const linebreakPage: Page = (() => {
       controls.className = 'controls-panel';
 
       const textarea = createTextarea({
-        label: 'Text (EDITABLE)',
+        label: 'TEXT (EDITABLE)',
         value: state.text,
         maxLength: 500,
         debounceMs: 300,
@@ -222,7 +222,7 @@ export const linebreakPage: Page = (() => {
       const loosenessSlider = createSlider({
         label: 'LOOSENESS',
         description:
-          'Adjusts the target number of lines. 0=optimal fit. positive values: looser, more whitespace, negative values: tighter, more compressed.',
+          'Adjusts the target number of lines, optimal fit 0. positive values: looser, more whitespace, negative values: tighter, more compressed.',
         ...LOOSENESS_SLIDER,
         value: state.looseness,
         format: (v) => (v >= 0 ? `+${v}` : String(v)),
@@ -234,10 +234,10 @@ export const linebreakPage: Page = (() => {
 
       const alignmentGroup = createToggleGroup({
         options: [
-          { label: 'Justified', value: 'justified' },
+          { label: 'Center', value: 'center' },
           { label: 'Left', value: 'left' },
           { label: 'Right', value: 'right' },
-          { label: 'Center', value: 'center' },
+          { label: 'Justified', value: 'justified' },
         ] as { label: string; value: AlignmentMode }[],
         value: state.alignment,
         onChange: (v) => {
@@ -249,7 +249,7 @@ export const linebreakPage: Page = (() => {
       const letterSpacingSlider = createSlider({
         label: 'LETTER SPACING',
         description:
-          'Global tracking in em units. 0 = default. Positive values space letters out; negative values tighten them.',
+          'Global tracking in em units, default 0. Positive values space letters out; negative values tighten them.',
         ...LETTER_SPACING_SLIDER,
         value: state.letterSpacing,
         format: (v) =>
@@ -264,7 +264,14 @@ export const linebreakPage: Page = (() => {
       const omaRow = document.createElement('div');
       omaRow.className = 'control-row';
       const omaLbl = document.createElement('span');
-      omaLbl.textContent = 'Optical Margins';
+      omaLbl.classList.add('slider-label-tip');
+      const omaLblText = document.createTextNode('OPTICAL MARGINS');
+      const omaTip = document.createElement('span');
+      omaTip.className = 'slider-tip-text';
+      omaTip.textContent =
+        'Allows punctuation (", −, …) to hang slightly into the margin. Effect is subtle — best seen at left margin of lines starting with quotes or dashes.';
+      omaLbl.appendChild(omaLblText);
+      omaLbl.appendChild(omaTip);
       const omaBtn = document.createElement('button');
       omaBtn.type = 'button';
       omaBtn.className = 'toggle-btn';

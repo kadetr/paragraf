@@ -83,19 +83,22 @@ export function composeKP(
     return runKP(lineWidth);
   }
 
-  // Two-pass OMA: first pass at base width, adjust line widths, second pass.
+  // Two-pass OMA: first pass at base width → extract per-line protrusions →
+  // second pass with wider line widths → recompute xOffsets from second-pass
+  // line boundaries (mirrors createParagraphComposer in @paragraf/typography).
   const firstPass = runKP(lineWidth);
-  const { lineWidths, xOffsets, rightProtrusions } = buildOmaAdjustments(
-    firstPass,
+  const { lineWidths } = buildOmaAdjustments(firstPass, lineWidth, measurer);
+  const secondPass = runKP(lineWidth, lineWidths);
+  const { xOffsets, rightProtrusions } = buildOmaAdjustments(
+    secondPass,
     lineWidth,
     measurer,
   );
-  const secondPass = runKP(lineWidth, lineWidths);
 
   // Apply xOffsets and rightProtrusions from OMA onto the final composed lines.
   return secondPass.map((line, i) => ({
     ...line,
-    xOffset: (line.xOffset ?? 0) + (xOffsets[i] ?? 0),
+    xOffset: xOffsets[i] ?? 0,
     rightProtrusion: rightProtrusions[i] ?? 0,
   }));
 }

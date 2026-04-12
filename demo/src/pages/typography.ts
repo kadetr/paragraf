@@ -3,6 +3,7 @@
 
 import type { Page, BootContext } from '../router.js';
 import { FONTS } from '../fonts.js';
+import { createTextarea } from '../components/textarea.js';
 
 // ─── Slider constants (exported for unit tests) ──────────────────────────────────
 
@@ -61,7 +62,7 @@ export const DEFAULT_FONT_SIZE = 12;
 export const DEFAULT_LEADING = 1.4;
 export const DEFAULT_LETTER_SPACING = 0;
 
-const SAMPLE_TEXT =
+const DEFAULT_SAMPLE_TEXT =
   'The quick brown fox jumps over the lazy dog. ' +
   'Pack my box with five dozen liquor jugs. ' +
   'How vexingly quick daft zebras jump!';
@@ -122,6 +123,7 @@ export const typographyPage: Page = (() => {
   let currentFontSize = DEFAULT_FONT_SIZE;
   let currentLeading = DEFAULT_LEADING;
   let currentLetterSpacing = DEFAULT_LETTER_SPACING;
+  let currentText = DEFAULT_SAMPLE_TEXT;
 
   let specEl: HTMLElement | null = null;
   let previewEl: HTMLElement | null = null;
@@ -135,6 +137,7 @@ export const typographyPage: Page = (() => {
         currentLetterSpacing,
       );
     if (previewEl) {
+      previewEl.textContent = currentText;
       Object.assign(previewEl.style, {
         fontFamily: font.family,
         fontSize: `${currentFontSize}pt`,
@@ -185,6 +188,19 @@ export const typographyPage: Page = (() => {
       // ── Controls ─────────────────────────────────────────────────────────
       const controls = document.createElement('div');
       controls.className = 'controls';
+
+      // Textarea
+      const textarea = createTextarea({
+        label: 'Text (editable)',
+        value: currentText,
+        maxLength: 500,
+        debounceMs: 300,
+        onChange: (text) => {
+          currentText = text;
+          updatePreview();
+        },
+      });
+      controls.appendChild(textarea.el);
 
       // Font select
       const fontRow = document.createElement('div');
@@ -258,7 +274,6 @@ export const typographyPage: Page = (() => {
 
       previewEl = document.createElement('div');
       previewEl.className = 'text-preview';
-      previewEl.textContent = SAMPLE_TEXT;
 
       preview.appendChild(specEl);
       preview.appendChild(previewEl);

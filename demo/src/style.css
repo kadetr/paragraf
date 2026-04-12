@@ -152,8 +152,7 @@ nav [role="tab"][aria-selected="true"] {
   font-size: 0.69rem;
   font-weight: 600;
   color: var(--text-muted);
-  text-transform: uppercase;
-  letter-spacing: 0.07em;
+  letter-spacing: 0.03em;
 }
 
 .control-row input[type="range"],
@@ -177,7 +176,7 @@ nav [role="tab"][aria-selected="true"] {
   cursor: pointer;
   font-family: var(--font-ui);
   font-size: 0.75rem;
-  padding: 0.3rem 0.75rem;
+  padding: 0.3rem 0.6rem;
   transition: color 0.12s, border-color 0.12s, background 0.12s;
 }
 
@@ -211,7 +210,8 @@ nav [role="tab"][aria-selected="true"] {
   display: flex;
   justify-content: space-between;
   align-items: baseline;
-  gap: 0.5rem;
+  flex-wrap: wrap;
+  gap: 0.3rem 0.5rem;
 }
 
 .slider-label-text {
@@ -260,6 +260,7 @@ nav [role="tab"][aria-selected="true"] {
 
 .slider-wrapper input[type="range"] {
   width: 100%;
+  flex: 0 0 100%;
   accent-color: var(--accent-blue);
   cursor: pointer;
 }
@@ -281,22 +282,21 @@ nav [role="tab"][aria-selected="true"] {
   font-size: 0.69rem;
   font-weight: 600;
   color: var(--text-muted);
-  text-transform: uppercase;
   letter-spacing: 0.07em;
 }
 
 textarea {
-  background: var(--surface2);
+  background: #fff;
   border: 1px solid var(--border);
   border-radius: 6px;
-  color: var(--text);
+  color: var(--text-muted);
   font-family: var(--font-mono);
   font-size: 0.77rem;
   line-height: 1.55;
   padding: 0.55rem 0.7rem;
   resize: vertical;
   width: 100%;
-  min-height: 90px;
+  min-height: 150px;
   outline: none;
   transition: border-color 0.15s;
 }
@@ -366,19 +366,22 @@ input[type="range"] {
 .preview-col h3 {
   font-size: 0.69rem;
   font-weight: 700;
-  text-transform: uppercase;
   letter-spacing: 0.07em;
   color: var(--text-muted);
 }
 
 /* ─── SVG preview & container (white box) ───────────────────────────────────── */
 .svg-preview {
-  background: #fff;
+  background: var(--surface2);
   border-radius: 4px;
   overflow: hidden; /* prevent child SVG from triggering ResizeObserver loop */
   flex: 1;
   min-height: 150px;
   min-width: 0;
+}
+
+.svg-preview svg {
+  fill: #fff;
 }
 
 .svg-container {
@@ -484,7 +487,6 @@ input[type="range"] {
 .showcase-title {
   font-size: 0.8rem;
   font-weight: 700;
-  text-transform: uppercase;
   letter-spacing: 0.07em;
   color: var(--text-muted);
   margin-bottom: 1rem;
