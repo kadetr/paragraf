@@ -25,9 +25,17 @@ Generating documents programmatically in Node.js means choosing between:
 
 The core of every professional typesetting engine — InDesign, TeX, QuarkXPress — is the **Knuth-Plass algorithm**: solve the entire paragraph at once, minimising total spacing deviation across all lines simultaneously. The difference is visible:
 
-![Knuth-Plass vs Greedy](docs/KP-Greedy.png)
+Every JavaScript library uses a greedy algorithm — fill each line as full as possible, no lookahead. It's fast and simple, but it produces rivers of white space and inconsistent line density. But optimal line breaking is only one layer. Five things together separate paragraf from any other JavaScript output library:
 
-Every JavaScript library uses a greedy algorithm — fill each line as full as possible, no lookahead. It's fast and simple, but it produces rivers of white space and inconsistent line density. paragraf uses Knuth-Plass with **real font metrics**: actual OpenType glyph advances from a Rust/WASM shaper (rustybuzz, the same shaping engine used by Firefox and Servo), not canvas measurement approximations or character-count estimates.
+**Real text shaping.** Most libraries measure text with a canvas element or multiply character count by an average advance width. paragraf runs rustybuzz — a Rust port of HarfBuzz, the same shaping engine used by Firefox, Chrome, and Android — for every text run. GSUB ligature substitution, GPOS kerning, correct Arabic/Hebrew advance widths, per-run OpenType feature flags. The output is metrically identical to what a desktop application produces, not an approximation.
+
+**Optical margin alignment.** A two-pass algorithm that protrudes punctuation and soft-hyphens partially into the page margin, then re-runs Knuth-Plass with the adjusted column widths. The result is a visually flush edge on justified text — the technique InDesign calls "optical margin alignment" and TeX calls `\pdfprotrudechars`. No other JavaScript library implements this.
+
+**ICC colour management.** `@paragraf/color` implements the full ICC transform pipeline: profile parsing, sRGB → CIE Lab → CMYK conversion, and tetrahedral LUT interpolation for device-specific output profiles. CMYK with correct profile transforms is a hard requirement for commercial printing. No other Node.js PDF library provides this.
+
+**Style inheritance.** `@paragraf/style` provides InDesign-equivalent paragraph styles and character styles with cascading inheritance — derived styles override only what they change, in a named style registry. This is what makes template-driven documents maintainable at scale.
+
+**A single entry point for the full pipeline.** `@paragraf/compile` orchestrates all layers — font discovery, style registry, page geometry, paragraph composition, glyph layout, PDF/SVG output — behind one `compile()` call. You can drive the entire pipeline from a template definition and a data object, or drop in at any layer for custom workflows.
 
 ---
 
@@ -53,7 +61,7 @@ Every JavaScript library uses a greedy algorithm — fill each line as full as p
 
 ## Packages
 
-Eight packages in strict layers. Each package only imports from layers below it.
+Twelve packages in strict layers. Each package only imports from layers below it.
 
 | Folder | Package | What it does | Env |
 |---|---|---|:---:|
@@ -61,32 +69,85 @@ Eight packages in strict layers. Each package only imports from layers below it.
 | `0-color/` | `@paragraf/color` | ICC colour profiles, sRGB/Lab/CMYK spaces, LUT interpolation | both |
 | `1a-linebreak/` | `@paragraf/linebreak` | Knuth-Plass algorithm, 22-language hyphenation, traceback, node builder | both |
 | `1b-font-engine/` | `@paragraf/font-engine` | FontEngine interface, fontkit adapter, measurer factory | both |
+| `1c-layout/` | `@paragraf/layout` | Page geometry, unit converters (mm/in/cm), named page sizes (A4, Letter…) | both |
+| `1d-style/` | `@paragraf/style` | Paragraph and character style definitions with cascading inheritance | both |
 | `2a-shaping-wasm/` | `@paragraf/shaping-wasm` | Rust/WASM OpenType shaper (rustybuzz): GSUB ligatures, GPOS kerning, sups/subs | Node |
 | `2b-render-core/` | `@paragraf/render-core` | Glyph layout → SVG / Canvas, document types | both |
 | `3a-typography/` | `@paragraf/typography` | Paragraph compositor, OMA, BiDi, document model | Node |
 | `3b-render-pdf/` | `@paragraf/render-pdf` | PDF output via pdfkit, selectable text overlay | Node |
+| `4a-template/` | `@paragraf/template` | Document schema: named content slots, style bindings, page size declarations | Node |
+| `4b-compile/` | `@paragraf/compile` | Full pipeline: template + data + fonts → PDF / SVG / RenderedDocument | Node |
 
 ---
 
 ## Architecture
 
-```
-0-types ──────────────────────────────────────────┐
-   │                                               │
-1a-linebreak        1b-font-engine ────────────────┤
-   │                   │          │                │
-   │           2a-shaping-wasm  2b-render-core     │
-   │                   │          │                │
-   └───────────────────┴──────────┘                │
-                       │                           │
-             3a-typography              3b-render-pdf
-```
+![paragraf architecture](docs/architecture.png)
 
 `3a-typography` and `3b-render-pdf` are true layer-3 siblings — neither depends on the other. `RenderedDocument` / `RenderedPage` live in `2b-render-core` so `render-pdf` works without `typography` for simpler pipelines.
+
+Layer 4 (`4a-template`, `4b-compile`) sits above both. `@paragraf/compile` is the highest-level entry point — it drives the full pipeline from a template definition and a data object to PDF, SVG, or a `RenderedDocument`, with no boilerplate.
 
 ---
 
 ## Quick start
+
+### High-level API (`@paragraf/compile`)
+
+The fastest path from data to PDF. One call drives the entire pipeline — font loading, style resolution, page geometry, Knuth-Plass composition, glyph layout, and rendering.
+
+```bash
+npm install @paragraf/compile
+```
+
+```ts
+import { defineTemplate, compile } from '@paragraf/compile';
+import { writeFileSync } from 'fs';
+
+const template = defineTemplate({
+  layout: { size: 'A4', margins: 72 },
+  fonts: {
+    'SourceSerif4': {
+      regular: './fonts/SourceSerif4-Regular.ttf',
+      bold:    './fonts/SourceSerif4-Bold.ttf',
+    },
+  },
+  styles: {
+    body: {
+      font:       { family: 'SourceSerif4', size: 11 },
+      alignment:  'justified',
+      lineHeight: 16,
+    },
+    heading: {
+      font:       { family: 'SourceSerif4', size: 18, weight: 700 },
+      alignment:  'left',
+      lineHeight: 24,
+    },
+  },
+  content: [
+    { style: 'heading', text: '{{title}}' },
+    { style: 'body',    text: '{{body}}' },
+  ],
+});
+
+const result = await compile({
+  template,
+  data: {
+    title: 'Of Wishing',
+    body:  'In olden times when wishing still helped one, there lived a king '
+         + 'whose daughters were all beautiful.',
+  },
+  output: 'pdf',
+});
+
+writeFileSync('output.pdf', result.data as Buffer);
+```
+
+`defineTemplate()` validates the template at definition time (style references, binding syntax, inheritance cycles). `compile()` auto-detects the WASM shaper and falls back to fontkit silently.
+
+### Low-level API (`@paragraf/typography`)
+
+For custom rendering pipelines or when you need direct access to composed lines and glyph positions.
 
 ```bash
 npm install @paragraf/typography @paragraf/render-pdf
@@ -246,14 +307,10 @@ console.log(wasmStatus()); // { status: 'loaded' | 'absent' | 'error' }
 
 ## Status
 
-**v0.3.0 — pre-release.** The core algorithm and rendering pipeline are stable and well-tested (533 unit tests, 22 manual output scripts). APIs may change before v1.0. Not yet published to npm — GitHub only at this stage.
+**v0.5.0 — pre-release.** The core algorithm and rendering pipeline are stable and well-tested (946 unit tests + 25 demo component tests, 23 manual output scripts). APIs may change before v1.0. Not yet published to npm — GitHub only at this stage.
 
 Planned before v1.0:
-- `@paragraf/layout` — page geometry, unit converters (mm/inch/cm), named page sizes
-- `@paragraf/style` — paragraph and character style system with inheritance
-- `@paragraf/template` — document schema and data bindings
-- `@paragraf/compile` — high-level orchestrator: template + data → PDF
-- `@paragraf/color-wasm` — Rust/LCMS2 for ICC profiles and CMYK (print output)
+- `@paragraf/color-wasm` — Rust/LCMS2 for ICC profiles and CMYK (replaces the pure-JS ICC implementation in `@paragraf/color`)
 
 See [`docs/`](docs/) for architecture details, IO schemas, and the document model reference.
 See [`ROADMAP.md`](ROADMAP.md) for the full product roadmap.
