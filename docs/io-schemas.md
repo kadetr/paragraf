@@ -319,7 +319,10 @@ compressed below natural. Values near `±1` are borderline; values beyond `±1`
 indicate the algorithm was struggling. Most callers do not read this field.
 
 **`alignment`** — The alignment mode applied to this line, propagated from
-`ParagraphInput.alignment`.
+`ParagraphInput.alignment`. `layoutParagraph` reads this field to compute the
+horizontal start position of the line: `right`-aligned lines are shifted by
+`lineWidth − contentWidth`; `center`-aligned lines by half that amount. This
+offset is computed internally by the renderer and is independent of `xOffset`.
 
 **`isWidow`** — `true` if this is the last line of the paragraph and it
 contains only one non-empty content word. This is a compositional fact set

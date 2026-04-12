@@ -8,7 +8,7 @@ import type {
   Measurer,
   GlueSpaceMetrics,
   FontRegistry,
-} from '@paragraf/types';
+} from '@paragraf/compile';
 import {
   measure_text_wasm,
   space_metrics_wasm,

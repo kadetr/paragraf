@@ -5,12 +5,17 @@
 | Package | npm name | Direct `@paragraf/*` deps | Direct third-party deps |
 |---|---|---|---|
 | `0-types` | `@paragraf/types` | — | — |
+| `0-color` | `@paragraf/color` | — | — |
 | `1a-linebreak` | `@paragraf/linebreak` | `types` | `hyphen` |
 | `1b-font-engine` | `@paragraf/font-engine` | `types` | `fontkit` |
+| `1c-layout` | `@paragraf/layout` | `types` | — |
+| `1d-style` | `@paragraf/style` | `types` | — |
 | `2a-shaping-wasm` | `@paragraf/shaping-wasm` | `types`, `font-engine` | — |
 | `2b-render-core` | `@paragraf/render-core` | `types`, `font-engine` | — |
 | `3a-typography` | `@paragraf/typography` | `types`, `linebreak`, `font-engine`, `shaping-wasm`, `render-core` | — |
 | `3b-render-pdf` | `@paragraf/render-pdf` | `types`, `font-engine`, `render-core` | `pdfkit` |
+| `4a-template` | `@paragraf/template` | `types`, `layout`, `style` | — |
+| `4b-compile` | `@paragraf/compile` | `types`, `layout`, `style`, `template`, `font-engine`, `typography`, `render-core`, `render-pdf` | — |
 
 ---
 
@@ -139,6 +144,101 @@ npm install @paragraf/render-pdf
 
 ---
 
+### `@paragraf/layout`
+
+Page geometry, unit converters, and named paper sizes.
+
+```
+npm install @paragraf/layout
+```
+
+| Package | Source |
+|---|---|
+| `@paragraf/types` | transitive |
+| `@paragraf/layout` | direct |
+
+Browser-safe. No font or WASM dependencies.
+
+---
+
+### `@paragraf/style`
+
+Paragraph and character style definitions with inheritance resolution.
+
+```
+npm install @paragraf/style
+```
+
+| Package | Source |
+|---|---|
+| `@paragraf/types` | transitive |
+| `@paragraf/style` | direct |
+
+Browser-safe. No font or WASM dependencies.
+
+---
+
+### `@paragraf/color`
+
+ICC color management utilities.
+
+```
+npm install @paragraf/color
+```
+
+| Package | Source |
+|---|---|
+| `@paragraf/color` | direct |
+
+Browser-safe. No dependencies at all.
+
+---
+
+### `@paragraf/template`
+
+Document schema and content slot definitions.
+
+```
+npm install @paragraf/template
+```
+
+| Package | Source |
+|---|---|
+| `@paragraf/types` | transitive |
+| `@paragraf/layout` | transitive |
+| `@paragraf/style` | transitive |
+| `@paragraf/template` | direct |
+
+---
+
+### `@paragraf/compile`
+
+High-level document compile pipeline. Merges template, data, fonts, layout, and
+styles into a rendered PDF, SVG, or document model in one call.
+
+```
+npm install @paragraf/compile
+```
+
+| Package | Source |
+|---|---|
+| `@paragraf/types` | transitive |
+| `@paragraf/linebreak` | transitive |
+| `@paragraf/font-engine` | transitive |
+| `@paragraf/shaping-wasm` | transitive |
+| `@paragraf/render-core` | transitive |
+| `@paragraf/typography` | transitive |
+| `@paragraf/render-pdf` | transitive |
+| `@paragraf/layout` | transitive |
+| `@paragraf/style` | transitive |
+| `@paragraf/template` | transitive |
+| `@paragraf/compile` | direct |
+| `fontkit` | transitive |
+| `hyphen` | transitive |
+| `pdfkit` | transitive |
+
+---
+
 ### Full pipeline (typography + PDF output)
 
 ```
@@ -172,3 +272,8 @@ npm install @paragraf/typography @paragraf/render-pdf
 
 - **`@paragraf/shaping-wasm`** ships a compiled Rust/WASM binary. The WASM
   engine is loaded lazily and falls back gracefully if unavailable.
+
+- **`@paragraf/compile`** is the highest-level entry point and pulls in the
+  entire stack (typography, render-core, render-pdf, template, layout, style).
+  Use it when you want a single `compile()` call rather than assembling the
+  pipeline manually.

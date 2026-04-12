@@ -7,7 +7,8 @@ import type {
   ComposedParagraph,
   ComposedLine,
   FontRegistry,
-} from '@paragraf/types';
+  AlignmentMode,
+} from '@paragraf/compile';
 import { createBrowserMeasurer } from './measurer.js';
 
 export function composeGreedy(
@@ -15,6 +16,7 @@ export function composeGreedy(
   font: Font,
   lineWidth: number,
   registry: FontRegistry,
+  alignment: AlignmentMode = 'left',
 ): ComposedParagraph {
   const measurer = createBrowserMeasurer(registry);
   const words = text.trim().split(/\s+/).filter(Boolean);
@@ -53,6 +55,7 @@ export function composeGreedy(
             baseline,
             false,
             spaceMetrics.width,
+            alignment,
           ),
         );
         lineWords = [word];
@@ -73,6 +76,7 @@ export function composeGreedy(
         baseline,
         true,
         spaceMetrics.width,
+        alignment,
       ),
     );
   }
@@ -89,13 +93,22 @@ function buildLine(
   baseline: number,
   isLastLine: boolean,
   naturalSpaceWidth: number,
+  alignment: AlignmentMode,
 ): ComposedLine {
   const numGaps = words.length - 1;
   // usedWidth already includes natural spaces; subtract them to get pure word content width
   const wordContentWidth = usedWidth - numGaps * naturalSpaceWidth;
   const remaining = lineWidth - wordContentWidth;
-  const wordSpacing =
-    isLastLine || numGaps === 0 ? naturalSpaceWidth : remaining / numGaps;
+  // Only justify non-last lines when alignment is 'justified'
+  const justify = alignment === 'justified' && !isLastLine && numGaps > 0;
+  const wordSpacing = justify ? remaining / numGaps : naturalSpaceWidth;
+  // Last line of justified text and non-justified modes both use the declared alignment
+  const lineAlignment: AlignmentMode =
+    alignment === 'justified' && !isLastLine
+      ? 'justified'
+      : alignment === 'justified'
+        ? 'left'
+        : alignment;
 
   return {
     words,
@@ -104,7 +117,7 @@ function buildLine(
     wordSpacing,
     hyphenated: false,
     ratio: 0,
-    alignment: isLastLine ? 'left' : 'justified',
+    alignment: lineAlignment,
     isWidow: false,
     lineWidth,
     lineHeight,

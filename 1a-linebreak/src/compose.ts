@@ -92,10 +92,19 @@ const extractLine = (
 
   const start = from === 0 ? 0 : from + 1;
 
+  // Track box widths and word-glue count for exact justified fill computation.
+  // KP's prefix sums include the break glue of the previous line (for non-first lines
+  // that follow a word break), causing the ratio to be computed for N glues while the
+  // layout only applies N-1 visible gaps. We correct this by recomputing wordSpacing
+  // directly from node widths after the scan loop.
+  let boxWidthSum = 0;
+  let wordGlueCount = 0;
+
   for (let i = start; i <= to; i++) {
     const node = nodes[i];
 
     if (node.type === 'box') {
+      boxWidthSum += node.width;
       if ((lastWasHyphenPenalty || lastWasBox) && words.length > 0) {
         // hyphen fragment continuation or span continuation within same word
         words[words.length - 1] += node.content;
@@ -126,13 +135,12 @@ const extractLine = (
       lastWasBox = false;
     }
 
-    // NOTE: word spacing is resolved from the first word glue on the line.
-    // For single-font paragraphs this is exact.
-    // For mixed-font paragraphs, glues from different fonts have different
-    // natural widths and stretch budgets — this is an approximation.
-    if (node.type === 'glue' && node.kind === 'word' && !spacingResolved) {
-      wordSpacing = resolveGlueWidth(node, effectiveRatio, alignment);
-      spacingResolved = true;
+    if (node.type === 'glue' && node.kind === 'word') {
+      wordGlueCount++;
+      if (!spacingResolved) {
+        wordSpacing = resolveGlueWidth(node, effectiveRatio, alignment);
+        spacingResolved = true;
+      }
     }
   }
 
@@ -143,6 +151,32 @@ const extractLine = (
     if (lastRuns.length > 0) {
       const last = lastRuns[lastRuns.length - 1];
       lastRuns[lastRuns.length - 1] = { ...last, text: last.text + '-' };
+    }
+  }
+
+  // Recompute wordSpacing to exactly fill lineWidth for justified non-last lines.
+  // The KP algorithm's prefix sums include the break glue of the previous line in
+  // each line's width/stretch totals (since sums[i] - sums[a.position] includes
+  // node[a.position] when a.position > 0 and that node is a glue). This causes the
+  // ratio to be computed for N glues while the layout only renders N-1 visible gaps,
+  // making lines fall short by exactly one wordSpacing. We fix this by computing
+  // wordSpacing directly: (lineWidth - totalBoxWidth - hyphenWidth) / visibleGlueCount.
+  if (alignment === 'justified' && (!isLastLine || justifyLastLine)) {
+    const breakNode = nodes[to];
+    // Break node contributes a word glue if it's a glue (word break); exclude it
+    // from the visible gap count since it is consumed by the line break, not rendered.
+    const breakIsWordGlue =
+      breakNode?.type === 'glue' && breakNode.kind === 'word';
+    const visibleGlues = wordGlueCount - (breakIsWordGlue ? 1 : 0);
+    // Hyphen penalty width is part of the rendered line width (the '-' is in wordRuns)
+    // but is NOT counted in boxWidthSum since penalty nodes don't add to prefix sums.
+    const penaltyWidth =
+      breakNode?.type === 'penalty' && breakNode.flagged ? breakNode.width : 0;
+    if (visibleGlues > 0) {
+      wordSpacing = Math.max(
+        0,
+        (lineWidth - boxWidthSum - penaltyWidth) / visibleGlues,
+      );
     }
   }
 

@@ -503,14 +503,19 @@ export const createParagraphComposer = async (
       direction !== 'rtl' &&
       lines.length > 0
     ) {
-      const adjustedInput = buildOmaInput(input, lines);
+      const adjustedInput = buildOmaInput(input, lines, measurer);
       const pass2 = compose(adjustedInput);
       // Compute xOffsets from pass-2 lines: pass 2 already has correct break
       // positions, so its first/last characters are the true margin characters.
-      const { xOffsets } = buildOmaAdjustments(pass2.lines, lineWidth);
+      const { xOffsets, rightProtrusions } = buildOmaAdjustments(
+        pass2.lines,
+        lineWidth,
+        measurer,
+      );
       lines = pass2.lines.map((line, i) => ({
         ...line,
         xOffset: xOffsets[i] ?? 0,
+        rightProtrusion: rightProtrusions[i] ?? 0,
       }));
     }
 
