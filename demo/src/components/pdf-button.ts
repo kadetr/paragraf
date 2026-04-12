@@ -32,7 +32,7 @@ export function createPdfButton(opts: PdfButtonOptions): PdfButtonHandle {
     btn.disabled = true;
     try {
       const bytes = await opts.onDownload();
-      const blob = new Blob([bytes.buffer as ArrayBuffer], {
+      const blob = new Blob([bytes as Uint8Array<ArrayBuffer>], {
         type: 'application/pdf',
       });
       const url = URL.createObjectURL(blob);

@@ -64,11 +64,7 @@ export function createRouter(
   function start(): void {
     window.addEventListener('hashchange', () => {
       const key = parseHash(window.location.hash);
-      if (key !== current) {
-        if (current !== null) pages[current].unmount();
-        current = key;
-        pages[key].mount(container, ctx);
-      }
+      if (key !== current) activate(key);
     });
 
     // Boot on current hash (or default)

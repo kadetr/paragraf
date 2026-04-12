@@ -11,6 +11,7 @@ export interface SvgPreviewHandle {
   el: HTMLElement;
   setSvg(svgString: string): void;
   clear(): void;
+  destroy(): void;
 }
 
 export function createSvgPreview(
@@ -27,6 +28,20 @@ export function createSvgPreview(
       }
     });
     ro.observe(container);
+
+    return {
+      el: container,
+      setSvg(svgString: string) {
+        container.innerHTML = svgString;
+      },
+      clear() {
+        container.innerHTML = '';
+      },
+      destroy() {
+        ro.disconnect();
+        container.innerHTML = '';
+      },
+    };
   }
 
   return {
@@ -35,6 +50,9 @@ export function createSvgPreview(
       container.innerHTML = svgString;
     },
     clear() {
+      container.innerHTML = '';
+    },
+    destroy() {
       container.innerHTML = '';
     },
   };

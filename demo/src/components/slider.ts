@@ -2,7 +2,7 @@
 
 export interface SliderOptions {
   label: string;
-  description?: string; // shown as tooltip (title) on the label
+  description?: string; // shown as custom tooltip/help text on the label
   highlight?: boolean; // light-blue accent background (KP-specific controls)
   min: number;
   max: number;

@@ -106,16 +106,19 @@ export const linebreakPage: Page = (() => {
     if (!loadedFonts.has(fontOpt.id)) {
       const url = `${import.meta.env.BASE_URL}${fontOpt.fileName}`;
       const resp = await fetch(url);
-      if (resp.ok) {
-        const bytes = new Uint8Array(await resp.arrayBuffer());
-        (
-          ctx.engine as import('../browser-engine.js').BrowserWasmFontEngine
-        ).loadFontBytes(fontOpt.id, bytes);
-        const face = new FontFace(fontOpt.family, bytes.buffer);
-        await face.load();
-        document.fonts.add(face);
-        loadedFonts.add(fontOpt.id);
+      if (!resp.ok) {
+        throw new Error(
+          `Failed to load font "${fontOpt.id}": ${resp.status} ${resp.statusText}`,
+        );
       }
+      const bytes = new Uint8Array(await resp.arrayBuffer());
+      (
+        ctx.engine as import('../browser-engine.js').BrowserWasmFontEngine
+      ).loadFontBytes(fontOpt.id, bytes);
+      const face = new FontFace(fontOpt.family, bytes.buffer);
+      await face.load();
+      document.fonts.add(face);
+      loadedFonts.add(fontOpt.id);
     }
 
     const font: import('@paragraf/types').Font = {
@@ -349,6 +352,8 @@ export const linebreakPage: Page = (() => {
 
     unmount(): void {
       mounted = false;
+      kpPreview?.destroy();
+      greedyPreview?.destroy();
       kpPreview = null;
       greedyPreview = null;
       kpStatus = null;
