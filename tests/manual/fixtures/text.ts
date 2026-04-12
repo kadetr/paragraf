@@ -22,9 +22,6 @@ export const EN_BODY =
   'stands isolated at the top of a column. The algorithm was described by Donald ' +
   'Knuth and Michael Plass in their 1981 paper "Breaking Paragraphs into Lines".';
 
-export const EN_BODY_2 =
-  'Far out in the uncharted backwaters of the unfashionable end of the Western Spiral Arm of the Galaxy lies a small unregarded yellow sun. Orbiting this at a distance of roughly ninety-two million miles is an utterly insignificant little blue-green planet whose ape-descended life forms are so amazingly primitive that they still think digital watches are a pretty neat idea. This planet has – or rather had – a problem, which was this: most of the people living on it were unhappy for pretty much of the time. Many solutions were suggested for this problem, but most of these were largely concerned with the movements of small green pieces of paper, which is odd because on the whole it was not the small green pieces of paper that were unhappy. And so the problem remained; lots of the people were mean, and most of them were miserable, even the ones with digital watches.';
-
 // ─── EN_NARROW ───────────────────────────────────────────────────────────────
 // Short English text for narrow-column tests. Used by: MT-06, MT-08.
 
