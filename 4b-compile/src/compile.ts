@@ -205,21 +205,6 @@ export async function compile<T = unknown>(
     );
   }
 
-  // ── RTL + spans guard ─────────────────────────────────────────────────────
-  // composer.compose() throws at runtime when spans are present in an RTL
-  // paragraph. Catch it here with a clear error before reaching step 9.
-  for (const input of paragraphs) {
-    if (input.spans && input.spans.length > 0) {
-      const text = input.spans.map((s) => s.text).join('');
-      if (paragraphIsRtl(text)) {
-        throw new Error(
-          '[paragraf/compile] RTL text with per-span font input is not yet supported. ' +
-            'Use plain text content slots for RTL content. (planned v0.8)',
-        );
-      }
-    }
-  }
-
   // ── 8. Ensure languages for non-default styles ────────────────────────────
   const languages = new Set<Language>(
     paragraphs
@@ -429,28 +414,3 @@ async function emptyResult(
 }
 
 // ─── Private utilities ────────────────────────────────────────────────────────
-
-/**
- * Matches text containing at least one strong RTL character.
- * Uses Unicode script properties instead of a hand-maintained range list
- * to reduce the chance of compile-time RTL detection drifting over time.
- */
-const RTL_CHARACTER_RE = /[\p{Script=Hebrew}\p{Script=Arabic}]/u;
-
-/**
- * True only when the text's paragraph direction is RTL, determined by the
- * first-strong-directional algorithm (P2/P3 of UBA).  This mirrors
- * detectParagraphDirection() in paragraph.ts so the compile-time RTL+spans
- * guard only fires for paragraphs the composer would also classify as RTL.
- * Paragraphs whose first strong character is LTR return false even when they
- * contain later RTL runs, preventing false positives on mixed-direction text.
- */
-function paragraphIsRtl(text: string): boolean {
-  for (const char of text) {
-    if (RTL_CHARACTER_RE.test(char)) return true; // first strong = RTL
-    // Strong LTR: basic Latin letters — stop scanning early
-    const cp = char.codePointAt(0)!;
-    if ((cp >= 0x41 && cp <= 0x5a) || (cp >= 0x61 && cp <= 0x7a)) return false;
-  }
-  return false;
-}

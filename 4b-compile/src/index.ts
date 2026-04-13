@@ -1,7 +1,7 @@
 // index.ts — Public API for @paragraf/compile.
 
 // ─── Main entry points ────────────────────────────────────────────────────────
-export { compile, _resetCompileWarnings } from './compile.js';
+export { compile } from './compile.js';
 export { compileBatch } from './batch.js';
 
 // ─── Option and result types ──────────────────────────────────────────────────
