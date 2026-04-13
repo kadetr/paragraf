@@ -685,3 +685,63 @@ describe('TextSpan.verticalOffset — propagation to wordRuns', () => {
     allRuns.forEach((s) => expect(s.verticalOffset).toBe(0));
   });
 });
+
+// ─── lineHeight override ──────────────────────────────────────────────────────
+
+describe('ParagraphInput — lineHeight override', () => {
+  it('lineHeight stamps every output line with the given value', () => {
+    const output = composer.compose({
+      text: TEXT,
+      font: FONT_REGULAR,
+      lineWidth: 250,
+      lineHeight: 18,
+    });
+    expect(output.lineCount).toBeGreaterThan(0);
+    output.lines.forEach((l) => expect(l.lineHeight).toBe(18));
+  });
+
+  it('lineHeight=0 is ignored — uses font-metric-derived value', () => {
+    const noOverride = composer.compose({
+      text: TEXT,
+      font: FONT_REGULAR,
+      lineWidth: 250,
+    });
+    const withZero = composer.compose({
+      text: TEXT,
+      font: FONT_REGULAR,
+      lineWidth: 250,
+      lineHeight: 0,
+    });
+    expect(withZero.lines[0].lineHeight).toBe(noOverride.lines[0].lineHeight);
+  });
+
+  it('negative lineHeight is ignored — uses font-metric-derived value', () => {
+    const noOverride = composer.compose({
+      text: TEXT,
+      font: FONT_REGULAR,
+      lineWidth: 250,
+    });
+    const withNeg = composer.compose({
+      text: TEXT,
+      font: FONT_REGULAR,
+      lineWidth: 250,
+      lineHeight: -5,
+    });
+    expect(withNeg.lines[0].lineHeight).toBe(noOverride.lines[0].lineHeight);
+  });
+
+  it('lineHeight override does not affect line count', () => {
+    const normal = composer.compose({
+      text: TEXT,
+      font: FONT_REGULAR,
+      lineWidth: 250,
+    });
+    const withOverride = composer.compose({
+      text: TEXT,
+      font: FONT_REGULAR,
+      lineWidth: 250,
+      lineHeight: 24,
+    });
+    expect(withOverride.lineCount).toBe(normal.lineCount);
+  });
+});

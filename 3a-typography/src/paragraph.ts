@@ -205,9 +205,11 @@ export interface ParagraphOutput {
 export interface ParagraphComposer {
   compose: (input: ParagraphInput) => ParagraphOutput;
   ensureLanguage: (language: Language) => Promise<void>;
-  /** The Measurer used internally by this composer. Reuse it for layoutDocument
-   *  to avoid creating a second font-cache lookup for the same registry. */
-  measurer: Measurer;
+  /** The Measurer used internally by this composer, when available. Reuse it
+   *  for layoutDocument to avoid creating a second font-cache lookup for the
+   *  same registry. Optional to preserve compatibility with existing/mock
+   *  ParagraphComposer implementations. */
+  measurer?: Measurer;
 }
 
 /**
@@ -528,8 +530,13 @@ export const createParagraphComposer = async (
 
     // Apply exact leading override: when the caller specifies lineHeight on the
     // input, stamp it onto every ComposedLine so layoutDocument advances by that
-    // fixed amount rather than the font-metric-derived value.
-    if (input.lineHeight !== undefined) {
+    // fixed amount rather than the font-metric-derived value. Ignore invalid
+    // overrides so we preserve the composed, metric-derived line heights.
+    if (
+      input.lineHeight !== undefined &&
+      Number.isFinite(input.lineHeight) &&
+      input.lineHeight > 0
+    ) {
       const lh = input.lineHeight;
       lines = lines.map((line) => ({ ...line, lineHeight: lh }));
     }

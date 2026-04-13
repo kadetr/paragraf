@@ -41,6 +41,7 @@ import type {
 import { renderToSvg } from '@paragraf/render-core';
 import type { RenderedParagraph } from '@paragraf/render-core';
 import type { FontEngine } from '@paragraf/font-engine';
+import { createMeasurer } from '@paragraf/font-engine';
 import { renderDocumentToPdf } from '@paragraf/render-pdf';
 
 import type { CompileOptions, CompileResult } from './types.js';
@@ -49,6 +50,17 @@ import { resolveText } from './interpolate.js';
 import { resolveComposerOptions, detectActualShaping } from './shaping.js';
 
 const DEFAULT_MAX_PAGES = 100;
+
+// Module-level sets to deduplicate development-time warnings (one warn per style
+// name per process, avoiding spam in high-volume compileBatch runs).
+const _warnedSpacing = new Set<string>();
+const _warnedHyphenation = new Set<string>();
+
+/** @internal — reset warning dedup state between tests to prevent state pollution. */
+export function _resetCompileWarnings(): void {
+  _warnedSpacing.clear();
+  _warnedHyphenation.clear();
+}
 
 // ─── Main entry point ─────────────────────────────────────────────────────────
 
@@ -107,20 +119,19 @@ export async function compile<T = unknown>(
   const styleRegistry = defineStyles(template.styles);
 
   // Warn once per style name when properties are declared but not yet implemented.
-  // Per-call Sets (not module-level) to ensure clean state across calls and tests.
-  const warnedSpacing = new Set<string>();
-  const warnedHyphenation = new Set<string>();
+  // Module-level Sets deduplicate across compileBatch runs; call _resetCompileWarnings()
+  // in tests that need clean warning state.
   for (const name of styleRegistry.names()) {
     const s = styleRegistry.resolve(name);
-    if ((s.spaceBefore > 0 || s.spaceAfter > 0) && !warnedSpacing.has(name)) {
-      warnedSpacing.add(name);
+    if ((s.spaceBefore > 0 || s.spaceAfter > 0) && !_warnedSpacing.has(name)) {
+      _warnedSpacing.add(name);
       console.warn(
         `[paragraf/compile] Style "${name}": spaceBefore/spaceAfter are not yet ` +
           `implemented and will be ignored. (planned v0.6)`,
       );
     }
-    if (s.hyphenation === false && !warnedHyphenation.has(name)) {
-      warnedHyphenation.add(name);
+    if (s.hyphenation === false && !_warnedHyphenation.has(name)) {
+      _warnedHyphenation.add(name);
       console.warn(
         `[paragraf/compile] Style "${name}": hyphenation: false is not yet supported; ` +
           `paragraphs will still be hyphenated according to their language setting. (planned v0.6)`,
@@ -200,7 +211,7 @@ export async function compile<T = unknown>(
   for (const input of paragraphs) {
     if (input.spans && input.spans.length > 0) {
       const text = input.spans.map((s) => s.text).join('');
-      if (hasRtlCharacter(text)) {
+      if (paragraphIsRtl(text)) {
         throw new Error(
           '[paragraf/compile] RTL text with per-span font input is not yet supported. ' +
             'Use plain text content slots for RTL content. (planned v0.8)',
@@ -224,9 +235,11 @@ export async function compile<T = unknown>(
   const composedDoc = composeDocument(doc, composer);
 
   // ── 10. Layout document ──────────────────────────────────────────────────
-  // Reuse the measurer the composer already holds — both hit the same font cache,
-  // so creating a second one is wasteful and fragile if the cache is ever cleared.
-  const { measurer } = composer;
+  // Reuse the measurer the composer already holds when available — both hit
+  // the same font cache, so creating a second one is wasteful and fragile if
+  // the cache is ever cleared. Fall back to createMeasurer for mock composers
+  // that do not expose a measurer (e.g. in tests).
+  const measurer = composer.measurer ?? createMeasurer(registry);
   const renderedDoc = layoutDocument(composedDoc, frames, measurer);
 
   // Count overflow lines (lines composed but not placed due to page limit)
@@ -377,7 +390,14 @@ function buildInput(
     firstLineIndent: style.firstLineIndent,
     tolerance: style.tolerance,
     looseness: style.looseness,
-    lineHeight: style.lineHeight,
+    // Only forward lineHeight when it is a valid positive finite number; invalid
+    // values (zero, negative, NaN, Infinity) would cause overlapping text or
+    // unstable layout and should be silently ignored.
+    ...(style.lineHeight !== undefined &&
+    Number.isFinite(style.lineHeight) &&
+    style.lineHeight > 0
+      ? { lineHeight: style.lineHeight }
+      : {}),
     // NOTE v0.6: style.hyphenation === false is not yet supported by ParagraphInput;
     // all paragraphs are hyphenated according to their language setting.
   };
@@ -411,22 +431,26 @@ async function emptyResult(
 // ─── Private utilities ────────────────────────────────────────────────────────
 
 /**
- * Return true if `text` contains at least one strong RTL character
- * (Hebrew, Arabic, or Arabic supplement blocks).
- * Mirrors the logic in paragraph.ts detectParagraphDirection.
+ * Matches text containing at least one strong RTL character.
+ * Uses Unicode script properties instead of a hand-maintained range list
+ * to reduce the chance of compile-time RTL detection drifting over time.
  */
-function hasRtlCharacter(text: string): boolean {
+const RTL_CHARACTER_RE = /[\p{Script=Hebrew}\p{Script=Arabic}]/u;
+
+/**
+ * True only when the text's paragraph direction is RTL, determined by the
+ * first-strong-directional algorithm (P2/P3 of UBA).  This mirrors
+ * detectParagraphDirection() in paragraph.ts so the compile-time RTL+spans
+ * guard only fires for paragraphs the composer would also classify as RTL.
+ * Paragraphs whose first strong character is LTR return false even when they
+ * contain later RTL runs, preventing false positives on mixed-direction text.
+ */
+function paragraphIsRtl(text: string): boolean {
   for (const char of text) {
+    if (RTL_CHARACTER_RE.test(char)) return true; // first strong = RTL
+    // Strong LTR: basic Latin letters — stop scanning early
     const cp = char.codePointAt(0)!;
-    if (
-      (cp >= 0x0590 && cp <= 0x05ff) ||
-      (cp >= 0x0600 && cp <= 0x06ff) ||
-      (cp >= 0x0750 && cp <= 0x077f) ||
-      (cp >= 0xfb50 && cp <= 0xfdff) ||
-      (cp >= 0xfe70 && cp <= 0xfeff)
-    ) {
-      return true;
-    }
+    if ((cp >= 0x41 && cp <= 0x5a) || (cp >= 0x61 && cp <= 0x7a)) return false;
   }
   return false;
 }
