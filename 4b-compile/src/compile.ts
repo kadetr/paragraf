@@ -26,7 +26,7 @@ import type { Margins } from '@paragraf/layout';
 import { defineStyles } from '@paragraf/style';
 import type { ResolvedParagraphStyle } from '@paragraf/style';
 import type { Template, Dimension, DimensionMargins } from '@paragraf/template';
-import { createMeasurer } from '@paragraf/font-engine';
+
 import {
   createParagraphComposer,
   createDefaultFontEngine,
@@ -49,11 +49,6 @@ import { resolveText } from './interpolate.js';
 import { resolveComposerOptions, detectActualShaping } from './shaping.js';
 
 const DEFAULT_MAX_PAGES = 100;
-
-// Module-level sets to deduplicate development-time warnings (one warn per style
-// name per process, avoiding spam in high-volume compileBatch runs).
-const _warnedSpacing = new Set<string>();
-const _warnedHyphenation = new Set<string>();
 
 // ─── Main entry point ─────────────────────────────────────────────────────────
 
@@ -112,17 +107,20 @@ export async function compile<T = unknown>(
   const styleRegistry = defineStyles(template.styles);
 
   // Warn once per style name when properties are declared but not yet implemented.
+  // Per-call Sets (not module-level) to ensure clean state across calls and tests.
+  const warnedSpacing = new Set<string>();
+  const warnedHyphenation = new Set<string>();
   for (const name of styleRegistry.names()) {
     const s = styleRegistry.resolve(name);
-    if ((s.spaceBefore > 0 || s.spaceAfter > 0) && !_warnedSpacing.has(name)) {
-      _warnedSpacing.add(name);
+    if ((s.spaceBefore > 0 || s.spaceAfter > 0) && !warnedSpacing.has(name)) {
+      warnedSpacing.add(name);
       console.warn(
         `[paragraf/compile] Style "${name}": spaceBefore/spaceAfter are not yet ` +
           `implemented and will be ignored. (planned v0.6)`,
       );
     }
-    if (s.hyphenation === false && !_warnedHyphenation.has(name)) {
-      _warnedHyphenation.add(name);
+    if (s.hyphenation === false && !warnedHyphenation.has(name)) {
+      warnedHyphenation.add(name);
       console.warn(
         `[paragraf/compile] Style "${name}": hyphenation: false is not yet supported; ` +
           `paragraphs will still be hyphenated according to their language setting. (planned v0.6)`,
@@ -196,6 +194,21 @@ export async function compile<T = unknown>(
     );
   }
 
+  // ── RTL + spans guard ─────────────────────────────────────────────────────
+  // composer.compose() throws at runtime when spans are present in an RTL
+  // paragraph. Catch it here with a clear error before reaching step 9.
+  for (const input of paragraphs) {
+    if (input.spans && input.spans.length > 0) {
+      const text = input.spans.map((s) => s.text).join('');
+      if (hasRtlCharacter(text)) {
+        throw new Error(
+          '[paragraf/compile] RTL text with per-span font input is not yet supported. ' +
+            'Use plain text content slots for RTL content. (planned v0.8)',
+        );
+      }
+    }
+  }
+
   // ── 8. Ensure languages for non-default styles ────────────────────────────
   const languages = new Set<Language>(
     paragraphs
@@ -211,7 +224,9 @@ export async function compile<T = unknown>(
   const composedDoc = composeDocument(doc, composer);
 
   // ── 10. Layout document ──────────────────────────────────────────────────
-  const measurer = createMeasurer(registry);
+  // Reuse the measurer the composer already holds — both hit the same font cache,
+  // so creating a second one is wasteful and fragile if the cache is ever cleared.
+  const { measurer } = composer;
   const renderedDoc = layoutDocument(composedDoc, frames, measurer);
 
   // Count overflow lines (lines composed but not placed due to page limit)
@@ -362,6 +377,7 @@ function buildInput(
     firstLineIndent: style.firstLineIndent,
     tolerance: style.tolerance,
     looseness: style.looseness,
+    lineHeight: style.lineHeight,
     // NOTE v0.6: style.hyphenation === false is not yet supported by ParagraphInput;
     // all paragraphs are hyphenated according to their language setting.
   };
@@ -390,4 +406,27 @@ async function emptyResult(
     compress: true,
   });
   return { data: pdfBuf, metadata };
+}
+
+// ─── Private utilities ────────────────────────────────────────────────────────
+
+/**
+ * Return true if `text` contains at least one strong RTL character
+ * (Hebrew, Arabic, or Arabic supplement blocks).
+ * Mirrors the logic in paragraph.ts detectParagraphDirection.
+ */
+function hasRtlCharacter(text: string): boolean {
+  for (const char of text) {
+    const cp = char.codePointAt(0)!;
+    if (
+      (cp >= 0x0590 && cp <= 0x05ff) ||
+      (cp >= 0x0600 && cp <= 0x06ff) ||
+      (cp >= 0x0750 && cp <= 0x077f) ||
+      (cp >= 0xfb50 && cp <= 0xfdff) ||
+      (cp >= 0xfe70 && cp <= 0xfeff)
+    ) {
+      return true;
+    }
+  }
+  return false;
 }
