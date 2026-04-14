@@ -26,7 +26,7 @@ import type { Margins } from '@paragraf/layout';
 import { defineStyles } from '@paragraf/style';
 import type { ResolvedParagraphStyle } from '@paragraf/style';
 import type { Template, Dimension, DimensionMargins } from '@paragraf/template';
-import { createMeasurer } from '@paragraf/font-engine';
+
 import {
   createParagraphComposer,
   createDefaultFontEngine,
@@ -41,6 +41,7 @@ import type {
 import { renderToSvg } from '@paragraf/render-core';
 import type { RenderedParagraph } from '@paragraf/render-core';
 import type { FontEngine } from '@paragraf/font-engine';
+import { createMeasurer } from '@paragraf/font-engine';
 import { renderDocumentToPdf } from '@paragraf/render-pdf';
 
 import type { CompileOptions, CompileResult } from './types.js';
@@ -112,6 +113,8 @@ export async function compile<T = unknown>(
   const styleRegistry = defineStyles(template.styles);
 
   // Warn once per style name when properties are declared but not yet implemented.
+  // These module-level Sets intentionally deduplicate warnings across compile()
+  // and compileBatch runs for the lifetime of the loaded module.
   for (const name of styleRegistry.names()) {
     const s = styleRegistry.resolve(name);
     if ((s.spaceBefore > 0 || s.spaceAfter > 0) && !_warnedSpacing.has(name)) {
@@ -211,7 +214,11 @@ export async function compile<T = unknown>(
   const composedDoc = composeDocument(doc, composer);
 
   // ── 10. Layout document ──────────────────────────────────────────────────
-  const measurer = createMeasurer(registry);
+  // Reuse the measurer the composer already holds when available — both hit
+  // the same font cache, so creating a second one is wasteful and fragile if
+  // the cache is ever cleared. Fall back to createMeasurer for mock composers
+  // that do not expose a measurer (e.g. in tests).
+  const measurer = composer.measurer ?? createMeasurer(registry);
   const renderedDoc = layoutDocument(composedDoc, frames, measurer);
 
   // Count overflow lines (lines composed but not placed due to page limit)
@@ -362,6 +369,12 @@ function buildInput(
     firstLineIndent: style.firstLineIndent,
     tolerance: style.tolerance,
     looseness: style.looseness,
+    // Only forward lineHeight when it is a valid positive finite number; invalid
+    // values (zero, negative, NaN, Infinity) would cause overlapping text or
+    // unstable layout and should be silently ignored.
+    ...(Number.isFinite(style.lineHeight) && style.lineHeight > 0
+      ? { lineHeight: style.lineHeight }
+      : {}),
     // NOTE v0.6: style.hyphenation === false is not yet supported by ParagraphInput;
     // all paragraphs are hyphenated according to their language setting.
   };

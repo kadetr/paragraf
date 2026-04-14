@@ -113,7 +113,10 @@ export const typographyPage: Page = (() => {
     const row = document.createElement('div');
     row.className = 'control-row';
     const lbl = document.createElement('label');
-    lbl.textContent = `${label}: ${fmt(value)}`;
+    // Use a separate span for the text so that updating it doesn't destroy
+    // the <input> child that is also appended to the label.
+    const labelText = document.createElement('span');
+    labelText.textContent = `${label}: ${fmt(value)}`;
     const input = document.createElement('input');
     input.type = 'range';
     input.min = String(min);
@@ -122,10 +125,11 @@ export const typographyPage: Page = (() => {
     input.value = String(value);
     input.addEventListener('input', () => {
       const v = Number(input.value);
-      lbl.textContent = `${label}: ${fmt(v)}`;
+      labelText.textContent = `${label}: ${fmt(v)}`;
       onChange(v);
       updatePreview();
     });
+    lbl.appendChild(labelText);
     lbl.appendChild(input);
     row.appendChild(lbl);
     return row;

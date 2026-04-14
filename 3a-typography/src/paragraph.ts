@@ -187,6 +187,10 @@ export interface ParagraphInput {
   widowPenalty?: number;
   orphanPenalty?: number;
   preserveSoftHyphens?: boolean;
+  /** When set, overrides the font-metric-derived line height on every composed
+   *  line. Use this to enforce exact leading (e.g. 16pt) independent of the
+   *  font's ascender/descender/lineGap values. */
+  lineHeight?: number;
   /** When true, run a second Knuth-Plass pass with OMA-adjusted lineWidths.
    *  Each output line's xOffset is set proportional to left-margin protrusion. */
   opticalMarginAlignment?: boolean;
@@ -201,6 +205,11 @@ export interface ParagraphOutput {
 export interface ParagraphComposer {
   compose: (input: ParagraphInput) => ParagraphOutput;
   ensureLanguage: (language: Language) => Promise<void>;
+  /** The Measurer used internally by this composer, when available. Reuse it
+   *  for layoutDocument to avoid creating a second font-cache lookup for the
+   *  same registry. Optional to preserve compatibility with existing/mock
+   *  ParagraphComposer implementations. */
+  measurer?: Measurer;
 }
 
 /**
@@ -519,6 +528,19 @@ export const createParagraphComposer = async (
       }));
     }
 
+    // Apply exact leading override: when the caller specifies lineHeight on the
+    // input, stamp it onto every ComposedLine so layoutDocument advances by that
+    // fixed amount rather than the font-metric-derived value. Ignore invalid
+    // overrides so we preserve the composed, metric-derived line heights.
+    if (
+      input.lineHeight !== undefined &&
+      Number.isFinite(input.lineHeight) &&
+      input.lineHeight > 0
+    ) {
+      const lh = input.lineHeight;
+      lines = lines.map((line) => ({ ...line, lineHeight: lh }));
+    }
+
     return {
       lines,
       lineCount: lines.length,
@@ -526,7 +548,7 @@ export const createParagraphComposer = async (
     };
   };
 
-  return { compose, ensureLanguage };
+  return { compose, ensureLanguage, measurer };
 };
 
 /**
