@@ -372,9 +372,7 @@ function buildInput(
     // Only forward lineHeight when it is a valid positive finite number; invalid
     // values (zero, negative, NaN, Infinity) would cause overlapping text or
     // unstable layout and should be silently ignored.
-    ...(style.lineHeight !== undefined &&
-    Number.isFinite(style.lineHeight) &&
-    style.lineHeight > 0
+    ...(Number.isFinite(style.lineHeight) && style.lineHeight > 0
       ? { lineHeight: style.lineHeight }
       : {}),
     // NOTE v0.6: style.hyphenation === false is not yet supported by ParagraphInput;
