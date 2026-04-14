@@ -7,6 +7,7 @@ import {
   ParagraphComposer,
 } from '@paragraf/typography';
 import { FontRegistry, Font } from '@paragraf/types';
+import { layoutParagraph } from '@paragraf/render-core';
 
 // ─── Fixtures ────────────────────────────────────────────────────────────────
 
@@ -743,5 +744,28 @@ describe('ParagraphInput — lineHeight override', () => {
       lineHeight: 24,
     });
     expect(withOverride.lineCount).toBe(normal.lineCount);
+  });
+
+  it('lineHeight override is reflected in layoutParagraph output — baselines advance by the given value', () => {
+    const LH = 30;
+    const output = composer.compose({
+      text: TEXT,
+      font: FONT_REGULAR,
+      lineWidth: 250,
+      lineHeight: LH,
+    });
+    // Require at least two lines so we can check the advance between them.
+    expect(output.lineCount).toBeGreaterThan(1);
+
+    const rendered = layoutParagraph(output.lines, composer.measurer!, { x: 0, y: 0 });
+
+    // Every RenderedLine should report the overridden lineHeight.
+    rendered.forEach((rl) => expect(rl.lineHeight).toBe(LH));
+
+    // Consecutive baselines differ by exactly LH (baseline = lineY + line.baseline,
+    // and line.baseline is constant for a uniform font/size).
+    for (let i = 1; i < rendered.length; i++) {
+      expect(rendered[i].baseline - rendered[i - 1].baseline).toBeCloseTo(LH, 5);
+    }
   });
 });

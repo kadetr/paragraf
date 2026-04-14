@@ -56,12 +56,6 @@ const DEFAULT_MAX_PAGES = 100;
 const _warnedSpacing = new Set<string>();
 const _warnedHyphenation = new Set<string>();
 
-/** @internal — reset warning dedup state between tests to prevent state pollution. */
-export function _resetCompileWarnings(): void {
-  _warnedSpacing.clear();
-  _warnedHyphenation.clear();
-}
-
 // ─── Main entry point ─────────────────────────────────────────────────────────
 
 /**
