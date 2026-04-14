@@ -757,7 +757,12 @@ describe('ParagraphInput — lineHeight override', () => {
     // Require at least two lines so we can check the advance between them.
     expect(output.lineCount).toBeGreaterThan(1);
 
-    const rendered = layoutParagraph(output.lines, composer.measurer!, {
+    const measurer = composer.measurer;
+    expect(measurer).toBeDefined();
+    if (!measurer) {
+      throw new Error('Expected composer.measurer to be defined');
+    }
+    const rendered = layoutParagraph(output.lines, measurer, {
       x: 0,
       y: 0,
     });
