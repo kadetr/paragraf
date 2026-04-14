@@ -757,7 +757,10 @@ describe('ParagraphInput — lineHeight override', () => {
     // Require at least two lines so we can check the advance between them.
     expect(output.lineCount).toBeGreaterThan(1);
 
-    const rendered = layoutParagraph(output.lines, composer.measurer!, { x: 0, y: 0 });
+    const rendered = layoutParagraph(output.lines, composer.measurer!, {
+      x: 0,
+      y: 0,
+    });
 
     // Every RenderedLine should report the overridden lineHeight.
     rendered.forEach((rl) => expect(rl.lineHeight).toBe(LH));
@@ -765,7 +768,10 @@ describe('ParagraphInput — lineHeight override', () => {
     // Consecutive baselines differ by exactly LH (baseline = lineY + line.baseline,
     // and line.baseline is constant for a uniform font/size).
     for (let i = 1; i < rendered.length; i++) {
-      expect(rendered[i].baseline - rendered[i - 1].baseline).toBeCloseTo(LH, 5);
+      expect(rendered[i].baseline - rendered[i - 1].baseline).toBeCloseTo(
+        LH,
+        5,
+      );
     }
   });
 });
