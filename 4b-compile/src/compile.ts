@@ -113,8 +113,8 @@ export async function compile<T = unknown>(
   const styleRegistry = defineStyles(template.styles);
 
   // Warn once per style name when properties are declared but not yet implemented.
-  // Module-level Sets deduplicate across compileBatch runs; call _resetCompileWarnings()
-  // in tests that need clean warning state.
+  // These module-level Sets intentionally deduplicate warnings across compile()
+  // and compileBatch runs for the lifetime of the loaded module.
   for (const name of styleRegistry.names()) {
     const s = styleRegistry.resolve(name);
     if ((s.spaceBefore > 0 || s.spaceAfter > 0) && !_warnedSpacing.has(name)) {
@@ -406,5 +406,3 @@ async function emptyResult(
   });
   return { data: pdfBuf, metadata };
 }
-
-// ─── Private utilities ────────────────────────────────────────────────────────
