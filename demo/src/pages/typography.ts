@@ -80,7 +80,7 @@ export const typographyPage: Page = (() => {
   let currentFontSize = DEFAULT_FONT_SIZE;
   let currentLeading = DEFAULT_LEADING;
   let currentLetterSpacing = DEFAULT_LETTER_SPACING;
-  let currentMeasureCacheEnabled = getBrowserMeasureCacheConfig().enabled;
+  let currentMeasureCacheEnabled = false; // initialized in mount() to reflect shared state
   let currentText = DEFAULT_SAMPLE_TEXT;
 
   let specEl: HTMLElement | null = null;
@@ -144,6 +144,9 @@ export const typographyPage: Page = (() => {
     mount(el: HTMLElement, _ctx: BootContext) {
       host = el;
       el.className = ''; // clear any class left by a previous page
+
+      // Read shared cache config fresh on each mount so UI reflects state from other pages.
+      currentMeasureCacheEnabled = getBrowserMeasureCacheConfig().enabled;
 
       const root = document.createElement('div');
       root.className = 'typography-page';

@@ -72,9 +72,6 @@ function runComposeLikeLoop(
 ): { durationMs: number; totalWidth: number } {
   clearWordMeasureCache();
 
-  const fontEngineCacheEnabled =
-    mode === 'both-enabled' || mode === 'font-engine-only';
-
   const measurer = createMeasurer(REGISTRY, undefined, undefined, undefined);
 
   const start = performance.now();

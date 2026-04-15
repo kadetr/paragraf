@@ -1,6 +1,5 @@
-use std::cell::RefCell;
+use std::cell::{Cell, RefCell};
 use std::collections::HashMap;
-use std::sync::atomic::{AtomicU32, Ordering};
 
 use serde::{Deserialize, Serialize};
 use unicode_bidi::BidiInfo;
@@ -723,10 +722,11 @@ thread_local! {
 
     /// WASM-local face registry keyed by opaque u32 handle.
     static FACE_REGISTRY: RefCell<HashMap<u32, CachedFace>> = RefCell::new(HashMap::new());
-}
 
-/// Monotonic opaque face-handle generator.
-static NEXT_FACE_ID: AtomicU32 = AtomicU32::new(1);
+    /// Monotonic opaque face-handle generator. Cell<u32> avoids requiring atomics
+    /// on wasm32-unknown-unknown targets that don't enable the WebAssembly atomics feature.
+    static NEXT_FACE_ID: Cell<u32> = Cell::new(1);
+}
 
 struct CachedFace {
     face: rustybuzz::Face<'static>,
@@ -790,7 +790,11 @@ pub fn register_font(font_id: &str, data: &[u8]) {
 pub fn create_face(data: &[u8]) -> u32 {
     match CachedFace::from_bytes(data) {
         Ok(cached_face) => {
-            let id = NEXT_FACE_ID.fetch_add(1, Ordering::Relaxed);
+            let id = NEXT_FACE_ID.with(|c| {
+                let next = c.get();
+                c.set(next + 1);
+                next
+            });
             FACE_REGISTRY.with(|registry| {
                 registry.borrow_mut().insert(id, cached_face);
             });

@@ -30,7 +30,7 @@ L4  template, compile
 
 ## Active Work
 - v0.4.0 release cycle
-- workId 001: shaping result cache — font-engine + shaping-wasm (planned)
+- workId 001: shaping result cache — font-engine + shaping-wasm (cancelled)
 - See `work-pool.md` for full registry
 
 ## Document Index

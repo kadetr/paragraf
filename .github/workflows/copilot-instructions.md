@@ -33,7 +33,7 @@ L4   @paragraf/template       — template definition and resolution
      studio/                  — browser app: frame editor, style panel, data binding, live PDF preview
 ```
 
-Rust shaper source is closed. Only compiled WASM ships. No npm publish until v1.0.
+Rust source for `@paragraf/shaping-wasm` is included in this repository, and the compiled WASM can be rebuilt from that source (e.g. via `wasm-pack`). No npm publish until v1.0.
 
 ## Process Rules — Apply to All Packages
 
