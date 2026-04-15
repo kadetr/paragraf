@@ -256,7 +256,7 @@ export const linebreakPage: Page = (() => {
       const letterSpacingSlider = createSlider({
         label: 'Letter Spacing',
         description:
-          'Global tracking in em units, default 0. Positive values space letters out; negative values tighten them.',
+          'Global tracking in points, default 0. Positive values space letters out; negative values tighten them.',
         ...LETTER_SPACING_SLIDER,
         value: state.letterSpacing,
         format: (v) =>

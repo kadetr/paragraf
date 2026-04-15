@@ -1,12 +1,17 @@
 import * as path from 'path';
 import { performance } from 'perf_hooks';
 import { fileURLToPath } from 'url';
-import {
-  createMeasurer,
-  getCacheStats,
-  clearWordMeasureCache,
-} from '../src/index.js';
+import { createMeasurer } from '../src/index.js';
 import type { Font, FontRegistry } from '@paragraf/types';
+
+// Cache management APIs are not yet exposed by @paragraf/font-engine (workId 001 cancelled).
+// These stubs keep the benchmark runnable and report placeholder stats.
+function getCacheStats(): { size: number; hits: number; misses: number } {
+  return { size: 0, hits: 0, misses: 0 };
+}
+function clearWordMeasureCache(): void {
+  // no-op: cache not yet implemented in font-engine
+}
 
 type RunMode =
   | 'both-enabled'
@@ -70,15 +75,7 @@ function runComposeLikeLoop(
   const fontEngineCacheEnabled =
     mode === 'both-enabled' || mode === 'font-engine-only';
 
-  const measurer = createMeasurer(
-    REGISTRY,
-    undefined,
-    undefined,
-    undefined,
-    fontEngineCacheEnabled
-      ? { cacheOptions: { maxCacheEntries: 10000 } }
-      : { cacheOptions: { maxCacheEntries: 0 } },
-  ) as any;
+  const measurer = createMeasurer(REGISTRY, undefined, undefined, undefined);
 
   const start = performance.now();
   let totalWidth = 0;
