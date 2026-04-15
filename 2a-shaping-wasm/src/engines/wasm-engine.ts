@@ -106,7 +106,10 @@ export class WasmFontEngine implements FontEngine {
    * Registers raw font bytes (e.g. from fetch().arrayBuffer()) without fs access.
    */
   loadFontBytes(id: string, bytes: Uint8Array): void {
-    if (this.faceHandlesByFontId.delete(id)) {
+    const previousHandle = this.faceHandlesByFontId.get(id);
+    if (previousHandle !== undefined) {
+      this.wasm.drop_face?.(previousHandle);
+      this.faceHandlesByFontId.delete(id);
       this.stats.evictions += 1;
     }
     const ownedCopy = new Uint8Array(bytes);
@@ -203,7 +206,6 @@ export class WasmFontEngine implements FontEngine {
     }
     this.faceHandlesByFontId.clear();
     this.fontBytesById.clear();
-    this.syncGlobalStats();
     this.syncGlobalStats();
   }
 
