@@ -106,9 +106,13 @@ export class WasmFontEngine implements FontEngine {
    * Registers raw font bytes (e.g. from fetch().arrayBuffer()) without fs access.
    */
   loadFontBytes(id: string, bytes: Uint8Array): void {
+    if (this.faceHandlesByFontId.delete(id)) {
+      this.stats.evictions += 1;
+    }
     const ownedCopy = new Uint8Array(bytes);
     this.fontBytesById.set(id, ownedCopy);
     this.wasm.register_font(id, ownedCopy);
+    this.syncGlobalStats();
   }
 
   private mapShapeResult(rawJson: string, source: string): Glyph[] {
@@ -198,6 +202,8 @@ export class WasmFontEngine implements FontEngine {
       this.wasm.drop_face(handle);
     }
     this.faceHandlesByFontId.clear();
+    this.fontBytesById.clear();
+    this.syncGlobalStats();
     this.syncGlobalStats();
   }
 

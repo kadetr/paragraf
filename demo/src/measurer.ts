@@ -15,7 +15,6 @@ import {
   font_metrics_wasm,
 } from '../../2a-shaping-wasm/wasm/pkg-bundler/knuth_plass_wasm.js';
 import {
-  configureBrowserMeasureCache,
   getBrowserMeasureCacheConfig,
   registerBrowserMeasureCacheClearer,
 } from './cache-controls.js';
@@ -113,12 +112,11 @@ export function createBrowserMeasurer(registry: FontRegistry): Measurer {
       const measured = raw.ok.width as number;
 
       touchBrowserMeasureCacheKey(key, measured);
-      if (_browserMeasureCacheStore.size > cfg.maxEntries) {
+      while (_browserMeasureCacheStore.size > cfg.maxEntries) {
         const oldestKey = _browserMeasureCacheStore.keys().next().value;
-        if (oldestKey !== undefined) {
-          _browserMeasureCacheStore.delete(oldestKey);
-          _browserMeasureCacheStats.evictions += 1;
-        }
+        if (oldestKey === undefined) break;
+        _browserMeasureCacheStore.delete(oldestKey);
+        _browserMeasureCacheStats.evictions += 1;
       }
       syncBrowserMeasureCacheSize();
 

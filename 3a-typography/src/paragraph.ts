@@ -330,14 +330,13 @@ const writeMeasureCache = (
   maxCacheEntries: number,
 ): void => {
   _measureCacheStore.set(key, value);
-  if (maxCacheEntries > 0 && _measureCacheStore.size > maxCacheEntries) {
+  while (maxCacheEntries > 0 && _measureCacheStore.size > maxCacheEntries) {
     const oldestKey = _measureCacheStore.keys().next().value as
       | string
       | undefined;
-    if (oldestKey !== undefined) {
-      _measureCacheStore.delete(oldestKey);
-      _measureCacheStats.evictions += 1;
-    }
+    if (oldestKey === undefined) break;
+    _measureCacheStore.delete(oldestKey);
+    _measureCacheStats.evictions += 1;
   }
   _measureCacheStats.size = _measureCacheStore.size;
 };
