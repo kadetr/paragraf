@@ -757,9 +757,16 @@ impl CachedFace {
     }
 
     fn free_bytes(self) {
+        let CachedFace {
+            face,
+            bytes_ptr,
+            bytes_len,
+            bytes_cap,
+        } = self;
+        drop(face);
         // Rebuild the original Vec allocation and drop it to free memory.
         unsafe {
-            let _ = Vec::from_raw_parts(self.bytes_ptr, self.bytes_len, self.bytes_cap);
+            let _ = Vec::from_raw_parts(bytes_ptr, bytes_len, bytes_cap);
         }
     }
 }

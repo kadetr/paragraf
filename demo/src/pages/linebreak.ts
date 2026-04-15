@@ -308,7 +308,7 @@ export const linebreakPage: Page = (() => {
       cacheBtn.setAttribute('aria-pressed', String(state.measureCacheEnabled));
       cacheBtn.addEventListener('click', () => {
         state.measureCacheEnabled = !state.measureCacheEnabled;
-        configureBrowserMeasureCache({ enabled: state.measureCacheEnabled });
+        applyBrowserMeasureCacheConfig({ enabled: state.measureCacheEnabled });
         cacheBtn.textContent = state.measureCacheEnabled ? 'On' : 'Off';
         cacheBtn.setAttribute(
           'aria-pressed',

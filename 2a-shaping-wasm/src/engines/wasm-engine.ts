@@ -166,6 +166,11 @@ export class WasmFontEngine implements FontEngine {
         'WasmFontEngine: create_face did not return a numeric handle',
       );
     }
+    if (handle === 0) {
+      throw new Error(
+        `WasmFontEngine: create_face failed for font '${fontId}'`,
+      );
+    }
     return handle >>> 0;
   }
 

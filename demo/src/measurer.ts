@@ -46,7 +46,7 @@ function touchBrowserMeasureCacheKey(key: string, value: number): void {
 }
 
 function buildBrowserMeasureCacheKey(content: string, font: Font): string {
-  return [
+  return JSON.stringify([
     content,
     font.id,
     font.size,
@@ -55,7 +55,7 @@ function buildBrowserMeasureCacheKey(content: string, font: Font): string {
     font.stretch,
     font.letterSpacing ?? 0,
     font.variant ?? 'normal',
-  ].join('|');
+  ]);
 }
 
 export function applyBrowserMeasureCacheConfig(
