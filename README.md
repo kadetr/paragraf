@@ -82,7 +82,7 @@ Twelve packages in strict layers. Each package only imports from layers below it
 
 ## Architecture
 
-![paragraf architecture](docs/architecture.png)
+![paragraf architecture](documents/architecture.png)
 
 `3a-typography` and `3b-render-pdf` are true layer-3 siblings — neither depends on the other. `RenderedDocument` / `RenderedPage` live in `2b-render-core` so `render-pdf` works without `typography` for simpler pipelines.
 
@@ -312,5 +312,5 @@ console.log(wasmStatus()); // { status: 'loaded' | 'absent' | 'error' }
 Planned before v1.0:
 - `@paragraf/color-wasm` — Rust/LCMS2 for ICC profiles and CMYK (replaces the pure-JS ICC implementation in `@paragraf/color`)
 
-See [`docs/`](docs/) for architecture details, IO schemas, and the document model reference.
+See [`documents/`](documents/) for architecture details, IO schemas, and the document model reference.
 See [`ROADMAP.md`](ROADMAP.md) for the full product roadmap.

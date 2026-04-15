@@ -26,6 +26,16 @@ export function analyze_bidi(text: string): string;
 export function compute_breakpoints_wasm(input_json: string): string;
 
 /**
+ * Create and register a parsed face from raw bytes, returning an opaque u32 handle.
+ */
+export function create_face(data: Uint8Array): number;
+
+/**
+ * Drop a registered face by handle. Unknown IDs are ignored with a warning.
+ */
+export function drop_face(id: number): void;
+
+/**
  * OS/2 font metrics scaled to pt. Mirrors TypeScript `realMetrics`.
  * Uses sTypo* values with hhea fallback; baseline shift from ySuperscriptYOffset /
  * ySubscriptYOffset when Font.variant is set.
@@ -79,6 +89,12 @@ export function round_trip_paragraph(input_json: string): string;
  * Returns `{ ok: { glyphs: ShapedGlyph[], unitsPerEm: number } }` or `{ error: "..." }`.
  */
 export function shape_text_wasm(text: string, font_json: string): string;
+
+/**
+ * Shape text using a previously created face handle.
+ * Returns `{ ok: { glyphs, unitsPerEm } }` or `{ error: "..." }`.
+ */
+export function shape_with_face(id: number, text: string, font_json: string): string;
 
 /**
  * Space glyph metrics in pt: natural width, stretch, shrink.

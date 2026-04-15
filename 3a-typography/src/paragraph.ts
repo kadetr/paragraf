@@ -223,7 +223,180 @@ export interface ParagraphComposer {
  */
 export interface ComposerOptions {
   useWasm?: boolean;
+  measureCache?: MeasureCacheOptions;
 }
+
+export interface MeasureCacheOptions {
+  enabled?: boolean;
+  maxCacheEntries?: number;
+  featureSetId?: string;
+  featureSetIdResolver?: (word: string, font: Font) => string;
+}
+
+export interface MeasureCacheStats {
+  size: number;
+  hits: number;
+  misses: number;
+  evictions: number;
+}
+
+const DEFAULT_MEASURE_CACHE_OPTIONS: Required<
+  Pick<MeasureCacheOptions, 'enabled' | 'maxCacheEntries'>
+> = {
+  enabled: true,
+  maxCacheEntries: 10_000,
+};
+
+let _measureCacheConfig: Required<
+  Pick<MeasureCacheOptions, 'enabled' | 'maxCacheEntries'>
+> = {
+  ...DEFAULT_MEASURE_CACHE_OPTIONS,
+};
+
+const _measureCacheStore = new Map<string, number>();
+const _measureCacheStats: MeasureCacheStats = {
+  size: 0,
+  hits: 0,
+  misses: 0,
+  evictions: 0,
+};
+
+let _nonLtrCacheWarnIssued = false;
+
+const normalizeMaxEntries = (value: number | undefined): number => {
+  if (value === undefined) return DEFAULT_MEASURE_CACHE_OPTIONS.maxCacheEntries;
+  if (!Number.isFinite(value)) {
+    return DEFAULT_MEASURE_CACHE_OPTIONS.maxCacheEntries;
+  }
+  return Math.max(0, Math.trunc(value));
+};
+
+const effectiveCacheConfig = (
+  options?: MeasureCacheOptions,
+): Required<Pick<MeasureCacheOptions, 'enabled' | 'maxCacheEntries'>> => ({
+  enabled: options?.enabled ?? _measureCacheConfig.enabled,
+  maxCacheEntries: normalizeMaxEntries(
+    options?.maxCacheEntries ?? _measureCacheConfig.maxCacheEntries,
+  ),
+});
+
+const resolveFeatureSetId = (
+  word: string,
+  font: Font,
+  options?: MeasureCacheOptions,
+): string => {
+  if (options?.featureSetIdResolver) {
+    const resolved = options.featureSetIdResolver(word, font);
+    if (resolved && resolved.trim().length > 0) return resolved;
+  }
+  if (options?.featureSetId && options.featureSetId.trim().length > 0) {
+    return options.featureSetId;
+  }
+  // TODO(v2): add script + direction to cache key for non-LTR support
+  return '__default-feature-set__';
+};
+
+const buildMeasureCacheKey = (
+  word: string,
+  font: Font,
+  options?: MeasureCacheOptions,
+): string => {
+  const featureSetId = resolveFeatureSetId(word, font, options);
+  const letterSpacing = font.letterSpacing ?? 0;
+  const variant = font.variant ?? 'normal';
+  return [
+    word,
+    font.id,
+    String(font.size),
+    String(font.weight),
+    font.style,
+    font.stretch,
+    String(letterSpacing),
+    variant,
+    featureSetId,
+  ].join('\u0001');
+};
+
+const touchMeasureCacheKey = (key: string): void => {
+  const value = _measureCacheStore.get(key);
+  if (value === undefined) return;
+  _measureCacheStore.delete(key);
+  _measureCacheStore.set(key, value);
+};
+
+const writeMeasureCache = (
+  key: string,
+  value: number,
+  maxCacheEntries: number,
+): void => {
+  _measureCacheStore.set(key, value);
+  if (maxCacheEntries > 0 && _measureCacheStore.size > maxCacheEntries) {
+    const oldestKey = _measureCacheStore.keys().next().value as
+      | string
+      | undefined;
+    if (oldestKey !== undefined) {
+      _measureCacheStore.delete(oldestKey);
+      _measureCacheStats.evictions += 1;
+    }
+  }
+  _measureCacheStats.size = _measureCacheStore.size;
+};
+
+const withMeasureCache = (
+  base: Measurer,
+  options?: MeasureCacheOptions,
+): Measurer => {
+  return {
+    ...base,
+    measure: (content: string, font: Font): number => {
+      const cfg = effectiveCacheConfig(options);
+      if (!cfg.enabled || cfg.maxCacheEntries <= 0) {
+        return base.measure(content, font);
+      }
+
+      const key = buildMeasureCacheKey(content, font, options);
+      const cached = _measureCacheStore.get(key);
+      if (cached !== undefined) {
+        _measureCacheStats.hits += 1;
+        touchMeasureCacheKey(key);
+        return cached;
+      }
+
+      _measureCacheStats.misses += 1;
+      const measured = base.measure(content, font);
+      writeMeasureCache(key, measured, cfg.maxCacheEntries);
+      return measured;
+    },
+  };
+};
+
+export const clearMeasureCache = (): void => {
+  _measureCacheStore.clear();
+  _measureCacheStats.size = 0;
+  _measureCacheStats.hits = 0;
+  _measureCacheStats.misses = 0;
+  _measureCacheStats.evictions = 0;
+  _nonLtrCacheWarnIssued = false;
+};
+
+export const getMeasureCacheStats = (): MeasureCacheStats => ({
+  size: _measureCacheStore.size,
+  hits: _measureCacheStats.hits,
+  misses: _measureCacheStats.misses,
+  evictions: _measureCacheStats.evictions,
+});
+
+export const configureMeasureCache = (
+  options: MeasureCacheOptions = {},
+): Required<Pick<MeasureCacheOptions, 'enabled' | 'maxCacheEntries'>> => {
+  _measureCacheConfig = {
+    enabled: options.enabled ?? _measureCacheConfig.enabled,
+    maxCacheEntries: normalizeMaxEntries(
+      options.maxCacheEntries ?? _measureCacheConfig.maxCacheEntries,
+    ),
+  };
+  return { ..._measureCacheConfig };
+};
 
 // ─── Span helpers ─────────────────────────────────────────────────────────────
 
@@ -354,9 +527,13 @@ export const createParagraphComposer = async (
   // to use the TypeScript path unconditionally (e.g. for the 1a layer split).
   const useWasm = (options?.useWasm ?? true) && _wasm !== null;
 
-  const measurer: Measurer = useWasm
+  const baseMeasurer: Measurer = useWasm
     ? createWasmMeasurer(registry)
     : createMeasurer(registry);
+  const measurer: Measurer = withMeasureCache(
+    baseMeasurer,
+    options?.measureCache,
+  );
   const loadedLanguages = new Set<Language>(['en-us']);
 
   const ensureLanguage = async (language: Language): Promise<void> => {
@@ -397,6 +574,15 @@ export const createParagraphComposer = async (
     const direction: 'ltr' | 'rtl' = useWasm
       ? getDirectionViaWasm(sourceText)
       : detectParagraphDirection(sourceText);
+
+    const cacheCfg = effectiveCacheConfig(options?.measureCache);
+    if (cacheCfg.enabled && direction === 'rtl' && !_nonLtrCacheWarnIssued) {
+      console.warn(
+        '[paragraf] measure cache: non-LTR paragraph detected. ' +
+          'Cache key currently omits script/direction (v1 limitation).',
+      );
+      _nonLtrCacheWarnIssued = true;
+    }
 
     if (direction === 'rtl' && !useWasm && !_rtlFallbackWarnIssued) {
       console.warn(

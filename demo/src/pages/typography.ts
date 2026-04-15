@@ -4,6 +4,10 @@
 import type { Page, BootContext } from '../router.js';
 import { FONTS } from '../fonts.js';
 import { createTextarea, type TextareaHandle } from '../components/textarea.js';
+import {
+  configureBrowserMeasureCache,
+  getBrowserMeasureCacheConfig,
+} from '../cache-controls.js';
 
 // ─── Slider constants (exported for unit tests) ──────────────────────────────────
 
@@ -76,6 +80,7 @@ export const typographyPage: Page = (() => {
   let currentFontSize = DEFAULT_FONT_SIZE;
   let currentLeading = DEFAULT_LEADING;
   let currentLetterSpacing = DEFAULT_LETTER_SPACING;
+  let currentMeasureCacheEnabled = getBrowserMeasureCacheConfig().enabled;
   let currentText = DEFAULT_SAMPLE_TEXT;
 
   let specEl: HTMLElement | null = null;
@@ -159,6 +164,29 @@ export const typographyPage: Page = (() => {
         },
       });
       controls.appendChild(textareaHandle.el);
+
+      // Cache toggle (shared with linebreak page measurer)
+      const cacheRow = document.createElement('div');
+      cacheRow.className = 'control-row';
+      const cacheLbl = document.createElement('span');
+      cacheLbl.textContent = 'Measure cache (linebreak)';
+      const cacheBtn = document.createElement('button');
+      cacheBtn.type = 'button';
+      cacheBtn.className = 'toggle-btn';
+      cacheBtn.textContent = currentMeasureCacheEnabled ? 'On' : 'Off';
+      cacheBtn.setAttribute('aria-pressed', String(currentMeasureCacheEnabled));
+      cacheBtn.addEventListener('click', () => {
+        currentMeasureCacheEnabled = !currentMeasureCacheEnabled;
+        configureBrowserMeasureCache({ enabled: currentMeasureCacheEnabled });
+        cacheBtn.textContent = currentMeasureCacheEnabled ? 'On' : 'Off';
+        cacheBtn.setAttribute(
+          'aria-pressed',
+          String(currentMeasureCacheEnabled),
+        );
+      });
+      cacheRow.appendChild(cacheLbl);
+      cacheRow.appendChild(cacheBtn);
+      controls.appendChild(cacheRow);
 
       // Font select
       const fontRow = document.createElement('div');
