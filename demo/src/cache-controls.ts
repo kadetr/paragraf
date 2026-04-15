@@ -34,3 +34,25 @@ export function configureBrowserMeasureCache(
 export function getBrowserMeasureCacheConfig(): BrowserMeasureCacheConfig {
   return { ..._browserMeasureCacheConfig };
 }
+
+// Registered by measurer.ts so that applyBrowserMeasureCacheConfig can clear
+// the actual cache store without creating a circular dependency.
+let _clearCacheCallback: (() => void) | null = null;
+
+export function registerBrowserMeasureCacheClearer(fn: () => void): void {
+  _clearCacheCallback = fn;
+}
+
+/**
+ * Apply cache config and, when disabling or zeroing maxEntries, clear the
+ * existing cache store so stale widths are not returned on the next run.
+ */
+export function applyBrowserMeasureCacheConfig(
+  options: Partial<BrowserMeasureCacheConfig> = {},
+): BrowserMeasureCacheConfig {
+  const cfg = configureBrowserMeasureCache(options);
+  if (!cfg.enabled || cfg.maxEntries === 0) {
+    _clearCacheCallback?.();
+  }
+  return cfg;
+}

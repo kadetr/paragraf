@@ -5,7 +5,7 @@ import type { Page, BootContext } from '../router.js';
 import { FONTS } from '../fonts.js';
 import { createTextarea, type TextareaHandle } from '../components/textarea.js';
 import {
-  configureBrowserMeasureCache,
+  applyBrowserMeasureCacheConfig,
   getBrowserMeasureCacheConfig,
 } from '../cache-controls.js';
 
@@ -177,7 +177,7 @@ export const typographyPage: Page = (() => {
       cacheBtn.setAttribute('aria-pressed', String(currentMeasureCacheEnabled));
       cacheBtn.addEventListener('click', () => {
         currentMeasureCacheEnabled = !currentMeasureCacheEnabled;
-        configureBrowserMeasureCache({ enabled: currentMeasureCacheEnabled });
+        applyBrowserMeasureCacheConfig({ enabled: currentMeasureCacheEnabled });
         cacheBtn.textContent = currentMeasureCacheEnabled ? 'On' : 'Off';
         cacheBtn.setAttribute(
           'aria-pressed',

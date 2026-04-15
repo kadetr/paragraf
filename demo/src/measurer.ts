@@ -17,6 +17,7 @@ import {
 import {
   configureBrowserMeasureCache,
   getBrowserMeasureCacheConfig,
+  registerBrowserMeasureCacheClearer,
 } from './cache-controls.js';
 
 type BrowserMeasureCacheStats = {
@@ -33,6 +34,11 @@ const _browserMeasureCacheStats: BrowserMeasureCacheStats = {
   misses: 0,
   evictions: 0,
 };
+
+registerBrowserMeasureCacheClearer(() => {
+  _browserMeasureCacheStore.clear();
+  syncBrowserMeasureCacheSize();
+});
 
 function syncBrowserMeasureCacheSize(): void {
   _browserMeasureCacheStats.size = _browserMeasureCacheStore.size;
@@ -56,16 +62,6 @@ function buildBrowserMeasureCacheKey(content: string, font: Font): string {
     font.letterSpacing ?? 0,
     font.variant ?? 'normal',
   ]);
-}
-
-export function applyBrowserMeasureCacheConfig(
-  options: Parameters<typeof configureBrowserMeasureCache>[0] = {},
-): ReturnType<typeof getBrowserMeasureCacheConfig> {
-  const cfg = configureBrowserMeasureCache(options);
-  if (!cfg.enabled || cfg.maxEntries === 0) {
-    clearBrowserMeasureCache();
-  }
-  return cfg;
 }
 
 export function clearBrowserMeasureCache(): void {

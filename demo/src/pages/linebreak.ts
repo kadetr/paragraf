@@ -17,7 +17,7 @@ import { createPdfButton } from '../components/pdf-button.js';
 import { runPipeline } from '../rendering/pipeline.js';
 import { FONTS } from '../fonts.js';
 import {
-  configureBrowserMeasureCache,
+  applyBrowserMeasureCacheConfig,
   getBrowserMeasureCacheConfig,
 } from '../cache-controls.js';
 

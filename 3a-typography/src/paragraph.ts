@@ -304,17 +304,17 @@ const buildMeasureCacheKey = (
   const featureSetId = resolveFeatureSetId(word, font, options);
   const letterSpacing = font.letterSpacing ?? 0;
   const variant = font.variant ?? 'normal';
-  return [
+  return JSON.stringify([
     word,
     font.id,
-    String(font.size),
-    String(font.weight),
+    font.size,
+    font.weight,
     font.style,
     font.stretch,
-    String(letterSpacing),
+    letterSpacing,
     variant,
     featureSetId,
-  ].join('\u0001');
+  ]);
 };
 
 const touchMeasureCacheKey = (key: string): void => {

@@ -745,8 +745,11 @@ impl CachedFace {
 
         let leaked: &'static [u8] =
             unsafe { std::slice::from_raw_parts(bytes_ptr as *const u8, bytes_len) };
-        let face = rustybuzz::Face::from_slice(leaked, 0)
-            .ok_or_else(|| "failed to parse font data".to_string())?;
+        let face = rustybuzz::Face::from_slice(leaked, 0).ok_or_else(|| {
+            // Reconstruct and drop the allocation to avoid memory leak on failure.
+            unsafe { drop(Vec::from_raw_parts(bytes_ptr, bytes_len, bytes_cap)) };
+            "failed to parse font data".to_string()
+        })?;
 
         Ok(Self {
             face,
