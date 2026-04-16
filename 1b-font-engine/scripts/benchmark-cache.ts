@@ -13,11 +13,7 @@ function clearWordMeasureCache(): void {
   // no-op: cache not yet implemented in font-engine
 }
 
-type RunMode =
-  | 'both-enabled'
-  | 'font-engine-only'
-  | 'shaping-wasm-only'
-  | 'both-disabled';
+
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -67,7 +63,6 @@ function forceGcIfAvailable(): void {
 }
 
 function runComposeLikeLoop(
-  mode: RunMode,
   featureSetId: string,
 ): { durationMs: number; totalWidth: number } {
   clearWordMeasureCache();
@@ -88,7 +83,6 @@ function runComposeLikeLoop(
 }
 
 function printSummary(
-  mode: RunMode,
   cold: { durationMs: number },
   warm: { durationMs: number },
   heapBefore: number,
@@ -101,7 +95,6 @@ function printSummary(
       ? feStats.hits / (feStats.hits + feStats.misses)
       : 0;
 
-  console.log(`mode=${mode}`);
   console.log(`cold_ms=${cold.durationMs.toFixed(3)}`);
   console.log(`warm_ms=${warm.durationMs.toFixed(3)}`);
   console.log(
@@ -132,26 +125,17 @@ function printSummary(
 async function main(): Promise<void> {
   const getFaceStats = await loadShapingWasmStatsAccessor();
 
-  const modes: RunMode[] = [
-    'both-enabled',
-    'font-engine-only',
-    'shaping-wasm-only',
-    'both-disabled',
-  ];
+  forceGcIfAvailable();
+  const heapBefore = process.memoryUsage().heapUsed;
 
-  for (const mode of modes) {
-    forceGcIfAvailable();
-    const heapBefore = process.memoryUsage().heapUsed;
+  const cold = runComposeLikeLoop('feat-benchmark');
+  const warm = runComposeLikeLoop('feat-benchmark');
 
-    const cold = runComposeLikeLoop(mode, 'feat-benchmark');
-    const warm = runComposeLikeLoop(mode, 'feat-benchmark');
+  forceGcIfAvailable();
+  const heapAfter = process.memoryUsage().heapUsed;
 
-    forceGcIfAvailable();
-    const heapAfter = process.memoryUsage().heapUsed;
-
-    const faceStats = getFaceStats ? getFaceStats() : null;
-    printSummary(mode, cold, warm, heapBefore, heapAfter, faceStats);
-  }
+  const faceStats = getFaceStats ? getFaceStats() : null;
+  printSummary(cold, warm, heapBefore, heapAfter, faceStats);
 }
 
 main().catch((err) => {

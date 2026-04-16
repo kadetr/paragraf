@@ -31,13 +31,11 @@ L4  template, compile
 ## Active Work
 - v0.4.0 release cycle
 - workId 001: shaping result cache — font-engine + shaping-wasm (cancelled)
-- See `work-pool.md` for full registry
 
 ## Document Index
 | File | Purpose |
 |---|---|
 | `outer-context.md` | Full project primer |
-| `work-pool.md` | All work items |
 | `glossary.md` | Term definitions |
 | `[package]-inner-context.md` | Per-package AI primer |
 | `[package]-decisions.md` | Per-package decision log |

@@ -44,7 +44,6 @@ Rust source for `@paragraf/shaping-wasm` is included in this repository, and the
 
 ## Key Documents
 
-- Work registry: `work-pool.md`
 - Terminology: `glossary.md`
 - Package decisions: `[package]-decisions.md` per package
 - Package context: `[package]-inner-context.md` per package
@@ -53,7 +52,7 @@ Rust source for `@paragraf/shaping-wasm` is included in this repository, and the
 ## Current Focus
 
 - v0.4.0 release cycle
-- workId 001: shaping result cache (font-engine + shaping-wasm) — status: planned
+- workId 001: shaping result cache (font-engine + shaping-wasm) — status: cancelled
 - Article series: "Towards an Open Source Print-Ready Publication Library in JavaScript"
 
 ## What paragraf Is Not
