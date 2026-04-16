@@ -67,6 +67,18 @@ or fails to initialise, all composition falls back to the TypeScript
 Knuth-Plass implementation transparently. Call `wasmStatus()` from
 `@paragraf/typography` to inspect the current state.
 
+## Benchmark
+
+Combined cache benchmark is owned by `@paragraf/typography`:
+
+`3a-typography/scripts/benchmark-cache.ts`
+
+Run via:
+
+```bash
+cd 3a-typography && npm run benchmark:cache
+```
+
 ## Browser support
 
 Not yet supported. Requires switching to `wasm-pack --target bundler` and an

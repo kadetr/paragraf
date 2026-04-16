@@ -2,6 +2,9 @@ import { describe, it, expect, beforeAll } from 'vitest';
 import * as path from 'path';
 import {
   createParagraphComposer,
+  clearMeasureCache,
+  configureMeasureCache,
+  getMeasureCacheStats,
   ParagraphInput,
   ParagraphOutput,
   ParagraphComposer,
@@ -338,6 +341,66 @@ describe('ParagraphComposer — ensureLanguage', () => {
   it('calling ensureLanguage twice for same language does not throw', async () => {
     await expect(composer.ensureLanguage('en-us')).resolves.not.toThrow();
     await expect(composer.ensureLanguage('en-us')).resolves.not.toThrow();
+  });
+});
+
+describe('Measure cache (3a ownership)', () => {
+  it('records cache hits on warm compose runs', () => {
+    clearMeasureCache();
+    configureMeasureCache({ enabled: true, maxCacheEntries: 10_000 });
+
+    composer.compose({
+      text: 'cache cache cache warmup run text',
+      font: FONT_REGULAR,
+      lineWidth: 300,
+    });
+    const first = getMeasureCacheStats();
+
+    composer.compose({
+      text: 'cache cache cache warmup run text',
+      font: FONT_REGULAR,
+      lineWidth: 300,
+    });
+    const second = getMeasureCacheStats();
+
+    expect(first.misses).toBeGreaterThan(0);
+    expect(second.hits).toBeGreaterThan(first.hits);
+  });
+
+  it('disabled cache does not store entries', () => {
+    clearMeasureCache();
+    configureMeasureCache({ enabled: false, maxCacheEntries: 10_000 });
+
+    composer.compose({
+      text: 'disabled cache run one',
+      font: FONT_REGULAR,
+      lineWidth: 300,
+    });
+    composer.compose({
+      text: 'disabled cache run one',
+      font: FONT_REGULAR,
+      lineWidth: 300,
+    });
+
+    const stats = getMeasureCacheStats();
+    expect(stats.size).toBe(0);
+    expect(stats.hits).toBe(0);
+    expect(stats.misses).toBe(0);
+  });
+
+  it('evicts least-recently-used entries when capacity is exceeded', () => {
+    clearMeasureCache();
+    configureMeasureCache({ enabled: true, maxCacheEntries: 1 });
+
+    composer.compose({
+      text: 'alpha beta gamma delta',
+      font: FONT_REGULAR,
+      lineWidth: 600,
+    });
+
+    const stats = getMeasureCacheStats();
+    expect(stats.evictions).toBeGreaterThan(0);
+    expect(stats.size).toBe(1);
   });
 });
 

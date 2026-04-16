@@ -90,4 +90,4 @@ const pdfBuffer = await renderToPdf(rendered, fontEngine);
 writeFileSync('output.pdf', pdfBuffer);
 ```
 
-See the [getting started guide](../docs/getting-started.md) for a complete walkthrough.
+See the [getting started guide](../documents/getting-started.md) for a complete walkthrough.

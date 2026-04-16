@@ -1,4 +1,9 @@
-export { WasmFontEngine } from './engines/wasm-engine.js';
+export {
+  WasmFontEngine,
+  getFaceCacheStats,
+  type FaceCacheStats,
+  type WasmFontEngineOptions,
+} from './engines/wasm-engine.js';
 export { serializeNodesToBinary, tracebackWasmBinary } from './wasm-binary.js';
 
 import { createRequire } from 'module';

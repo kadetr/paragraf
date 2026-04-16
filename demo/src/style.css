@@ -477,6 +477,7 @@ input[type="range"] {
   padding: 1.25rem;
   min-height: 120px;
   line-height: 1.5;
+  white-space: pre-wrap;
 }
 
 /* ─── Showcase (Zone B) ──────────────────────────────────────────────────────── */

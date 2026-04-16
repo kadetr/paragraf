@@ -16,6 +16,10 @@ import { createSvgPreview } from '../components/svg-preview.js';
 import { createPdfButton } from '../components/pdf-button.js';
 import { runPipeline } from '../rendering/pipeline.js';
 import { FONTS } from '../fonts.js';
+import {
+  applyBrowserMeasureCacheConfig,
+  getBrowserMeasureCacheConfig,
+} from '../cache-controls.js';
 
 // ─── Constants (exported for unit tests) ───────────────────────────────────────
 
@@ -57,6 +61,7 @@ type State = {
   opticalMarginAlignment: boolean;
   alignment: AlignmentMode;
   lineWidth: number;
+  measureCacheEnabled: boolean;
   ctx: BootContext | null;
 };
 
@@ -69,6 +74,7 @@ export const linebreakPage: Page = (() => {
     opticalMarginAlignment: false,
     alignment: DEFAULT_ALIGNMENT,
     lineWidth: 350,
+    measureCacheEnabled: true,
     ctx: null,
   };
 
@@ -188,6 +194,7 @@ export const linebreakPage: Page = (() => {
       mounted = true;
       container = el;
       state.ctx = ctx;
+      state.measureCacheEnabled = getBrowserMeasureCacheConfig().enabled;
       el.innerHTML = '';
       el.className = 'page page-linebreak';
 
@@ -207,7 +214,7 @@ export const linebreakPage: Page = (() => {
       });
 
       const toleranceSlider = createSlider({
-        label: 'TOLERANCE',
+        label: 'Tolerance',
         description:
           'Controls how aggressively KP accepts tight or loose lines. lower values: tighter fits; higher values: more slack.',
         ...TOLERANCE_SLIDER,
@@ -220,7 +227,7 @@ export const linebreakPage: Page = (() => {
       });
 
       const loosenessSlider = createSlider({
-        label: 'LOOSENESS',
+        label: 'Looseness',
         description:
           'Adjusts the target number of lines, optimal fit 0. positive values: looser, more whitespace, negative values: tighter, more compressed.',
         ...LOOSENESS_SLIDER,
@@ -247,9 +254,9 @@ export const linebreakPage: Page = (() => {
       });
 
       const letterSpacingSlider = createSlider({
-        label: 'LETTER SPACING',
+        label: 'Letter Spacing',
         description:
-          'Global tracking in em units, default 0. Positive values space letters out; negative values tighten them.',
+          'Global tracking in points, default 0. Positive values space letters out; negative values tighten them.',
         ...LETTER_SPACING_SLIDER,
         value: state.letterSpacing,
         format: (v) =>
@@ -265,7 +272,7 @@ export const linebreakPage: Page = (() => {
       omaRow.className = 'control-row';
       const omaLbl = document.createElement('span');
       omaLbl.classList.add('slider-label-tip');
-      const omaLblText = document.createTextNode('OPTICAL MARGINS');
+      const omaLblText = document.createTextNode('Optical Margins');
       const omaTip = document.createElement('span');
       omaTip.className = 'slider-tip-text';
       omaTip.textContent =
@@ -289,11 +296,35 @@ export const linebreakPage: Page = (() => {
       omaRow.appendChild(omaLbl);
       omaRow.appendChild(omaBtn);
 
+      // Measure cache toggle
+      const cacheRow = document.createElement('div');
+      cacheRow.className = 'control-row';
+      const cacheLbl = document.createElement('span');
+      cacheLbl.textContent = 'Measure Cache';
+      const cacheBtn = document.createElement('button');
+      cacheBtn.type = 'button';
+      cacheBtn.className = 'toggle-btn';
+      cacheBtn.textContent = state.measureCacheEnabled ? 'On' : 'Off';
+      cacheBtn.setAttribute('aria-pressed', String(state.measureCacheEnabled));
+      cacheBtn.addEventListener('click', () => {
+        state.measureCacheEnabled = !state.measureCacheEnabled;
+        applyBrowserMeasureCacheConfig({ enabled: state.measureCacheEnabled });
+        cacheBtn.textContent = state.measureCacheEnabled ? 'On' : 'Off';
+        cacheBtn.setAttribute(
+          'aria-pressed',
+          String(state.measureCacheEnabled),
+        );
+        doRender();
+      });
+      cacheRow.appendChild(cacheLbl);
+      cacheRow.appendChild(cacheBtn);
+
       controls.appendChild(textareaHandle.el);
       controls.appendChild(toleranceSlider.el);
       controls.appendChild(loosenessSlider.el);
       controls.appendChild(letterSpacingSlider.el);
       controls.appendChild(omaRow);
+      controls.appendChild(cacheRow);
       controls.appendChild(alignmentGroup.el);
 
       // ── Preview (right panel) ─────────────────────────────────────────────

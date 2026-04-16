@@ -1,4 +1,4 @@
-use std::cell::RefCell;
+use std::cell::{Cell, RefCell};
 use std::collections::HashMap;
 
 use serde::{Deserialize, Serialize};
@@ -635,7 +635,11 @@ pub fn traceback_wasm_binary(
     let para = ParagraphInput {
         nodes,
         line_width,
-        line_widths: if line_widths_f64.is_empty() { None } else { Some(line_widths_f64.to_vec()) },
+        line_widths: if line_widths_f64.is_empty() {
+            None
+        } else {
+            Some(line_widths_f64.to_vec())
+        },
         tolerance,
         emergency_stretch: if emergency_stretch > 0.0 {
             Some(emergency_stretch)
@@ -715,6 +719,59 @@ pub fn traceback_wasm(input_json: &str) -> String {
 thread_local! {
     /// WASM-local font byte store. Register once; referenced by font id on every call.
     static FONT_BYTES: RefCell<HashMap<String, Vec<u8>>> = RefCell::new(HashMap::new());
+
+    /// WASM-local face registry keyed by opaque u32 handle.
+    static FACE_REGISTRY: RefCell<HashMap<u32, CachedFace>> = RefCell::new(HashMap::new());
+
+    /// Monotonic opaque face-handle generator. Cell<u32> avoids requiring atomics
+    /// on wasm32-unknown-unknown targets that don't enable the WebAssembly atomics feature.
+    static NEXT_FACE_ID: Cell<u32> = Cell::new(1);
+}
+
+struct CachedFace {
+    face: rustybuzz::Face<'static>,
+    bytes_ptr: *mut u8,
+    bytes_len: usize,
+    bytes_cap: usize,
+}
+
+impl CachedFace {
+    fn from_bytes(bytes: &[u8]) -> Result<Self, String> {
+        let mut owned = bytes.to_vec();
+        let bytes_ptr = owned.as_mut_ptr();
+        let bytes_len = owned.len();
+        let bytes_cap = owned.capacity();
+        std::mem::forget(owned);
+
+        let leaked: &'static [u8] =
+            unsafe { std::slice::from_raw_parts(bytes_ptr as *const u8, bytes_len) };
+        let face = rustybuzz::Face::from_slice(leaked, 0).ok_or_else(|| {
+            // Reconstruct and drop the allocation to avoid memory leak on failure.
+            unsafe { drop(Vec::from_raw_parts(bytes_ptr, bytes_len, bytes_cap)) };
+            "failed to parse font data".to_string()
+        })?;
+
+        Ok(Self {
+            face,
+            bytes_ptr,
+            bytes_len,
+            bytes_cap,
+        })
+    }
+
+    fn free_bytes(self) {
+        let CachedFace {
+            face,
+            bytes_ptr,
+            bytes_len,
+            bytes_cap,
+        } = self;
+        drop(face);
+        // Rebuild the original Vec allocation and drop it to free memory.
+        unsafe {
+            let _ = Vec::from_raw_parts(bytes_ptr, bytes_len, bytes_cap);
+        }
+    }
 }
 
 /// Register a font's raw bytes under `font_id` in the WASM-local cache.
@@ -726,6 +783,95 @@ pub fn register_font(font_id: &str, data: &[u8]) {
             .borrow_mut()
             .insert(font_id.to_string(), data.to_vec());
     });
+}
+
+/// Create and register a parsed face from raw bytes, returning an opaque u32 handle.
+#[wasm_bindgen]
+pub fn create_face(data: &[u8]) -> u32 {
+    match CachedFace::from_bytes(data) {
+        Ok(cached_face) => {
+            let id = NEXT_FACE_ID.with(|c| {
+                let next = c.get();
+                c.set(next + 1);
+                next
+            });
+            FACE_REGISTRY.with(|registry| {
+                registry.borrow_mut().insert(id, cached_face);
+            });
+            id
+        }
+        Err(_) => 0,
+    }
+}
+
+/// Drop a registered face by handle. Unknown IDs are ignored with a warning.
+#[wasm_bindgen]
+pub fn drop_face(id: u32) {
+    FACE_REGISTRY.with(|registry| {
+        let removed = registry.borrow_mut().remove(&id);
+        match removed {
+            Some(cached_face) => cached_face.free_bytes(),
+            None => {
+                // Unknown IDs are non-fatal by contract.
+                eprintln!("[shaping-wasm] drop_face: unknown id {}", id);
+            }
+        }
+    });
+}
+
+fn shape_from_face(
+    face: &rustybuzz::Face<'_>,
+    text: &str,
+    variant: Option<&str>,
+) -> (Vec<ShapedGlyph>, i32) {
+    let upm = face.units_per_em();
+    let features = shape_features(variant);
+
+    let mut buf = rustybuzz::UnicodeBuffer::new();
+    buf.push_str(text);
+    let output = rustybuzz::shape(face, &features, buf);
+
+    let glyphs: Vec<ShapedGlyph> = output
+        .glyph_infos()
+        .iter()
+        .zip(output.glyph_positions().iter())
+        .map(|(info, pos)| ShapedGlyph {
+            glyph_id: info.glyph_id as u16,
+            advance_width: pos.x_advance,
+            x_offset: pos.x_offset,
+            y_offset: pos.y_offset,
+        })
+        .collect();
+
+    (glyphs, upm)
+}
+
+/// Shape text using a previously created face handle.
+/// Returns `{ ok: { glyphs, unitsPerEm } }` or `{ error: "..." }`.
+#[wasm_bindgen]
+pub fn shape_with_face(id: u32, text: &str, font_json: &str) -> String {
+    let font = match parse_font_params(font_json) {
+        Ok(f) => f,
+        Err(e) => return serde_json::to_string(&serde_json::json!({ "error": e })).unwrap(),
+    };
+
+    let shaped = FACE_REGISTRY.with(|registry| {
+        let registry = registry.borrow();
+        registry
+            .get(&id)
+            .map(|cached| shape_from_face(&cached.face, text, font.variant.as_deref()))
+    });
+
+    match shaped {
+        Some((glyphs, upm)) => serde_json::to_string(&serde_json::json!({
+            "ok": { "glyphs": glyphs, "unitsPerEm": upm }
+        }))
+        .unwrap(),
+        None => serde_json::to_string(&serde_json::json!({
+            "error": format!("unknown face id {}", id)
+        }))
+        .unwrap(),
+    }
 }
 
 // ─── Phase 4 — internal helpers ───────────────────────────────────────────────
@@ -1060,26 +1206,7 @@ pub fn shape_text_wasm(text: &str, font_json: &str) -> String {
     let result = with_font_bytes(&font.id, |bytes| {
         let face = rustybuzz::Face::from_slice(bytes, 0)
             .ok_or_else(|| "failed to parse font data".to_string())?;
-        let upm = face.units_per_em();
-        let features = shape_features(font.variant.as_deref());
-
-        let mut buf = rustybuzz::UnicodeBuffer::new();
-        buf.push_str(text);
-        let output = rustybuzz::shape(&face, &features, buf);
-
-        let glyphs: Vec<ShapedGlyph> = output
-            .glyph_infos()
-            .iter()
-            .zip(output.glyph_positions().iter())
-            .map(|(info, pos)| ShapedGlyph {
-                glyph_id: info.glyph_id as u16,
-                advance_width: pos.x_advance,
-                x_offset: pos.x_offset,
-                y_offset: pos.y_offset,
-            })
-            .collect();
-
-        Ok((glyphs, upm))
+        Ok(shape_from_face(&face, text, font.variant.as_deref()))
     });
 
     match result {
@@ -1155,18 +1282,18 @@ pub fn analyze_bidi(text: &str) -> String {
 
     // Assign each grapheme cluster the BiDi level of its first scalar value.
     // This guarantees run boundaries always fall on grapheme cluster boundaries.
-    let clusters: Vec<(usize, unicode_bidi::Level)> =
-        text.grapheme_indices(true)
-            .map(|(g_start, _g_str)| {
-                let ci = char_bytes.partition_point(|&b| b < g_start);
-                let level = if ci < levels.len() {
-                    levels[ci]
-                } else {
-                    unicode_bidi::Level::ltr()
-                };
-                (g_start, level)
-            })
-            .collect();
+    let clusters: Vec<(usize, unicode_bidi::Level)> = text
+        .grapheme_indices(true)
+        .map(|(g_start, _g_str)| {
+            let ci = char_bytes.partition_point(|&b| b < g_start);
+            let level = if ci < levels.len() {
+                levels[ci]
+            } else {
+                unicode_bidi::Level::ltr()
+            };
+            (g_start, level)
+        })
+        .collect();
 
     if clusters.is_empty() {
         return serde_json::to_string(&serde_json::json!({ "ok": [] })).unwrap();

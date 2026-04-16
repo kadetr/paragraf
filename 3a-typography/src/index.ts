@@ -3,12 +3,17 @@ export {
   createParagraphComposer,
   createDefaultFontEngine,
   wasmStatus,
+  clearMeasureCache,
+  getMeasureCacheStats,
+  configureMeasureCache,
 } from './paragraph.js';
 export type {
   ParagraphInput,
   ParagraphOutput,
   ParagraphComposer,
   ComposerOptions,
+  MeasureCacheOptions,
+  MeasureCacheStats,
 } from './paragraph.js';
 
 // optical margin alignment

@@ -124,3 +124,20 @@ const { lines } = composer.compose({
 });
 // each line.xOffset is the left-margin protrusion in points
 ```
+
+## Cache benchmark (workId 005)
+
+Typography owns the integration benchmark for shaping-result cache behavior.
+
+Run from this package:
+
+```bash
+npm run benchmark:cache
+```
+
+Output includes:
+
+- cold/warm latency and delta
+- measure-cache hit/miss/eviction stats
+- heap delta
+- shaping-wasm face-cache stats snapshot (when available)

@@ -57,6 +57,28 @@ function compute_breakpoints_wasm(input_json) {
 exports.compute_breakpoints_wasm = compute_breakpoints_wasm;
 
 /**
+ * Create and register a parsed face from raw bytes, returning an opaque u32 handle.
+ * @param {Uint8Array} data
+ * @returns {number}
+ */
+function create_face(data) {
+    const ptr0 = passArray8ToWasm0(data, wasm.__wbindgen_malloc);
+    const len0 = WASM_VECTOR_LEN;
+    const ret = wasm.create_face(ptr0, len0);
+    return ret >>> 0;
+}
+exports.create_face = create_face;
+
+/**
+ * Drop a registered face by handle. Unknown IDs are ignored with a warning.
+ * @param {number} id
+ */
+function drop_face(id) {
+    wasm.drop_face(id);
+}
+exports.drop_face = drop_face;
+
+/**
  * OS/2 font metrics scaled to pt. Mirrors TypeScript `realMetrics`.
  * Uses sTypo* values with hhea fallback; baseline shift from ySuperscriptYOffset /
  * ySubscriptYOffset when Font.variant is set.
@@ -243,6 +265,32 @@ function shape_text_wasm(text, font_json) {
     }
 }
 exports.shape_text_wasm = shape_text_wasm;
+
+/**
+ * Shape text using a previously created face handle.
+ * Returns `{ ok: { glyphs, unitsPerEm } }` or `{ error: "..." }`.
+ * @param {number} id
+ * @param {string} text
+ * @param {string} font_json
+ * @returns {string}
+ */
+function shape_with_face(id, text, font_json) {
+    let deferred3_0;
+    let deferred3_1;
+    try {
+        const ptr0 = passStringToWasm0(text, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
+        const len0 = WASM_VECTOR_LEN;
+        const ptr1 = passStringToWasm0(font_json, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
+        const len1 = WASM_VECTOR_LEN;
+        const ret = wasm.shape_with_face(id, ptr0, len0, ptr1, len1);
+        deferred3_0 = ret[0];
+        deferred3_1 = ret[1];
+        return getStringFromWasm0(ret[0], ret[1]);
+    } finally {
+        wasm.__wbindgen_free(deferred3_0, deferred3_1, 1);
+    }
+}
+exports.shape_with_face = shape_with_face;
 
 /**
  * Space glyph metrics in pt: natural width, stretch, shrink.
