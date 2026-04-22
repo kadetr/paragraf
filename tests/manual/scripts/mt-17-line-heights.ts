@@ -14,6 +14,7 @@ import { layoutParagraph, renderToSvg } from '@paragraf/render-core';
 import { serifRegistry, font } from '../fixtures/fonts.js';
 import { EN_BODY } from '../fixtures/text.js';
 import { writeSvg, writeJson, type TestMetrics } from '../fixtures/output.js';
+import { addSvgTestHeader } from '../fixtures/header.js';
 import {
   MARGIN_X,
   MARGIN_TOP,
@@ -106,7 +107,7 @@ if (process.argv[1]?.endsWith('mt-17-line-heights.ts')) {
       height: PAGE_H,
     });
     const label = String(mult.toFixed(1)).replace('.', '_');
-    writeSvg(`mt-17-line-height-${label}x.svg`, svg);
+    writeSvg(`mt-17-line-height-${label}x.svg`, addSvgTestHeader(svg, 'MT-17'));
 
     console.log(
       `  ${size.toFixed(1).padEnd(9)} ${String(mult.toFixed(1) + '×').padEnd(6)} ${String(out.lines.length).padEnd(6)} ${totalHeight.toFixed(1).padEnd(11)} ${ms.toFixed(1)}`,

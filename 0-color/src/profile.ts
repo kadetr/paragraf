@@ -51,8 +51,12 @@ export interface ColorProfile {
   readonly trc?: [TrcCurve, TrcCurve, TrcCurve];
   /** Device → PCS LUT. */
   readonly a2b0?: Mft2Tag;
-  /** PCS → device LUT. */
+  /** PCS → device LUT (perceptual intent). */
   readonly b2a0?: Mft2Tag;
+  /** PCS → device LUT (relative colorimetric intent). */
+  readonly b2a1?: Mft2Tag;
+  /** PCS → device LUT (saturation intent). */
+  readonly b2a2?: Mft2Tag;
   /** Raw ICC profile bytes for PDF embedding. */
   readonly bytes: Uint8Array;
 }
@@ -142,6 +146,67 @@ function parseDescTag(
     return name;
   }
   return '';
+}
+
+function parseMft1Tag(
+  bytes: Uint8Array,
+  _view: DataView,
+  tagOffset: number,
+): Mft2Tag {
+  const inCh = bytes[tagOffset + 8];
+  const outCh = bytes[tagOffset + 9];
+  const gridPoints = bytes[tagOffset + 10];
+
+  // 3×3 matrix (s15Fixed16), row-major
+  const matrix: number[] = [];
+  for (let i = 0; i < 9; i++) {
+    matrix.push(readS15Fixed16(_view, tagOffset + 12 + i * 4));
+  }
+
+  const inputTableEntries = _view.getUint16(tagOffset + 48);
+  const outputTableEntries = _view.getUint16(tagOffset + 50);
+
+  let dataOffset = tagOffset + 52;
+
+  // Input curves: inCh × inputTableEntries × uint8, normalized /255
+  const inputCurves: Float64Array[] = [];
+  for (let c = 0; c < inCh; c++) {
+    const curve = new Float64Array(inputTableEntries);
+    for (let i = 0; i < inputTableEntries; i++) {
+      curve[i] = bytes[dataOffset] / 255;
+      dataOffset += 1;
+    }
+    inputCurves.push(curve);
+  }
+
+  // CLUT: gridPoints^inCh × outCh × uint8, normalized /255
+  const clutSize = Math.pow(gridPoints, inCh) * outCh;
+  const clut = new Float64Array(clutSize);
+  for (let i = 0; i < clutSize; i++) {
+    clut[i] = bytes[dataOffset] / 255;
+    dataOffset += 1;
+  }
+
+  // Output curves: outCh × outputTableEntries × uint8, normalized /255
+  const outputCurves: Float64Array[] = [];
+  for (let c = 0; c < outCh; c++) {
+    const curve = new Float64Array(outputTableEntries);
+    for (let i = 0; i < outputTableEntries; i++) {
+      curve[i] = bytes[dataOffset] / 255;
+      dataOffset += 1;
+    }
+    outputCurves.push(curve);
+  }
+
+  return {
+    inChannels: inCh,
+    outChannels: outCh,
+    gridPoints,
+    matrix,
+    inputCurves,
+    clut,
+    outputCurves,
+  };
 }
 
 function parseMft2Tag(
@@ -292,19 +357,29 @@ export function parseIccProfile(bytes: Uint8Array): ColorProfile {
     trc = [parseTRC(rTRCEntry), parseTRC(gTRCEntry), parseTRC(bTRCEntry)];
   }
 
-  // A2B0 / B2A0 LUT tags
+  // A2B0 / B2A0 / B2A1 / B2A2 LUT tags
+  function parseLutEntry(entry: {
+    offset: number;
+    size: number;
+  }): Mft2Tag | undefined {
+    const sig = readStr4(bytes, entry.offset);
+    if (sig === 'mft2') return parseMft2Tag(bytes, view, entry.offset);
+    if (sig === 'mft1') return parseMft1Tag(bytes, view, entry.offset);
+    return undefined;
+  }
+
   let a2b0: Mft2Tag | undefined;
   let b2a0: Mft2Tag | undefined;
+  let b2a1: Mft2Tag | undefined;
+  let b2a2: Mft2Tag | undefined;
   const a2b0Entry = tags.get('A2B0');
   const b2a0Entry = tags.get('B2A0');
-  if (a2b0Entry) {
-    const sig = readStr4(bytes, a2b0Entry.offset);
-    if (sig === 'mft2') a2b0 = parseMft2Tag(bytes, view, a2b0Entry.offset);
-  }
-  if (b2a0Entry) {
-    const sig = readStr4(bytes, b2a0Entry.offset);
-    if (sig === 'mft2') b2a0 = parseMft2Tag(bytes, view, b2a0Entry.offset);
-  }
+  const b2a1Entry = tags.get('B2A1');
+  const b2a2Entry = tags.get('B2A2');
+  if (a2b0Entry) a2b0 = parseLutEntry(a2b0Entry);
+  if (b2a0Entry) b2a0 = parseLutEntry(b2a0Entry);
+  if (b2a1Entry) b2a1 = parseLutEntry(b2a1Entry);
+  if (b2a2Entry) b2a2 = parseLutEntry(b2a2Entry);
 
   return {
     name,
@@ -316,6 +391,8 @@ export function parseIccProfile(bytes: Uint8Array): ColorProfile {
     trc,
     a2b0,
     b2a0,
+    b2a1,
+    b2a2,
     bytes,
   };
 }

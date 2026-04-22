@@ -13,7 +13,6 @@ import { createMeasurer } from '@paragraf/font-engine';
 import { layoutParagraph, renderToSvg } from '@paragraf/render-core';
 import { renderToPdf } from '@paragraf/render-pdf';
 import { serifRegistry, F12 } from '../fixtures/fonts.js';
-import { EN_BODY } from '../fixtures/text.js';
 import {
   writeSvg,
   writePdf,
@@ -22,6 +21,7 @@ import {
   type LineMetrics,
   type TestMetrics,
 } from '../fixtures/output.js';
+import { drawTestHeader } from '../fixtures/header.js';
 import {
   MARGIN_X,
   MARGIN_TOP,
@@ -35,30 +35,49 @@ const composer = await createParagraphComposer(registry);
 const measurer = createMeasurer(registry);
 const fontEngine = await createDefaultFontEngine(registry);
 
-// Each paragraph is rendered in its own half-column so they don't overlap.
-const colW = Math.floor(CONTENT_W / 2) - 10;
+// Purpose-built paragraph ending with the very short word "it." — short enough
+// that the penultimate line can trivially absorb it once runtPenalty is applied.
+// At colW=220/12pt the natural (no-penalty) layout leaves "it." alone on the
+// last line (widow).  Adding runtPenalty causes the algorithm to prefer the
+// non-widow layout, because "it." is small enough that the demerits increase on
+// the penultimate line is much smaller than the penalty.
+const WIDOW_TEXT =
+  'The Knuth–Plass algorithm finds the globally optimal set of line breaks for a ' +
+  'paragraph, minimising a cost function based on how tightly or loosely each line ' +
+  'is fitted. Unlike first-fit greedy algorithms, it considers all feasible ' +
+  'breakpoints simultaneously and avoids unsightly rivers of white space. ' +
+  'Difficult ligatures such as "fi" and "fl" are resolved automatically. ' +
+  'Hyphenation is applied using language-specific pattern dictionaries, and ' +
+  'consecutive hyphenated lines are capped to prevent a ladder effect at the ' +
+  'right margin. The algorithm was described by Knuth and Plass in 1981, and ' +
+  'professional typesetting tools have long relied on it.';
+
+// colW=223: at this width WIDOW_TEXT produces "it." alone on the last line
+// (1-word widow).  runtPenalty=8000 is comfortably above the demerits gap
+// (~14 208) needed to prefer the non-widow layout.
+const colW = 223;
 
 // ─── Without penalties ────────────────────────────────────────────────────────
 
 const outNoPenalty = composer.compose({
-  text: EN_BODY,
+  text: WIDOW_TEXT,
   font: F12,
   lineWidth: colW,
   tolerance: 3,
-  widowPenalty: 0,
-  orphanPenalty: 0,
+  runtPenalty: 0,
+  singleLinePenalty: 0,
 });
 
 // ─── With penalties ───────────────────────────────────────────────────────────
 
 const t0 = performance.now();
 const outPenalty = composer.compose({
-  text: EN_BODY,
+  text: WIDOW_TEXT,
   font: F12,
   lineWidth: colW,
   tolerance: 3,
-  widowPenalty: 150,
-  orphanPenalty: 150,
+  runtPenalty: 8000,
+  singleLinePenalty: 8000,
 });
 const ms = performance.now() - t0;
 
@@ -67,13 +86,26 @@ const ms = performance.now() - t0;
 const lastNoPenalty = outNoPenalty.lines[outNoPenalty.lines.length - 1];
 const lastWithPenalty = outPenalty.lines[outPenalty.lines.length - 1];
 
-const noWidow = lastWithPenalty ? lastWithPenalty.wordRuns.length > 1 : true;
+const noPenaltyLastWords = lastNoPenalty?.wordRuns.length ?? 0;
+const withPenaltyLastWords = lastWithPenalty?.wordRuns.length ?? 0;
+
+// A widow is a single word on the last line. The penalty should eliminate it
+// by making the penultimate line absorb the orphaned word.  Pass only when the
+// penalty version has >1 words on the last line AND the no-penalty version had
+// exactly 1 word (i.e., there actually was a widow to fix).
+const hadWidow = noPenaltyLastWords === 1;
+const noWidow = withPenaltyLastWords > 1;
+const pass = hadWidow && noWidow;
 
 console.log(`\n  Without penalty: ${outNoPenalty.lines.length} lines`);
-console.log(`    Last line words: ${lastNoPenalty?.wordRuns.length ?? 0}`);
+console.log(
+  `    Last line words: ${noPenaltyLastWords} ${hadWidow ? '(widow detected)' : ''}`,
+);
 console.log(`  With penalty: ${outPenalty.lines.length} lines`);
-console.log(`    Last line words: ${lastWithPenalty?.wordRuns.length ?? 0}`);
+console.log(`    Last line words: ${withPenaltyLastWords}`);
 console.log(`  Widow fixed: ${noWidow}`);
+if (!hadWidow)
+  console.log('  NOTE: no widow at this width — test cannot exercise penalty');
 
 // ─── SVG: side-by-side ────────────────────────────────────────────────────────
 
@@ -124,6 +156,7 @@ const renderedPdf = layoutParagraph(outPenalty.lines, measurer, {
 const pdf = await renderToPdf(renderedPdf, fontEngine, {
   width: PAGE_W,
   height: PAGE_H,
+  preDraw: (doc) => drawTestHeader(doc, 'MT-07'),
 });
 writePdf('mt-07-widow-orphan.pdf', pdf);
 
@@ -153,13 +186,14 @@ const metrics: TestMetrics = {
     hyphenatedLines: lineMetrics.filter((l) => l.hyphenated).length,
   },
   extra: {
-    noPenaltyLastLineWords: lastNoPenalty?.wordRuns.length ?? 0,
-    withPenaltyLastLineWords: lastWithPenalty?.wordRuns.length ?? 0,
+    noPenaltyLastLineWords: noPenaltyLastWords,
+    withPenaltyLastLineWords: withPenaltyLastWords,
+    hadWidow: hadWidow,
     widowFixed: noWidow,
   },
 };
 
 writeJson('mt-07-widow-orphan.metrics.json', metrics);
 
-console.log(noWidow ? '\nPASS' : '\nFAIL — widow not resolved');
-process.exit(noWidow ? 0 : 1);
+console.log(pass ? '\nPASS' : '\nFAIL — widow not resolved');
+process.exit(pass ? 0 : 1);

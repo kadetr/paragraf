@@ -54,6 +54,7 @@ function makeLine(lineHeight = 12, baseline = 9.6): ComposedLine {
     ratio: 0,
     alignment: 'left',
     isWidow: false,
+    isRunt: false,
     lineWidth: 200,
     lineHeight,
     baseline,
@@ -193,16 +194,6 @@ describe('composeDocument', () => {
     const result = composeDocument(doc, makeMockComposer(4));
     expect(result.paragraphs[0].output.lineCount).toBe(4);
     expect(result.paragraphs[0].output.lines).toHaveLength(4);
-  });
-
-  it('passes the input through on each paragraph output', () => {
-    const input = makeInput(300);
-    const doc: Document = {
-      paragraphs: [input],
-      frames: [makeFrame()],
-    };
-    const result = composeDocument(doc, makeMockComposer());
-    expect(result.paragraphs[0].input).toBe(input);
   });
 
   it('merges styleDefaults (per-paragraph wins)', () => {

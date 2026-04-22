@@ -142,6 +142,7 @@ describe('renderToPdf — GSUB variant fonts', () => {
       ratio: 0,
       alignment: 'left',
       isWidow: false,
+    isRunt: false,
       lineWidth: 200,
       lineHeight: 20,
       baseline: 14,

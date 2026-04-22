@@ -115,6 +115,7 @@ describe('e2e: overflow handling', () => {
       output: 'rendered',
       shaping: 'fontkit',
       maxPages: 1,
+      onOverflow: 'silent',
     });
     expect(metadata.pageCount).toBe(1);
     expect(metadata.overflowLines).toBeGreaterThan(0);

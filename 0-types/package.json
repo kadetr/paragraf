@@ -36,7 +36,7 @@
     "typecheck": "tsc --noEmit",
     "prepack": "node ../scripts/publishconfig-swap.mjs apply",
     "postpack": "node ../scripts/publishconfig-swap.mjs restore",
-    "test": "vitest run",
+    "test": "vitest run --passWithNoTests",
     "test:watch": "vitest"
   },
   "devDependencies": {

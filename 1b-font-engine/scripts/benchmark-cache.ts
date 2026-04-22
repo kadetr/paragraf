@@ -13,8 +13,6 @@ function clearWordMeasureCache(): void {
   // no-op: cache not yet implemented in font-engine
 }
 
-
-
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
@@ -62,19 +60,20 @@ function forceGcIfAvailable(): void {
   if (typeof global.gc === 'function') global.gc();
 }
 
-function runComposeLikeLoop(
-  featureSetId: string,
-): { durationMs: number; totalWidth: number } {
+function runComposeLikeLoop(_featureSetId: string): {
+  durationMs: number;
+  totalWidth: number;
+} {
   clearWordMeasureCache();
 
-  const measurer = createMeasurer(REGISTRY, undefined, undefined, undefined);
+  const measurer = createMeasurer(REGISTRY);
 
   const start = performance.now();
   let totalWidth = 0;
 
   for (let i = 0; i < ITERATIONS; i++) {
     for (const word of WORDS) {
-      totalWidth += measurer.measure(word, FONT, featureSetId);
+      totalWidth += measurer.measure(word, FONT);
     }
   }
 

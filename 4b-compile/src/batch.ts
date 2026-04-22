@@ -3,8 +3,12 @@
 // Runs compile() across multiple records with a concurrency semaphore.
 // Uses collect-errors mode: all records are attempted; errors are captured
 // per-record rather than aborting the entire batch.
+//
+// One CompilerSession is created for the whole batch so fonts and WASM are
+// loaded only once, regardless of the number of records.
 
 import { compile } from './compile.js';
+import { createCompilerSession } from './session.js';
 import type {
   CompileOptions,
   CompileBatchOptions,
@@ -38,6 +42,15 @@ export async function compileBatch<T = unknown>(
     );
   }
   const concurrency = rawConcurrency;
+
+  // Build one shared session so fonts + WASM initialise once for the whole batch.
+  // If the caller already provided a session, reuse it as-is.
+  const session =
+    sharedOptions.session ??
+    (await createCompilerSession(sharedOptions.template, {
+      basePath: sharedOptions.basePath,
+      shaping: sharedOptions.shaping,
+    }));
 
   const total = records.length;
   const results: CompileBatchResult<T>[] = new Array(total);
@@ -74,6 +87,7 @@ export async function compileBatch<T = unknown>(
         const singleOptions: CompileOptions<T> = {
           ...sharedOptions,
           data: record,
+          session,
         };
         const result = await compile(singleOptions);
         results[index] = { record, index, result };

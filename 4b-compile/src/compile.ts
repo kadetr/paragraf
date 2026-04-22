@@ -43,11 +43,16 @@ import type { RenderedParagraph } from '@paragraf/render-core';
 import type { FontEngine } from '@paragraf/font-engine';
 import { createMeasurer } from '@paragraf/font-engine';
 import { renderDocumentToPdf } from '@paragraf/render-pdf';
+import type { OutputIntent } from '@paragraf/render-pdf';
+import { loadColorWasm, createWasmTransform } from '@paragraf/color-wasm';
+import { loadBuiltinSrgb } from '@paragraf/color';
+import type { ColorTransform } from '@paragraf/color';
 
 import type { CompileOptions, CompileResult } from './types.js';
 import { buildFontRegistry, selectVariant } from './fonts.js';
 import { resolveText } from './interpolate.js';
 import { resolveComposerOptions, detectActualShaping } from './shaping.js';
+import type { CompilerSession } from './session.js';
 
 const DEFAULT_MAX_PAGES = 100;
 
@@ -55,7 +60,6 @@ const DEFAULT_MAX_PAGES = 100;
 // name per process, avoiding spam in high-volume compileBatch runs).
 const _warnedSpacing = new Set<string>();
 const _warnedHyphenation = new Set<string>();
-
 // ─── Main entry point ─────────────────────────────────────────────────────────
 
 /**
@@ -72,17 +76,26 @@ export async function compile<T = unknown>(
     normalize,
     output = 'pdf',
     basePath = process.cwd(),
-    onOverflow = 'silent',
+    onOverflow = 'throw',
     shaping = 'auto',
     title,
     lang,
     selectable = false,
     maxPages = DEFAULT_MAX_PAGES,
+    outputIntent,
+    session,
+    verbose = true,
   } = options;
 
-  if (selectable && output !== 'pdf') {
+  if (verbose && selectable && output !== 'pdf') {
     console.warn(
       '[paragraf/compile] selectable: true has no effect when output is not "pdf".',
+    );
+  }
+
+  if (verbose && outputIntent && output !== 'pdf') {
+    console.warn(
+      '[paragraf/compile] outputIntent has no effect when output is not "pdf".',
     );
   }
 
@@ -93,16 +106,28 @@ export async function compile<T = unknown>(
   }
 
   // ── 1. Resolve fonts ───────────────────────────────────────────────────────
-  const registry = buildFontRegistry(template.fonts, basePath);
+  // ── 2. Build composer + font engine ────────────────────────────────────
+  // When a session is provided both steps are skipped — reuse the pre-built
+  // registry, composer, and engine from the session.
+  let registry: ReturnType<typeof buildFontRegistry>;
+  let composer: Awaited<ReturnType<typeof createParagraphComposer>>;
+  let fontEngine: Awaited<ReturnType<typeof createDefaultFontEngine>>;
+  let shapingEngine: CompilerSession['shapingEngine'];
 
-  // ── 2. Build composer + font engine ───────────────────────────────────────
-  const composerOpts = resolveComposerOptions(shaping);
-  const shapingEngine = detectActualShaping(composerOpts);
-
-  const [composer, fontEngine] = await Promise.all([
-    createParagraphComposer(registry, composerOpts),
-    createDefaultFontEngine(registry, composerOpts),
-  ]);
+  if (session) {
+    registry = session.registry;
+    composer = session.composer;
+    fontEngine = session.fontEngine;
+    shapingEngine = session.shapingEngine;
+  } else {
+    registry = buildFontRegistry(template.fonts, basePath);
+    const composerOpts = resolveComposerOptions(shaping);
+    shapingEngine = detectActualShaping(composerOpts);
+    [composer, fontEngine] = await Promise.all([
+      createParagraphComposer(registry, composerOpts),
+      createDefaultFontEngine(registry, composerOpts),
+    ]);
+  }
 
   // ── 3. Resolve layout ──────────────────────────────────────────────────────
   const layout = buildPageLayout(template.layout);
@@ -112,24 +137,29 @@ export async function compile<T = unknown>(
   // ── 4. Resolve styles ──────────────────────────────────────────────────────
   const styleRegistry = defineStyles(template.styles);
 
-  // Warn once per style name when properties are declared but not yet implemented.
-  // These module-level Sets intentionally deduplicate warnings across compile()
-  // and compileBatch runs for the lifetime of the loaded module.
-  for (const name of styleRegistry.names()) {
-    const s = styleRegistry.resolve(name);
-    if ((s.spaceBefore > 0 || s.spaceAfter > 0) && !_warnedSpacing.has(name)) {
-      _warnedSpacing.add(name);
-      console.warn(
-        `[paragraf/compile] Style "${name}": spaceBefore/spaceAfter are not yet ` +
-          `implemented and will be ignored. (planned v0.6)`,
-      );
-    }
-    if (s.hyphenation === false && !_warnedHyphenation.has(name)) {
-      _warnedHyphenation.add(name);
-      console.warn(
-        `[paragraf/compile] Style "${name}": hyphenation: false is not yet supported; ` +
-          `paragraphs will still be hyphenated according to their language setting. (planned v0.6)`,
-      );
+  // Warn when properties are declared but not yet implemented.
+  // Uses module-level sets so warnings fire at most once per style name across
+  // the lifetime of the process (avoids flooding in compileBatch workloads).
+  if (verbose) {
+    for (const name of styleRegistry.names()) {
+      const s = styleRegistry.resolve(name);
+      if (
+        (s.spaceBefore > 0 || s.spaceAfter > 0) &&
+        !_warnedSpacing.has(name)
+      ) {
+        _warnedSpacing.add(name);
+        console.warn(
+          `[paragraf/compile] Style "${name}": spaceBefore/spaceAfter are not yet ` +
+            `implemented and will be ignored. (planned v0.6)`,
+        );
+      }
+      if (s.hyphenation === false && !_warnedHyphenation.has(name)) {
+        _warnedHyphenation.add(name);
+        console.warn(
+          `[paragraf/compile] Style "${name}": hyphenation: false is not yet supported; ` +
+            `paragraphs will still be hyphenated according to their language setting. (planned v0.6)`,
+        );
+      }
     }
   }
 
@@ -268,6 +298,13 @@ export async function compile<T = unknown>(
   }
 
   // output === 'pdf'
+  let colorTransform: ColorTransform | undefined;
+  if (outputIntent) {
+    const wasm = loadColorWasm();
+    const srgb = await loadBuiltinSrgb();
+    colorTransform = createWasmTransform(wasm, srgb, outputIntent.profile);
+  }
+
   const pdfBuf = await renderDocumentToPdf(renderedDoc, fontEngine, {
     pageWidth,
     pageHeight,
@@ -276,6 +313,8 @@ export async function compile<T = unknown>(
     selectable,
     fontRegistry: selectable ? registry : undefined,
     compress: true,
+    outputIntent,
+    colorTransform,
   });
 
   return {
@@ -325,6 +364,7 @@ function buildFont(
     stretch = 'normal',
     letterSpacing,
     variant,
+    ligatures,
   } = style.font;
 
   if (!family) {
@@ -350,6 +390,7 @@ function buildFont(
     stretch,
     ...(letterSpacing !== undefined ? { letterSpacing } : {}),
     ...(variant !== undefined ? { variant } : {}),
+    ...(ligatures !== undefined ? { ligatures } : {}),
   };
 }
 

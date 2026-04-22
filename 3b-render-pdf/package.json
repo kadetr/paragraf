@@ -34,7 +34,7 @@
   "scripts": {
     "build": "tsup",
     "prepublishOnly": "npm run build",
-    "test": "vitest run",
+    "test": "vitest run --passWithNoTests",
     "test:watch": "vitest",
     "typecheck": "tsc --noEmit",
     "prepack": "node ../scripts/publishconfig-swap.mjs apply",
@@ -42,6 +42,8 @@
   },
   "dependencies": {
     "@paragraf/types": "^0.5.0",
+    "@paragraf/color": "^0.3.0",
+    "@paragraf/color-wasm": "^0.3.0",
     "@paragraf/font-engine": "^0.5.0",
     "@paragraf/render-core": ">=0.3.1 <0.4.0",
     "pdfkit": "^0.18.0"

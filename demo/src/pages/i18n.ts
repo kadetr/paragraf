@@ -15,7 +15,8 @@ export interface LocaleEntry {
   direction: LocaleDirection;
   sampleText: string;
   fontId: string; // matches FONTS entry id
-  hyphenatorLocale: string; // passed to loadHyphenator()
+  /** Language code accepted by loadHyphenator(). Absent when no pattern loader exists (e.g. Arabic). */
+  hyphenatorLocale?: string;
 }
 
 // ─── Locale data (exported for unit tests) ───────────────────────────────────────
@@ -66,7 +67,7 @@ export const LOCALE_MAP: Record<string, LocaleEntry> = {
     label: 'ar — العربية (Arabic)',
     direction: 'rtl',
     fontId: 'noto-arabic',
-    hyphenatorLocale: 'ar',
+    // No hyphenatorLocale: Arabic is not in PATTERN_LOADERS.
     sampleText:
       'الطباعة هي فن وتقنية ترتيب حروف الطباعة لجعل اللغة المكتوبة مقروءة وجذابة. ' +
       'يتضمن ترتيب الأحرف اختيار الخطوط وأحجام النقاط وأطوال الأسطر والمسافات بين الأسطر.',
@@ -139,7 +140,7 @@ export const i18nPage: Page = (() => {
     previewDiv.lang = currentLocaleId;
 
     let displayText = locale.sampleText;
-    if (showHyphenPoints) {
+    if (showHyphenPoints && locale.hyphenatorLocale) {
       try {
         await loadHyphenator(locale.hyphenatorLocale as Language);
         const words = hyphenateParagraph(locale.sampleText, {

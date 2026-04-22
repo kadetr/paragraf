@@ -50,6 +50,7 @@ function makeLine(lineHeight = 12, baseline = 9.6): ComposedLine {
     ratio: 0,
     alignment: 'left',
     isWidow: false,
+    isRunt: false,
     lineWidth: 200,
     lineHeight,
     baseline,

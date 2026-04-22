@@ -16,6 +16,9 @@ export default defineConfig(({ command }) => ({
       // (it uses BrowserWasmFontEngine), so the stubs are never invoked at runtime.
       fontkit: path.resolve(__dirname, './src/fontkit-stub.ts'),
       fs: path.resolve(__dirname, './src/fs-stub.ts'),
+      // 'node:fs/promises' is imported by @paragraf/color's loadProfile() — not
+      // called at runtime (demo uses loadBuiltinSrgb()), so a throw-stub is safe.
+      'node:fs/promises': path.resolve(__dirname, './src/fs-promises-stub.ts'),
       path: path.resolve(__dirname, './src/path-stub.ts'),
       module: path.resolve(__dirname, './src/module-stub.ts'),
     },

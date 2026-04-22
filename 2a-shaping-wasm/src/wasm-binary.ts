@@ -19,8 +19,8 @@ import { Node } from '@paragraf/types';
  *   - Bits 0-3: type (0=box, 1=glue, 2=penalty)
  *   - Bits 4-7: flags (kind for glue, flagged for penalty)
  *
- * ±Infinity is mapped to ±1e30 (PROHIBITED/FORCED_BREAK sentinels) so that
- * Rust prefix-sum subtraction never produces NaN (∞ − ∞ = NaN corrupts ratios).
+ * FORCED_BREAK (−∞) and PROHIBITED (+∞) sentinels are mapped to ±1e30 for
+ * Rust so that prefix-sum subtraction never produces NaN in Rust's f64 math.
  */
 const sentinel = (v: number): number => {
   if (v === Infinity) return 1e30;
@@ -38,12 +38,13 @@ export function serializeNodesToBinary(
     const f64Idx = i * 4;
 
     if (node.type === 'box') {
-      // Box: [width, 0, 0, 0], type=0
+      // Box: [width, 0, 0, 0], type=0, is_content in bit 4
       f64s[f64Idx] = node.width;
       f64s[f64Idx + 1] = 0;
       f64s[f64Idx + 2] = 0;
       f64s[f64Idx + 3] = 0;
-      u8s[i] = 0; // type=box
+      const contentFlag = node.content !== '' ? 1 : 0;
+      u8s[i] = 0 | (contentFlag << 4); // type=0, is_content in upper nibble
     } else if (node.type === 'glue') {
       // Glue: [width, stretch, shrink, 0], type=1, kind in upper nibble
       f64s[f64Idx] = node.width;
@@ -79,11 +80,18 @@ export function tracebackWasmBinary(
   tolerance: number,
   emergencyStretch: number = 0,
   looseness: number = 0,
+  /** @deprecated — use runtPenalty */
   widowPenalty: number = 0,
+  /** @deprecated — use singleLinePenalty */
   orphanPenalty: number = 0,
   consecutiveHyphenLimit: number = 0,
   lineWidths: number[] = [],
+  runtPenalty?: number,
+  singleLinePenalty?: number,
 ): any {
+  // Canonical names take precedence over deprecated aliases.
+  const effectiveWidowPenalty = runtPenalty ?? widowPenalty;
+  const effectiveOrphanPenalty = singleLinePenalty ?? orphanPenalty;
   const [f64s, u8s] = serializeNodesToBinary(nodes);
   const result = JSON.parse(
     wasm.traceback_wasm_binary(
@@ -94,8 +102,8 @@ export function tracebackWasmBinary(
       tolerance,
       emergencyStretch,
       looseness,
-      widowPenalty,
-      orphanPenalty,
+      effectiveWidowPenalty,
+      effectiveOrphanPenalty,
       consecutiveHyphenLimit,
     ),
   );

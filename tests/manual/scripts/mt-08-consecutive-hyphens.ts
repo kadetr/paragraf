@@ -22,10 +22,12 @@ import {
   type LineMetrics,
   type TestMetrics,
 } from '../fixtures/output.js';
+import { drawTestHeader } from '../fixtures/header.js';
 import { MARGIN_X, MARGIN_TOP, PAGE_W, PAGE_H } from '../fixtures/documents.js';
 
-const NARROW_W = 200; // narrow enough to force hyphens but wide enough for KP to find solutions
+const NARROW_W = 130; // at this width EN_BODY produces up to 4 consecutive hyphens, so LIMIT=2 actually binds
 const LIMIT = 2;
+const TOLERANCE = 6; // wider tolerance needed at 150 pt to find a feasible layout
 const registry = serifRegistry();
 const composer = await createParagraphComposer(registry);
 const measurer = createMeasurer(registry);
@@ -37,7 +39,7 @@ const outUnlimited = composer.compose({
   text: EN_BODY,
   font: F12,
   lineWidth: NARROW_W,
-  tolerance: 3,
+  tolerance: TOLERANCE,
   consecutiveHyphenLimit: 0,
 });
 
@@ -48,7 +50,7 @@ const outLimited = composer.compose({
   text: EN_BODY,
   font: F12,
   lineWidth: NARROW_W,
-  tolerance: 3,
+  tolerance: TOLERANCE,
   consecutiveHyphenLimit: LIMIT,
 });
 const ms = performance.now() - t0;
@@ -69,7 +71,7 @@ const maxRun = (lines: typeof outLimited.lines): number => {
 
 const unlimRun = maxRun(outUnlimited.lines);
 const limitedRun = maxRun(outLimited.lines);
-const pass = limitedRun <= LIMIT;
+const pass = limitedRun <= LIMIT && unlimRun > LIMIT;
 
 console.log(
   `\n  Unlimited: ${outUnlimited.lines.length} lines, max consecutive hyphens: ${unlimRun}`,
@@ -78,7 +80,9 @@ console.log(
   `  Limited (≤${LIMIT}): ${outLimited.lines.length} lines, max consecutive hyphens: ${limitedRun}`,
 );
 console.log(
-  pass ? '  PASS' : `  FAIL — max run ${limitedRun} > limit ${LIMIT}`,
+  pass
+    ? '  PASS'
+    : `  FAIL — ${unlimRun <= LIMIT ? `unlimited run ${unlimRun} ≤ limit ${LIMIT} (cap never binds)` : `limited run ${limitedRun} > limit ${LIMIT}`}`,
 );
 
 // ─── SVG ──────────────────────────────────────────────────────────────────────
@@ -95,6 +99,7 @@ writeSvg('mt-08-consecutive-hyphens.svg', svg);
 const pdf = await renderToPdf(rendered, fontEngine, {
   width: PAGE_W,
   height: PAGE_H,
+  preDraw: (doc) => drawTestHeader(doc, 'MT-08'),
 });
 writePdf('mt-08-consecutive-hyphens.pdf', pdf);
 

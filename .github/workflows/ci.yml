@@ -35,3 +35,6 @@ jobs:
 
       - name: Run e2e tests
         run: npm run test:e2e
+
+      - name: Run WASM/TS parity test (MT-11)
+        run: npx tsx tests/manual/scripts/mt-11-wasm-ts-parity.ts

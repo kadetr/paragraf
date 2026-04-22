@@ -114,17 +114,12 @@ const detectParagraphDirection = (text: string): 'ltr' | 'rtl' => {
 
 const getDirectionViaWasm = (text: string): 'ltr' | 'rtl' => {
   try {
-    const r = JSON.parse(_wasm.analyze_bidi(text)) as {
-      ok?: Array<{ text: string; isRtl: boolean }>;
+    const r = JSON.parse(_wasm.analyze_bidi_v2(text)) as {
+      ok?: { paragraphDirection: string };
     };
-    if (!r.ok) return detectParagraphDirection(text);
-    let rtlLen = 0;
-    let ltrLen = 0;
-    for (const run of r.ok) {
-      if (run.isRtl) rtlLen += run.text.length;
-      else ltrLen += run.text.length;
-    }
-    return rtlLen > ltrLen ? 'rtl' : 'ltr';
+    if (r.ok?.paragraphDirection === 'rtl') return 'rtl';
+    if (r.ok?.paragraphDirection === 'ltr') return 'ltr';
+    return detectParagraphDirection(text);
   } catch {
     return detectParagraphDirection(text);
   }
@@ -184,7 +179,13 @@ export interface ParagraphInput {
   looseness?: number;
   justifyLastLine?: boolean;
   consecutiveHyphenLimit?: number;
+  /** Demerit added when the final line contains a single word. @since v0.6 */
+  runtPenalty?: number;
+  /** Demerit added when the first line contains a single word. @since v0.6 */
+  singleLinePenalty?: number;
+  /** @deprecated Use `runtPenalty` instead. */
   widowPenalty?: number;
+  /** @deprecated Use `singleLinePenalty` instead. */
   orphanPenalty?: number;
   preserveSoftHyphens?: boolean;
   /** When set, overrides the font-metric-derived line height on every composed
@@ -231,6 +232,14 @@ export interface MeasureCacheOptions {
   maxCacheEntries?: number;
   featureSetId?: string;
   featureSetIdResolver?: (word: string, font: Font) => string;
+  /**
+   * Unique identifier for the font registry used by this composer.
+   * Include this when multiple ParagraphComposer instances may share the
+   * module-global cache store but use different font registries — preventing
+   * false cache hits when two registries assign the same font.id to different
+   * typefaces. (#76)
+   */
+  registryId?: string;
 }
 
 export interface MeasureCacheStats {
@@ -260,6 +269,10 @@ const _measureCacheStats: MeasureCacheStats = {
   misses: 0,
   evictions: 0,
 };
+
+// Monotonically increasing counter used to generate a unique registryId for
+// each ParagraphComposer instance that does not supply one explicitly (#76).
+let _composerInstanceCounter = 0;
 
 let _nonLtrCacheWarnIssued = false;
 
@@ -300,6 +313,7 @@ const buildMeasureCacheKey = (
   word: string,
   font: Font,
   options?: MeasureCacheOptions,
+  direction?: string,
 ): string => {
   const featureSetId = resolveFeatureSetId(word, font, options);
   const letterSpacing = font.letterSpacing ?? 0;
@@ -313,7 +327,10 @@ const buildMeasureCacheKey = (
     font.stretch,
     letterSpacing,
     variant,
+    font.ligatures ?? true,
     featureSetId,
+    direction ?? 'ltr',
+    options?.registryId ?? '',
   ]);
 };
 
@@ -344,6 +361,7 @@ const writeMeasureCache = (
 const withMeasureCache = (
   base: Measurer,
   options?: MeasureCacheOptions,
+  getDirection?: () => string,
 ): Measurer => {
   return {
     ...base,
@@ -353,7 +371,12 @@ const withMeasureCache = (
         return base.measure(content, font);
       }
 
-      const key = buildMeasureCacheKey(content, font, options);
+      const key = buildMeasureCacheKey(
+        content,
+        font,
+        options,
+        getDirection?.(),
+      );
       const cached = _measureCacheStore.get(key);
       if (cached !== undefined) {
         _measureCacheStats.hits += 1;
@@ -529,9 +552,27 @@ export const createParagraphComposer = async (
   const baseMeasurer: Measurer = useWasm
     ? createWasmMeasurer(registry)
     : createMeasurer(registry);
+
+  // Mutable ref: compose() sets this before measuring so the cache key includes
+  // the current paragraph's direction (#23). The ref is local to this composer
+  // instance and is not shared across concurrent calls.
+  let _currentDirection: string = 'ltr';
+
+  // registryId scopes the cache key to this registry, preventing false hits
+  // when two composers share the module-global store but use different font
+  // registries (#76). A simple incrementing counter is sufficient.
+  const registryId =
+    options?.measureCache?.registryId ?? String(_composerInstanceCounter++);
+
+  const cacheOptions: MeasureCacheOptions = {
+    ...options?.measureCache,
+    registryId,
+  };
+
   const measurer: Measurer = withMeasureCache(
     baseMeasurer,
-    options?.measureCache,
+    cacheOptions,
+    () => _currentDirection,
   );
   const loadedLanguages = new Set<Language>(['en-us']);
 
@@ -557,10 +598,16 @@ export const createParagraphComposer = async (
       looseness = 0,
       justifyLastLine = false,
       consecutiveHyphenLimit = 0,
-      widowPenalty = 0,
-      orphanPenalty = 0,
+      runtPenalty,
+      singleLinePenalty,
+      widowPenalty: widowPenaltyDeprecated = 0,
+      orphanPenalty: orphanPenaltyDeprecated = 0,
       preserveSoftHyphens = true,
     } = input;
+
+    // Accept both canonical (runtPenalty / singleLinePenalty) and deprecated names.
+    const widowPenalty = runtPenalty ?? widowPenaltyDeprecated;
+    const orphanPenalty = singleLinePenalty ?? orphanPenaltyDeprecated;
 
     // Detect paragraph direction.
     // RTL paragraphs bypass language loading and hyphenation for v0.8.
@@ -574,11 +621,16 @@ export const createParagraphComposer = async (
       ? getDirectionViaWasm(sourceText)
       : detectParagraphDirection(sourceText);
 
-    const cacheCfg = effectiveCacheConfig(options?.measureCache);
+    // Update the direction ref so the cache key includes the current paragraph's
+    // direction — prevents stale hits when LTR and RTL paragraphs are composed
+    // with the same composer instance (#23).
+    _currentDirection = direction;
+
+    const cacheCfg = effectiveCacheConfig(cacheOptions);
     if (cacheCfg.enabled && direction === 'rtl' && !_nonLtrCacheWarnIssued) {
       console.warn(
         '[paragraf] measure cache: non-LTR paragraph detected. ' +
-          'Cache key currently omits script/direction (v1 limitation).',
+          'Direction is now included in the cache key (since v0.6).',
       );
       _nonLtrCacheWarnIssued = true;
     }
@@ -670,8 +722,8 @@ export const createParagraphComposer = async (
         tolerance,
         emergencyStretch,
         consecutiveHyphenLimit,
-        widowPenalty,
-        orphanPenalty,
+        runtPenalty: widowPenalty,
+        singleLinePenalty: orphanPenalty,
         looseness,
       });
       breaks = traceback(result.node);

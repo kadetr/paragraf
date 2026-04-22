@@ -438,6 +438,17 @@ describe('ParagraphInput — step 3a parameters', () => {
     ).not.toThrow();
   });
 
+  it('runtPenalty (canonical name) is passed through without throwing', () => {
+    expect(() =>
+      composer.compose({
+        text: TEXT,
+        font: FONT_REGULAR,
+        lineWidth: 250,
+        runtPenalty: 5000,
+      }),
+    ).not.toThrow();
+  });
+
   it('orphanPenalty is passed through without throwing', () => {
     expect(() =>
       composer.compose({
@@ -445,6 +456,17 @@ describe('ParagraphInput — step 3a parameters', () => {
         font: FONT_REGULAR,
         lineWidth: 250,
         orphanPenalty: 5000,
+      }),
+    ).not.toThrow();
+  });
+
+  it('singleLinePenalty (canonical name) is passed through without throwing', () => {
+    expect(() =>
+      composer.compose({
+        text: TEXT,
+        font: FONT_REGULAR,
+        lineWidth: 250,
+        singleLinePenalty: 5000,
       }),
     ).not.toThrow();
   });
@@ -559,11 +581,10 @@ describe('ParagraphInput — step 3a parameters', () => {
   });
 });
 
-// ─── isWidow ─────────────────────────────────────────────────────────────────
+// ─── isWidow / isRunt ────────────────────────────────────────────────────────
 
-describe('ParagraphOutput — isWidow', () => {
-  it('isWidow is false when last line has multiple words', () => {
-    // wide enough that last line always has multiple words
+describe('ParagraphOutput — isRunt / isWidow', () => {
+  it('isRunt is false when last line has multiple words', () => {
     const output = composer.compose({
       text: 'the fox and the dog',
       font: FONT_REGULAR,
@@ -571,13 +592,11 @@ describe('ParagraphOutput — isWidow', () => {
     });
     const last = output.lines[output.lines.length - 1];
     expect(last.words.length).toBeGreaterThan(1);
-    expect(last.isWidow).toBe(false);
+    expect(last.isRunt).toBe(false);
+    expect(last.isWidow).toBe(false); // deprecated alias must agree
   });
 
-  it('isWidow is true when last line has exactly one word', () => {
-    // use a paragraph and lineWidth known to produce a single-word last line
-    // then verify isWidow=true
-    // we first find such a configuration by checking the output
+  it('isRunt is true when last line has exactly one word', () => {
     const output = composer.compose({
       text: 'In olden times when wishing still helped one',
       font: FONT_REGULAR,
@@ -585,11 +604,10 @@ describe('ParagraphOutput — isWidow', () => {
     });
     const last = output.lines[output.lines.length - 1];
     if (last.words.length === 1) {
-      // this configuration produces a widow — verify it is marked
-      expect(last.isWidow).toBe(true);
+      expect(last.isRunt).toBe(true);
+      expect(last.isWidow).toBe(true); // deprecated alias must agree
     } else {
-      // paragraph doesn't produce widow at this width — test is inapplicable
-      // isWidow must still be false
+      expect(last.isRunt).toBe(false);
       expect(last.isWidow).toBe(false);
     }
   });

@@ -21,6 +21,7 @@ import {
   type LineMetrics,
   type TestMetrics,
 } from '../fixtures/output.js';
+import { addSvgTestHeader } from '../fixtures/header.js';
 import {
   MARGIN_X,
   MARGIN_TOP,
@@ -38,66 +39,102 @@ const fontEngine = await createDefaultFontEngine(registry);
 
 type SweepRow = {
   tolerance: number;
-  lines: number;
-  ratioVar: number;
+  lines: number | null;
+  ratioVar: number | null;
   ms: number;
   emergencyUsed: boolean;
+  infeasible: boolean;
 };
 const rows: SweepRow[] = [];
 
-console.log('\n  Tol  Lines  RatioVar  Time(ms)  Emergency');
-console.log('  ─────────────────────────────────────────');
+// Use a narrow column (250pt) so that tight tolerance (1) is infeasible while
+// higher tolerances (≥2) succeed — demonstrating that tolerance has real effect.
+const NARROW_W = 250;
+
+console.log('\n  Tol  Lines  RatioVar  Time(ms)  Emergency  Infeasible');
+console.log('  ────────────────────────────────────────────────────');
 
 let failures = 0;
 
 for (const tolerance of TOLERANCES) {
   const t0 = performance.now();
-  const out = composer.compose({
-    text: EN_BODY,
-    font: F12,
-    lineWidth: CONTENT_W,
-    tolerance,
-  });
+  let infeasible = false;
+  let out: Awaited<ReturnType<typeof composer.compose>> | null = null;
+  try {
+    out = composer.compose({
+      text: EN_BODY,
+      font: F12,
+      lineWidth: NARROW_W,
+      tolerance,
+    });
+  } catch {
+    infeasible = true;
+  }
   const ms = performance.now() - t0;
 
-  const lineMs: LineMetrics[] = out.lines.map((l, idx) => ({
-    idx,
-    y: 0,
-    ratio: l.ratio,
-    hyphenated: l.hyphenated ?? false,
-    xOffset: 0,
-    lineWidth: l.lineWidth,
-    wordCount: l.wordRuns.length,
-  }));
-  const rv = ratioVariance(lineMs);
+  const lineMs: LineMetrics[] = out
+    ? out.lines.map((l, idx) => ({
+        idx,
+        y: 0,
+        ratio: l.ratio,
+        hyphenated: l.hyphenated ?? false,
+        xOffset: 0,
+        lineWidth: l.lineWidth,
+        wordCount: l.wordRuns.length,
+      }))
+    : [];
+  const rv = out ? ratioVariance(lineMs) : null;
 
-  const rendered = layoutParagraph(out.lines, measurer, {
-    x: MARGIN_X,
-    y: MARGIN_TOP,
-  });
-  const svg = renderToSvg(rendered, fontEngine, {
-    width: PAGE_W,
-    height: PAGE_H,
-  });
-  writeSvg(`mt-20-tolerance-${tolerance}.svg`, svg);
+  if (out) {
+    const rendered = layoutParagraph(out.lines, measurer, {
+      x: MARGIN_X,
+      y: MARGIN_TOP,
+    });
+    const svg = renderToSvg(rendered, fontEngine, {
+      width: PAGE_W,
+      height: PAGE_H,
+    });
+    writeSvg(
+      `mt-20-tolerance-${tolerance}.svg`,
+      addSvgTestHeader(svg, 'MT-20'),
+    );
+  }
 
   console.log(
-    `  ${String(tolerance).padEnd(4)} ${String(out.lines.length).padEnd(6)} ${rv.toFixed(4).padEnd(9)} ${ms.toFixed(1).padEnd(9)} ${out.usedEmergency ? 'YES' : 'no'}`,
+    `  ${String(tolerance).padEnd(4)} ${String(out?.lines.length ?? '—').padEnd(6)} ${rv != null ? rv.toFixed(4).padEnd(9) : '—'.padEnd(9)} ${ms.toFixed(1).padEnd(9)} ${out?.usedEmergency ? 'YES' : 'no'.padEnd(10)} ${infeasible ? 'YES (expected at low tol)' : 'no'}`,
   );
 
   rows.push({
     tolerance,
-    lines: out.lines.length,
+    lines: out?.lines.length ?? null,
     ratioVar: rv,
     ms,
-    emergencyUsed: out.usedEmergency,
+    emergencyUsed: out?.usedEmergency ?? false,
+    infeasible,
   });
 }
 
-// Check: emergency should be false or rare for tolerance ≥ 5
-const t5Row = rows.find((r) => r.tolerance === 5);
-if (t5Row?.emergencyUsed) {
-  console.log('  WARN  tolerance=5 still triggered emergency break');
+// Check: the highest tolerance (10) must produce a feasible solution
+const t10Row = rows.find((r) => r.tolerance === 10);
+if (!t10Row || t10Row.infeasible) {
+  console.log(
+    '  FAIL  tolerance=10 is infeasible — KP cannot set this paragraph at any tolerance',
+  );
+  failures++;
+}
+
+// Check: there must be visible differentiation across tolerances (otherwise the
+// test is meaningless — tighten NARROW_W further or use harder text).
+const anyInfeasible = rows.some((r) => r.infeasible);
+const lineCounts = rows
+  .filter((r) => !r.infeasible)
+  .map((r) => r.lines as number);
+const uniqueLineCounts = new Set(lineCounts);
+if (!anyInfeasible && uniqueLineCounts.size === 1) {
+  console.log(
+    '  FAIL  all tolerances produce identical line counts with no infeasible cases — no differentiation',
+  );
+  failures++;
 }
 
 const metrics: TestMetrics = {

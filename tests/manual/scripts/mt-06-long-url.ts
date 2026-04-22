@@ -27,6 +27,7 @@ import {
   type LineMetrics,
   type TestMetrics,
 } from '../fixtures/output.js';
+import { drawTestHeader } from '../fixtures/header.js';
 import { MARGIN_X, MARGIN_TOP, PAGE_W, PAGE_H } from '../fixtures/documents.js';
 
 const LINE_W = 200; // narrow column to force URL overflow
@@ -106,6 +107,7 @@ writeSvg('mt-06-long-url.svg', svg);
 const pdf = await renderToPdf(rendered, fontEngine, {
   width: PAGE_W,
   height: PAGE_H,
+  preDraw: (doc) => drawTestHeader(doc, 'MT-06'),
 });
 writePdf('mt-06-long-url.pdf', pdf);
 

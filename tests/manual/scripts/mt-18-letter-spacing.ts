@@ -14,6 +14,7 @@ import { layoutParagraph, renderToSvg } from '@paragraf/render-core';
 import { serifRegistry, F12 } from '../fixtures/fonts.js';
 import { EN_BODY } from '../fixtures/text.js';
 import { writeSvg, writeJson, type TestMetrics } from '../fixtures/output.js';
+import { addSvgTestHeader } from '../fixtures/header.js';
 import {
   MARGIN_X,
   MARGIN_TOP,
@@ -103,7 +104,10 @@ if (process.argv[1]?.endsWith('mt-18-letter-spacing.ts')) {
       height: PAGE_H,
     });
     const label = String(spacing).replace('-', 'n').replace('.', '_');
-    writeSvg(`mt-18-letter-spacing-${label}em.svg`, svg);
+    writeSvg(
+      `mt-18-letter-spacing-${label}em.svg`,
+      addSvgTestHeader(svg, 'MT-18'),
+    );
 
     console.log(
       `  ${String(spacing.toFixed(2) + 'em').padEnd(13)} ${String(out.lines.length).padEnd(6)} ${avgWordsPerLine.toFixed(2).padEnd(14)} ${ms.toFixed(1)}`,

@@ -15,6 +15,7 @@ import { layoutParagraph, renderToSvg } from '@paragraf/render-core';
 import { serifRegistry, F12 } from '../fixtures/fonts.js';
 import { EN_BODY } from '../fixtures/text.js';
 import { writeSvg, writeJson, type TestMetrics } from '../fixtures/output.js';
+import { addSvgTestHeader } from '../fixtures/header.js';
 import {
   MARGIN_X,
   MARGIN_TOP,
@@ -69,7 +70,7 @@ for (const alignment of ALIGNMENTS) {
     width: PAGE_W,
     height: PAGE_H,
   });
-  writeSvg(`mt-22-alignment-${alignment}.svg`, svg);
+  writeSvg(`mt-22-alignment-${alignment}.svg`, addSvgTestHeader(svg, 'MT-22'));
 
   console.log(
     `  ${alignment.padEnd(11)} ${String(out.lines.length).padEnd(6)} ${String(nonZeroRatioLines).padEnd(14)} ${ms.toFixed(1)}`,

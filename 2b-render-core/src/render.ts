@@ -108,14 +108,10 @@ export const getAndSubstituteGlyphs = (
   text: string,
   font?: Font,
 ) => {
-  let glyphs = fontEngine.glyphsForString(fontId, text, font);
-  glyphs = fontEngine.applyLigatures(fontId, glyphs);
-  if (font?.variant === 'superscript') {
-    glyphs = fontEngine.applySingleSubstitution(fontId, glyphs, 'sups');
-  } else if (font?.variant === 'subscript') {
-    glyphs = fontEngine.applySingleSubstitution(fontId, glyphs, 'subs');
-  }
-  return glyphs;
+  // GSUB features (liga, rlig, sups, subs) are applied inside glyphsForString
+  // by both FontkitEngine and WasmFontEngine — no separate applyLigatures /
+  // applySingleSubstitution calls needed.
+  return fontEngine.glyphsForString(fontId, text, font);
 };
 
 // ─── Metrics cache to avoid repeated getFontMetrics calls ──────────────────────

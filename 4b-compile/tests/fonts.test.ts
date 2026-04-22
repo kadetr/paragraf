@@ -1,4 +1,4 @@
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import * as path from 'path';
 import { existsSync } from 'fs';
 import type { FontRegistry } from '@paragraf/types';
@@ -7,6 +7,7 @@ import {
   resolveVariantEntry,
   buildFontRegistry,
   selectVariant,
+  _clearWeightMismatchWarnings,
 } from '../src/fonts.js';
 
 // Stub existsSync so unit tests don't require real font files on disk.
@@ -287,6 +288,7 @@ describe('selectVariant', () => {
   });
 
   it('warns on inexact weight match', () => {
+    _clearWeightMismatchWarnings(); // reset dedup cache so this test always sees the warning
     const spy = vi.spyOn(console, 'warn').mockImplementation(() => {});
     selectVariant('Serif', 600, 'normal', makeRegistry());
     expect(spy).toHaveBeenCalledWith(

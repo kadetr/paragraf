@@ -11,6 +11,8 @@
   },
   "workspaces": [
     "0-types",
+    "0-color",
+    "2c-color-wasm",
     "1a-linebreak",
     "1b-font-engine",
     "1c-layout",

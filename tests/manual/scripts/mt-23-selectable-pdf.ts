@@ -45,6 +45,7 @@ import {
   type LineMetrics,
   type TestMetrics,
 } from '../fixtures/output.js';
+import { drawTestHeader } from '../fixtures/header.js';
 import {
   MARGIN_X,
   MARGIN_TOP,
@@ -78,10 +79,12 @@ const paraMs = performance.now() - t0;
 const paraBase = await renderToPdf(paraRendered, fontEngine, {
   width: PAGE_W,
   height: PAGE_H,
+  preDraw: (doc) => drawTestHeader(doc, 'MT-23'),
 });
 const paraSel = await renderToPdf(paraRendered, fontEngine, {
   width: PAGE_W,
   height: PAGE_H,
+  preDraw: (doc) => drawTestHeader(doc, 'MT-23'),
   selectable: true,
   fontRegistry: registry,
   title: 'MT-23 Selectable Paragraph',
@@ -111,10 +114,12 @@ const ligRendered = layoutParagraph(ligOut.lines, measurer, {
 const ligBase = await renderToPdf(ligRendered, fontEngine, {
   width: PAGE_W,
   height: PAGE_H,
+  preDraw: (doc) => drawTestHeader(doc, 'MT-23'),
 });
 const ligSel = await renderToPdf(ligRendered, fontEngine, {
   width: PAGE_W,
   height: PAGE_H,
+  preDraw: (doc) => drawTestHeader(doc, 'MT-23'),
   selectable: true,
   fontRegistry: registry,
   title: 'MT-23 Selectable Ligatures',
@@ -144,10 +149,12 @@ const nonAsciiRendered = layoutParagraph(nonAsciiOut.lines, measurer, {
 const nonAsciiBase = await renderToPdf(nonAsciiRendered, fontEngine, {
   width: PAGE_W,
   height: PAGE_H,
+  preDraw: (doc) => drawTestHeader(doc, 'MT-23'),
 });
 const nonAsciiSel = await renderToPdf(nonAsciiRendered, fontEngine, {
   width: PAGE_W,
   height: PAGE_H,
+  preDraw: (doc) => drawTestHeader(doc, 'MT-23'),
   selectable: true,
   fontRegistry: registry,
   title: 'MT-23 Selectable Non-ASCII',
@@ -179,10 +186,12 @@ const renderedDoc = layoutDocument(composed, docDef.frames, measurer);
 const docBase = await renderDocumentToPdf(renderedDoc, fontEngine, {
   pageWidth: PAGE_W,
   pageHeight: PAGE_H,
+  preDraw: (doc) => drawTestHeader(doc, 'MT-23'),
 });
 const docSel = await renderDocumentToPdf(renderedDoc, fontEngine, {
   pageWidth: PAGE_W,
   pageHeight: PAGE_H,
+  preDraw: (doc) => drawTestHeader(doc, 'MT-23'),
   selectable: true,
   fontRegistry: registry,
   title: 'MT-23 Selectable Multi-Page Document',

@@ -1,8 +1,8 @@
 # paragraf — AI Primer
-updated: 260415-1430
+updated: 260419-0900
 
 Paste this file at the start of a Claude.ai or Gemini session when working without full context.
-For deeper work on a specific package, also attach the relevant `[package]-inner-context.md` and the active plan.
+For deeper work, attach `methodology.md` first, then the relevant `inner-context/[package]/` folder and the active plan.
 
 ---
 
@@ -14,32 +14,33 @@ Produces PDF-quality output. Runs in Node.js and browser. Not a TeX wrapper, not
 ```
 L0  types, color
 L1  linebreak, font-engine, style, layout
-L2  shaping-wasm, render-core, color-wasm
+L2  shaping-wasm, color-wasm, render-core
 L3  typography, render-pdf
 L4  template, compile
-    studio/ (browser app)
     demo/   (browser demo)
 ```
 
 ## Process Rules
-- TDD: tests before tasks, always
-- Tests: human-authored
-- Tasks: LLM-drafted, reviewed on exception
-- Config: always user-configurable, never hardcoded
-- APIs: stable externally — internal changes invisible to callers
+Follow `methodology.md` for all process rules.
+Key principle: TDD, test descriptions human-authored, test code and implementations LLM-generated.
 
 ## Active Work
-- v0.4.0 release cycle
-- workId 001: shaping result cache — font-engine + shaping-wasm (cancelled)
+See `work-pool.md` for current workIds and status.
 
 ## Document Index
-| File | Purpose |
-|---|---|
-| `outer-context.md` | Full project primer |
-| `glossary.md` | Term definitions |
-| `[package]-inner-context.md` | Per-package AI primer |
-| `[package]-decisions.md` | Per-package decision log |
-| `workId-package-type-plan-[datetime].md` | Active plans |
+| Document | Location | Purpose |
+|---|---|---|
+| `methodology.md` | `docs/` | Process rules — attach first in every session |
+| `methodology-reference.md` | `docs/` | Archive procedures, attachment rules, anti-patterns |
+| `outer-context.md` | `docs/` | Project-level consistency checker |
+| `work-pool.md` | `docs/` | Work registry |
+| `roadmap.md` | `docs/` | Strategic direction and milestones |
+| `glossary.md` | `docs/` | Terminology |
+| `dependency.md` | `docs/` | Project-level dependencies |
+| `io-schemas.md` | `docs/` | Project-level I/O types |
+| `inner-context/[package]/` | `docs/inner-context/` | Per-package context folder |
+| `plan/` | `docs/plan/` | Active plans |
+| `archive/` | `docs/archive/` | Completed/cancelled plans, locked decisions |
 
 ## Note
 This file is intentionally minimal. It is a navigation aid, not a reference document.

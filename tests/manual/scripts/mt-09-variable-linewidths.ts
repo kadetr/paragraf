@@ -22,6 +22,7 @@ import {
   type LineMetrics,
   type TestMetrics,
 } from '../fixtures/output.js';
+import { drawTestHeader } from '../fixtures/header.js';
 import {
   MARGIN_X,
   MARGIN_TOP,
@@ -110,6 +111,7 @@ writeSvg('mt-09-variable-linewidths.svg', svg);
 const pdf = await renderToPdf(rendered, fontEngine, {
   width: PAGE_W,
   height: PAGE_H,
+  preDraw: (doc) => drawTestHeader(doc, 'MT-09'),
 });
 writePdf('mt-09-variable-linewidths.pdf', pdf);
 

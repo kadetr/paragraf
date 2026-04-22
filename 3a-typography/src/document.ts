@@ -52,7 +52,7 @@ export interface Document {
 
 /** Intermediate result after composition but before layout. */
 export interface ComposedDocument {
-  paragraphs: Array<{ input: ParagraphInput; output: ParagraphOutput }>;
+  paragraphs: Array<{ output: ParagraphOutput }>;
 }
 
 // ─── Baseline-grid helpers (exported for unit tests) ─────────────────────────
@@ -177,7 +177,7 @@ export function composeDocument(
       lineWidth: textWidth,
     };
     const output = composer.compose(merged);
-    return { input, output };
+    return { output };
   });
 
   return { paragraphs };
@@ -214,13 +214,18 @@ export function layoutDocument(
   let frameIdx = 0;
   let colIdx = 0;
   let cursorY = frames.length > 0 ? frames[0].y : 0;
+  let oversetLineCount = 0;
 
   for (const { output } of composed.paragraphs) {
     const lines = output.lines;
     let lineIdx = 0;
 
     while (lineIdx < lines.length) {
-      if (frameIdx >= frames.length) break; // no more frames; discard the rest
+      if (frameIdx >= frames.length) {
+        // No more frames — count remaining lines as overset.
+        oversetLineCount += lines.length - lineIdx;
+        break;
+      }
 
       const frame = frames[frameIdx];
       const available = frame.height - (cursorY - frame.y);
@@ -248,12 +253,14 @@ export function layoutDocument(
       // when a single line's lineHeight exceeds the column height.
       const fitLines: typeof lines = [];
       let totalHeight = 0;
+      let isForcePlaced = false;
       while (lineIdx < lines.length) {
         const line = lines[lineIdx];
         const lh = frame.grid
           ? gridAdvance(line.lineHeight, frame.grid.interval)
           : line.lineHeight;
         if (fitLines.length === 0 || totalHeight + lh <= available) {
+          if (fitLines.length === 0 && lh > available) isForcePlaced = true;
           fitLines.push(line);
           totalHeight += lh;
           lineIdx++;
@@ -263,19 +270,46 @@ export function layoutDocument(
       }
 
       // If the frame has a grid, snap the cursor before placing.
+      // After snapping, the cursor may have moved forward enough that the
+      // collected lines no longer fit within the frame.  In that case, flush to
+      // the next column/frame and replay the lines there (unless this is a
+      // force-placed line, which we always place to avoid an infinite loop).
       if (frame.grid && fitLines.length > 0) {
-        cursorY = snapCursorToGrid(
+        const snappedY = snapCursorToGrid(
           cursorY,
           fitLines[0].baseline,
           frame,
           frame.grid,
         );
+        const snapOverflow =
+          !isForcePlaced && snappedY + totalHeight > frame.y + frame.height;
+        if (snapOverflow) {
+          // Restore lineIdx: the collected lines were not placed.
+          lineIdx -= fitLines.length;
+          const cols = frame.columnCount ?? 1;
+          if (colIdx < cols - 1) {
+            colIdx++;
+            cursorY = frame.y;
+          } else {
+            frameIdx++;
+            colIdx = 0;
+            if (frameIdx < frames.length) {
+              cursorY = frames[frameIdx].y;
+            }
+          }
+          continue;
+        }
+        cursorY = snappedY;
       }
 
       // Place this batch as one item.
       const origin = { x: colX(frame, colIdx), y: cursorY };
       const rendered = layoutParagraph(fitLines, measurer, origin);
-      getOrCreatePage(frame).items.push({ origin, rendered });
+      getOrCreatePage(frame).items.push({
+        origin,
+        rendered,
+        ...(isForcePlaced ? { forcePlaced: true } : {}),
+      });
       cursorY += totalHeight;
       // Paragraph spacing: only applied after the *last* batch of a paragraph
       // (not mid-split when the paragraph continues into the next column/frame).
@@ -303,5 +337,8 @@ export function layoutDocument(
   }
 
   const pages = [...pageMap.values()].sort((a, b) => a.pageIndex - b.pageIndex);
-  return { pages };
+  return {
+    pages,
+    ...(oversetLineCount > 0 ? { overset: true, oversetLineCount } : {}),
+  };
 }

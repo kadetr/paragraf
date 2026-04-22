@@ -15,6 +15,8 @@ export type { Frame, BaselineGrid };
 export interface RenderedItem {
   origin: { x: number; y: number };
   rendered: RenderedParagraph;
+  /** True if at least one line in this item was force-placed (taller than remaining column height). */
+  forcePlaced?: boolean;
 }
 
 /** All rendered items on a single page. */
@@ -28,4 +30,8 @@ export interface RenderedPage {
 /** Final output: one entry per page that has content. */
 export interface RenderedDocument {
   pages: RenderedPage[];
+  /** True if any composed lines were discarded because all frames were exhausted. */
+  overset?: boolean;
+  /** Count of lines that could not be placed (0 or absent when overset is false). */
+  oversetLineCount?: number;
 }

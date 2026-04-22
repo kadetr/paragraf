@@ -31,7 +31,7 @@ Every JavaScript library uses a greedy algorithm — fill each line as full as p
 
 **Optical margin alignment.** A two-pass algorithm that protrudes punctuation and soft-hyphens partially into the page margin, then re-runs Knuth-Plass with the adjusted column widths. The result is a visually flush edge on justified text — the technique InDesign calls "optical margin alignment" and TeX calls `\pdfprotrudechars`. No other JavaScript library implements this.
 
-**ICC colour management.** `@paragraf/color` implements the full ICC transform pipeline: profile parsing, sRGB → CIE Lab → CMYK conversion, and tetrahedral LUT interpolation for device-specific output profiles. CMYK with correct profile transforms is a hard requirement for commercial printing. No other Node.js PDF library provides this.
+**ICC colour management.** `@paragraf/color` implements the ICC transform pipeline for the sRGB and CIE Lab colour spaces: profile parsing, sRGB → Lab conversion, and tetrahedral LUT interpolation. CMYK output uses device-profile LUT lookups (B2A tables); full gamut-mapping and chromatic adaptation are partial. For commercial printing that mandates a specific output-device profile (Fogra39, SWOP), the transform produces correct colour for profiles with 8-bit B2A LUTs. No other Node.js PDF library provides ICC-based colour management at all.
 
 **Style inheritance.** `@paragraf/style` provides InDesign-equivalent paragraph styles and character styles with cascading inheritance — derived styles override only what they change, in a named style registry. This is what makes template-driven documents maintainable at scale.
 
@@ -53,7 +53,10 @@ Every JavaScript library uses a greedy algorithm — fill each line as full as p
 | Node-native (no browser subprocess) | ✅ | — | ✅ | — |
 | Open source | ✅ | ✅ | ✅ | ✅ |
 
-¹ Puppeteer delegates shaping to the OS renderer (CoreText/DirectWrite). Quality varies by platform and cannot be controlled programmatically.
+¹ Puppeteer delegates shaping to the OS renderer (CoreText/DirectWrite). Quality varies by platform and cannot be controlled programmatically.  
+² The `FontEngine` interface is environment-agnostic, but the bundled fontkit adapter (`createMeasurer`, `FontkitEngine`) reads font files from disk via Node's `fs.openSync` and is Node-only. In a browser you must supply your own `FontEngine` implementation backed by `fetch`/`ArrayBuffer`.
+
+**Browser path.** The packages that run in a browser without modification are: `@paragraf/types`, `@paragraf/color`, `@paragraf/linebreak`, `@paragraf/layout`, `@paragraf/style`, and `@paragraf/render-core`. Pair them with a custom `FontEngine` that loads fonts via `fetch`. `@paragraf/typography`, `@paragraf/render-pdf`, `@paragraf/shaping-wasm`, `@paragraf/compile`, and `@paragraf/font-engine` (with the built-in adapters) are Node-only.
 
 **For browser-side KP line breaking** (injecting optimal word spacing back into DOM text), see [tex-linebreak](https://github.com/robertknight/tex-linebreak) by robertknight. That is a different problem — paragraf is a print and PDF pipeline, not a browser text renderer.
 
@@ -68,7 +71,7 @@ Twelve packages in strict layers. Each package only imports from layers below it
 | `0-types/` | `@paragraf/types` | Zero-dep shared interfaces: `Font`, `ComposedLine`, `FontRegistry`, `TextSpan` | both |
 | `0-color/` | `@paragraf/color` | ICC colour profiles, sRGB/Lab/CMYK spaces, LUT interpolation | both |
 | `1a-linebreak/` | `@paragraf/linebreak` | Knuth-Plass algorithm, 22-language hyphenation, traceback, node builder | both |
-| `1b-font-engine/` | `@paragraf/font-engine` | FontEngine interface, fontkit adapter, measurer factory | both |
+| `1b-font-engine/` | `@paragraf/font-engine` | FontEngine interface, fontkit adapter, measurer factory | Node² |
 | `1c-layout/` | `@paragraf/layout` | Page geometry, unit converters (mm/in/cm), named page sizes (A4, Letter…) | both |
 | `1d-style/` | `@paragraf/style` | Paragraph and character style definitions with cascading inheritance | both |
 | `2a-shaping-wasm/` | `@paragraf/shaping-wasm` | Rust/WASM OpenType shaper (rustybuzz): GSUB ligatures, GPOS kerning, sups/subs | Node |
@@ -107,19 +110,19 @@ import { writeFileSync } from 'fs';
 const template = defineTemplate({
   layout: { size: 'A4', margins: 72 },
   fonts: {
-    'SourceSerif4': {
-      regular: './fonts/SourceSerif4-Regular.ttf',
-      bold:    './fonts/SourceSerif4-Bold.ttf',
+    'LiberationSerif': {
+      regular: './fonts/LiberationSerif-Regular.ttf',
+      bold:    './fonts/LiberationSerif-Bold.ttf',
     },
   },
   styles: {
     body: {
-      font:       { family: 'SourceSerif4', size: 11 },
+      font:       { family: 'LiberationSerif', size: 11 },
       alignment:  'justified',
       lineHeight: 16,
     },
     heading: {
-      font:       { family: 'SourceSerif4', size: 18, weight: 700 },
+      font:       { family: 'LiberationSerif', size: 18, weight: 700 },
       alignment:  'left',
       lineHeight: 24,
     },
@@ -162,12 +165,12 @@ import { layoutParagraph } from '@paragraf/render-core';
 import { renderToPdf }     from '@paragraf/render-pdf';
 import { writeFileSync }   from 'fs';
 
-// 1. Register fonts
+// 1. Register fonts — LiberationSerif ships with the repository
 const registry = new Map([
   ['body', {
     id: 'body',
-    face: 'SourceSerif4',
-    filePath: './fonts/SourceSerif4-Regular.ttf',
+    face: 'LiberationSerif',
+    filePath: './fonts/LiberationSerif-Regular.ttf',
   }],
 ]);
 
@@ -260,23 +263,38 @@ writeFileSync('document.pdf', pdfBuffer);
 | `emergencyStretch` | `0` | Extra stretch budget when no solution found at tolerance |
 | `firstLineIndent` | `0` | First-line indent in points |
 | `consecutiveHyphenLimit` | `∞` | Maximum consecutive hyphenated lines |
-| `widowPenalty` | `150` | Penalty for last line alone at top of frame |
-| `orphanPenalty` | `150` | Penalty for first line alone at bottom of frame |
+| `widowPenalty` | `150` | Demerit added when the final line of a paragraph is a single word (runt line). Best-effort — does not guarantee elimination when no feasible alternative layout exists. |
+| `orphanPenalty` | `150` | Demerit added when the first line of a paragraph composes to a single word. Same caveat as `widowPenalty`. |
 
-**Language hyphenation** — 22 languages built in and managed:
+**Language hyphenation** — 22 languages built in via Knuth–Liang pattern tables:
 `en-us` `en-gb` `de` `fr` `tr` `nl` `pl` `it` `es` `sv` `no` `da` `fi`
 `hu` `cs` `sk` `ro` `hr` `sl` `lt` `lv` `et`
+
+Note: pattern-based hyphenation does not support per-document exception dictionaries or sentence-start capitalisation detection (sentence-initial words may be suppressed as if they were proper nouns).
 
 **OpenType shaping** — via rustybuzz (Rust port of HarfBuzz):
 GSUB ligatures, GPOS kerning, superscript (`sups`), subscript (`subs`),
 per-run letter-spacing, correct advance widths for all scripts
 
-**Unicode BiDi** — full bidirectional algorithm for Arabic and Hebrew mixed with LTR text
+**Unicode BiDi** — paragraph-level direction detection and visual reordering for Arabic and Hebrew mixed with LTR text. Paragraph direction follows the first-strong character heuristic; full Unicode Bidirectional Algorithm (UBA) line-level reordering is not yet implemented.
 
 **Optical margin alignment** — two-pass recomposition, punctuation hangs into margins,
 per-character protrusion table
 
 **Multi-frame document model** — multi-column, multi-frame, multi-page with baseline grid snapping
+
+---
+
+## Known limitations
+
+These are intentional gaps for the current release, not bugs:
+
+- **PDF output is vector-path, not PDF/X-conformant.** Text is rendered as filled glyph outlines. PDF/X and PDF/A require embedded fonts with `TJ` operators and ToUnicode CMaps. This is planned but not yet implemented.
+- **`widowPenalty` / `orphanPenalty` are single-line runt penalties**, not frame-level widow/orphan control. True widow/orphan handling (preventing the first or last line of a paragraph from being isolated on a different page) requires frame-level composition, which is not yet implemented. The penalty is best-effort and may not change the layout when no feasible alternative exists.
+- **No `adjdemerits`.** TeX's adjacent-line fitness-class mismatch penalty is not implemented. This means KP does not penalise jarring transitions between very tight and very loose consecutive lines.
+- **`spaceBefore` / `spaceAfter`** are defined in the style types but are not applied during composition. They are silently ignored.
+- **`hyphenation: false`** is defined in the style types but not wired through the composition pipeline. Hyphenation is always enabled.
+- **Character styles** (`CharacterStyleDef`) exist in the type system and style registry, but the compile pipeline does not yet apply them to inline text spans. They are resolved but not rendered differently.
 
 ---
 
@@ -288,7 +306,7 @@ npm test      # unit tests across all packages
 npm run build # build all packages to dist/
 ```
 
-The WASM shaper ships as a prebuilt binary (`2a-shaping-wasm/wasm/pkg/`). The Rust source is closed — only the compiled binary is in this repository. To rebuild the binary after modifying the Rust layer:
+The WASM shaper ships as a prebuilt binary (`2a-shaping-wasm/wasm/pkg/`). The Rust source is included in this repository at `2a-shaping-wasm/wasm/src/lib.rs`. To rebuild the binary after modifying the Rust layer:
 
 ```bash
 cd 2a-shaping-wasm/wasm
@@ -307,10 +325,19 @@ console.log(wasmStatus()); // { status: 'loaded' | 'absent' | 'error' }
 
 ## Status
 
-**v0.5.0 — pre-release.** The core algorithm and rendering pipeline are stable and well-tested (946 unit tests + 25 demo component tests, 23 manual output scripts). APIs may change before v1.0. Not yet published to npm — GitHub only at this stage.
+**Pre-release.** The core algorithm and rendering pipeline are stable and well-tested. APIs may change before v1.0. Not yet published to npm — GitHub only at this stage.
+
+Package versions are not yet unified across the monorepo:
+
+| Layer | Packages | Version |
+|---|---|:---:|
+| L0–L1, L4 | `@paragraf/types`, `@paragraf/linebreak`, `@paragraf/font-engine`, `@paragraf/layout`, `@paragraf/style`, `@paragraf/template`, `@paragraf/compile` | 0.5.0 |
+| L2–L3 | `@paragraf/shaping-wasm`, `@paragraf/render-core`, `@paragraf/typography`, `@paragraf/render-pdf`, `@paragraf/color`, `@paragraf/color-wasm` | 0.3.x |
+
+Versions will be unified to a single release number before the first npm publish.
 
 Planned before v1.0:
 - `@paragraf/color-wasm` — Rust/LCMS2 for ICC profiles and CMYK (replaces the pure-JS ICC implementation in `@paragraf/color`)
 
-See [`documents/`](documents/) for architecture details, IO schemas, and the document model reference.
-See [`ROADMAP.md`](ROADMAP.md) for the full product roadmap.
+See [`docs/`](docs/) for architecture details, IO schemas, and the document model reference.
+See [`docs/roadmap.md`](docs/roadmap.md) for the full product roadmap.

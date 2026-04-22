@@ -22,6 +22,7 @@ import {
   type LineMetrics,
   type TestMetrics,
 } from '../fixtures/output.js';
+import { drawTestHeader } from '../fixtures/header.js';
 import {
   MARGIN_X,
   MARGIN_TOP,
@@ -166,6 +167,7 @@ writeSvg('mt-03-arabic.svg', svg);
 const pdf = await renderToPdf(rendered, fontEngine, {
   width: PAGE_W,
   height: PAGE_H,
+  preDraw: (doc) => drawTestHeader(doc, 'MT-03'),
 });
 writePdf('mt-03-arabic.pdf', pdf);
 

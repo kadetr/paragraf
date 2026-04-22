@@ -23,6 +23,7 @@ import {
   type LineMetrics,
   type TestMetrics,
 } from '../fixtures/output.js';
+import { drawTestHeader } from '../fixtures/header.js';
 import {
   MARGIN_X,
   MARGIN_TOP,
@@ -183,6 +184,7 @@ if (process.argv[1]?.endsWith('mt-15-optical-margin.ts')) {
   const pdf = await renderToPdf(renderedOn, fontEngine, {
     width: PAGE_W,
     height: PAGE_H,
+    preDraw: (doc) => drawTestHeader(doc, 'MT-15'),
   });
   writePdf('mt-15-optical-margin.pdf', pdf);
 

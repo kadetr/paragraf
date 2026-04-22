@@ -12,11 +12,40 @@ export interface ParagraphStyleDef {
   language?: Language;
   alignment?: AlignmentMode;
   lineHeight?: number; // total line height in points (leading)
-  hyphenation?: boolean; // default true
+  /**
+   * Enable hyphenation for this paragraph (default `true`).
+   *
+   * **Note:** `hyphenation: false` is accepted by the style system but the
+   * compile pipeline does not yet suppress hyphenation based on this flag.
+   * Until this is implemented, set it to `false` only as a forward-compatible
+   * declaration — no visible effect in the current release.
+   *
+   * @deprecated Implement or remove in a future release once the compile layer
+   * respects this flag.
+   */
+  hyphenation?: boolean;
 
   // Spacing
-  spaceBefore?: number; // vertical space above paragraph in points
-  spaceAfter?: number; // vertical space below paragraph in points
+  /**
+   * Vertical space above the paragraph in points.
+   *
+   * **Note:** `spaceBefore` is stored and cascaded by the style system but the
+   * document layout layer does not yet apply it. This field has no visual effect
+   * in the current release.
+   *
+   * @deprecated Implement in `composeDocument` before advertising this feature.
+   */
+  spaceBefore?: number;
+  /**
+   * Vertical space below the paragraph in points.
+   *
+   * **Note:** `spaceAfter` is stored and cascaded by the style system but the
+   * document layout layer does not yet apply it. This field has no visual effect
+   * in the current release.
+   *
+   * @deprecated Implement in `composeDocument` before advertising this feature.
+   */
+  spaceAfter?: number;
   firstLineIndent?: number; // first-line indent in points
 
   // KP algorithm tuning

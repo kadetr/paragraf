@@ -13,6 +13,23 @@
 export function analyze_bidi(text: string): string;
 
 /**
+ * Extended BiDi analysis: paragraph base level (P2/P3 first-strong), logical
+ * runs, and a visual reorder map derived from the UBA L2 algorithm.
+ *
+ * Returns:
+ * ```json
+ * { "ok": { "paragraphLevel": 0|1, "paragraphDirection": "ltr"|"rtl",
+ *           "runs": [{"text","level","isRtl"}],
+ *           "reorderMap": [<logical run index at visual position 0>, …] } }
+ * ```
+ * or `{ "error": "…" }`.
+ *
+ * `reorderMap[i]` is the logical run index that should be rendered at visual
+ * position `i`.  For LTR text it is the identity permutation.
+ */
+export function analyze_bidi_v2(text: string): string;
+
+/**
  * Run the full Knuth-Plass forward pass (with multi-pass tolerance ladder) on
  * a serialized ParagraphInput and return JSON.
  *
@@ -24,6 +41,16 @@ export function analyze_bidi(text: string): string;
  * `{ error: "..." }` on failure.
  */
 export function compute_breakpoints_wasm(input_json: string): string;
+
+/**
+ * Create and register a parsed face from raw bytes, returning an opaque u32 handle.
+ */
+export function create_face(data: Uint8Array): number;
+
+/**
+ * Drop a registered face by handle. Unknown IDs are ignored with a warning.
+ */
+export function drop_face(id: number): void;
 
 /**
  * OS/2 font metrics scaled to pt. Mirrors TypeScript `realMetrics`.
@@ -79,6 +106,12 @@ export function round_trip_paragraph(input_json: string): string;
  * Returns `{ ok: { glyphs: ShapedGlyph[], unitsPerEm: number } }` or `{ error: "..." }`.
  */
 export function shape_text_wasm(text: string, font_json: string): string;
+
+/**
+ * Shape text using a previously created face handle.
+ * Returns `{ ok: { glyphs, unitsPerEm } }` or `{ error: "..." }`.
+ */
+export function shape_with_face(id: number, text: string, font_json: string): string;
 
 /**
  * Space glyph metrics in pt: natural width, stretch, shrink.

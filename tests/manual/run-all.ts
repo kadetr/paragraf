@@ -37,6 +37,13 @@ const ALL_SCRIPTS = [
   'mt-21-looseness',
   'mt-22-alignment-modes',
   'mt-23-selectable-pdf',
+  'mt-24-color-profile-inspect',
+  'mt-25-color-swatch-ts',
+  'mt-26-color-wasm-parity',
+  'mt-27-color-rendering-intents',
+  'mt-28-color-pdf-fills',
+  'mt-29-color-cmyk-gap',
+  'mt-40-verapdf',
 ];
 
 const filter = process.argv.slice(2);

@@ -97,6 +97,8 @@ pub struct ParagraphInput {
     pub widow_penalty: Option<f64>,
     #[serde(rename = "orphanPenalty", skip_serializing_if = "Option::is_none")]
     pub orphan_penalty: Option<f64>,
+    #[serde(rename = "adjDemerits", skip_serializing_if = "Option::is_none")]
+    pub adj_demerits: Option<f64>,
 }
 
 /// Internal forward-pass state; stored in a Vec<BreakpointNode> arena.
@@ -110,6 +112,7 @@ pub struct BreakpointNode {
     pub previous: Option<usize>,
     pub flagged: bool,
     pub consecutive_hyphens: u32,
+    pub fitness_class: u8,
 }
 
 /// One break in the traceback result. Mirrors TypeScript `LineBreak` in traceback.ts.
@@ -191,7 +194,24 @@ fn is_feasible(ratio: f64, tolerance: f64) -> bool {
 }
 
 fn compute_badness(ratio: f64) -> f64 {
-    (100.0 * ratio.abs().powi(3)).round()
+    f64::min(10000.0, (100.0 * ratio.abs().powi(3)).round())
+}
+
+/// Maps an adjustment ratio to one of TeX's four fitness classes:
+///   0 = tight      (r < -0.5)
+///   1 = normal     (-0.5 ≤ r ≤ 0.5)
+///   2 = loose      (0.5 < r ≤ 1.0)
+///   3 = very loose (r > 1.0)
+fn fitness_class_of(ratio: f64) -> u8 {
+    if ratio < -0.5 {
+        0
+    } else if ratio <= 0.5 {
+        1
+    } else if ratio <= 1.0 {
+        2
+    } else {
+        3
+    }
 }
 
 fn compute_demerits(badness: f64, penalty: f64, prev_flagged: bool, curr_flagged: bool) -> f64 {
@@ -268,6 +288,7 @@ fn forward_pass(
     widow_penalty: f64,
     orphan_penalty: f64,
     line_widths: &[f64],
+    adj_demerits: f64,
 ) -> (Vec<BreakpointNode>, Vec<usize>) {
     let mut arena: Vec<BreakpointNode> = Vec::new();
     arena.push(BreakpointNode {
@@ -278,6 +299,7 @@ fn forward_pass(
         previous: None,
         flagged: false,
         consecutive_hyphens: 0,
+        fitness_class: 1, // initial node is treated as normal (ratio 0)
     });
     let mut active: Vec<usize> = vec![0];
 
@@ -297,7 +319,7 @@ fn forward_pass(
 
         for &a_idx in &active {
             // Copy fields before arena.push to satisfy the borrow checker
-            let (a_line, a_td, a_flagged, a_ch, a_pos, a_prev) = {
+            let (a_line, a_td, a_flagged, a_ch, a_pos, a_prev, a_fc) = {
                 let a = &arena[a_idx];
                 (
                     a.line,
@@ -306,6 +328,7 @@ fn forward_pass(
                     a.consecutive_hyphens,
                     a.position,
                     a.previous,
+                    a.fitness_class,
                 )
             };
 
@@ -328,6 +351,13 @@ fn forward_pass(
                 let badness = compute_badness(ratio);
                 let mut d = compute_demerits(badness, penalty_value, a_flagged, is_flagged);
 
+                if adj_demerits > 0.0 {
+                    let fc = fitness_class_of(ratio);
+                    if (fc as i16 - a_fc as i16).abs() > 1 {
+                        d += adj_demerits;
+                    }
+                }
+
                 if is_forced && widow_penalty > 0.0 {
                     if count_content_boxes(nodes, a_pos, i) == 1 {
                         d += widow_penalty;
@@ -346,6 +376,7 @@ fn forward_pass(
                     previous: Some(a_idx),
                     flagged: is_flagged,
                     consecutive_hyphens: consec,
+                    fitness_class: fitness_class_of(ratio),
                 };
                 arena.push(cand);
                 let cand_idx = arena.len() - 1;
@@ -388,6 +419,7 @@ fn run_forward_pass(
     let orphan_p = para.orphan_penalty.unwrap_or(0.0);
 
     let sums = build_prefix_sums(nodes);
+    let adj_demerits = para.adj_demerits.unwrap_or(0.0);
 
     let (mut arena, mut active) = forward_pass(
         nodes,
@@ -399,6 +431,7 @@ fn run_forward_pass(
         widow_p,
         orphan_p,
         line_widths,
+        adj_demerits,
     );
     let mut used_emergency = false;
 
@@ -414,6 +447,7 @@ fn run_forward_pass(
                 widow_p,
                 orphan_p,
                 line_widths,
+                adj_demerits,
             );
             arena = a2;
             active = act2;
@@ -469,6 +503,7 @@ pub fn compute_breakpoints_wasm(input_json: &str) -> String {
                 "ratio":              n.ratio,
                 "flagged":            n.flagged,
                 "consecutiveHyphens": n.consecutive_hyphens,
+                "fitnessClass":       n.fitness_class,
                 "previousIndex":      n.previous,
             })
         })
@@ -558,10 +593,15 @@ fn deserialize_nodes_binary(f64s: &[f64], u8s: &[u8]) -> Result<Vec<Node>, Strin
 
         match node_type {
             0 => {
-                // Box: just width
+                // Box: width, is_content flag in bit 4
+                let is_content = (type_byte >> 4) & 0x01 != 0;
                 nodes.push(Node::Box(BoxNode {
                     width,
-                    content: String::new(),
+                    content: if is_content {
+                        "x".to_string()
+                    } else {
+                        String::new()
+                    },
                     font: Font {
                         id: String::new(),
                         size: 0.0,
@@ -669,6 +709,7 @@ pub fn traceback_wasm_binary(
         } else {
             None
         },
+        adj_demerits: None,
     };
 
     let (arena, active, used_emergency) = match run_forward_pass(&para) {
@@ -1322,4 +1363,139 @@ pub fn analyze_bidi(text: &str) -> String {
     });
 
     serde_json::to_string(&serde_json::json!({ "ok": runs })).unwrap()
+}
+
+// ─── Phase 0 — UBA L2 helper ──────────────────────────────────────────────────
+
+/// Compute visual display order of runs using the UBA L2 reversal algorithm.
+/// Returns `order` where `order[i]` is the logical run index to display at visual
+/// position `i`.  For a pure LTR paragraph all levels are 0 and `order` is the
+/// identity permutation.
+fn visual_order_of_runs(run_levels: &[u8]) -> Vec<usize> {
+    let n = run_levels.len();
+    if n == 0 {
+        return vec![];
+    }
+    let mut order: Vec<usize> = (0..n).collect();
+    let max_level = run_levels.iter().copied().max().unwrap_or(0);
+    // For each level from max down to 1 reverse every maximal contiguous subsequence
+    // of runs with level >= threshold (UBA section L2).
+    for level in (1..=max_level).rev() {
+        let mut i = 0;
+        while i < n {
+            if run_levels[i] >= level {
+                let start = i;
+                while i < n && run_levels[i] >= level {
+                    i += 1;
+                }
+                order[start..i].reverse();
+            } else {
+                i += 1;
+            }
+        }
+    }
+    order
+}
+
+/// Extended BiDi analysis: paragraph base level (P2/P3 first-strong), logical
+/// runs, and a visual reorder map derived from the UBA L2 algorithm.
+///
+/// Returns:
+/// ```json
+/// { "ok": { "paragraphLevel": 0|1, "paragraphDirection": "ltr"|"rtl",
+///           "runs": [{"text","level","isRtl"}],
+///           "reorderMap": [<logical run index at visual position 0>, …] } }
+/// ```
+/// or `{ "error": "…" }`.
+///
+/// `reorderMap[i]` is the logical run index that should be rendered at visual
+/// position `i`.  For LTR text it is the identity permutation.
+#[wasm_bindgen]
+pub fn analyze_bidi_v2(text: &str) -> String {
+    if text.is_empty() {
+        return serde_json::to_string(&serde_json::json!({
+            "ok": {
+                "paragraphLevel": 0,
+                "paragraphDirection": "ltr",
+                "runs": [],
+                "reorderMap": []
+            }
+        }))
+        .unwrap();
+    }
+
+    let bidi = BidiInfo::new(text, None);
+    let levels = &bidi.levels;
+
+    // Paragraph base level from first paragraph (P2/P3 first-strong detection).
+    let para_level: u8 = bidi
+        .paragraphs
+        .first()
+        .map(|p| p.level.number())
+        .unwrap_or(0);
+    let para_dir = if para_level % 2 == 1 { "rtl" } else { "ltr" };
+
+    // char_bytes[i] = byte offset of the i-th Unicode scalar value.
+    let char_bytes: Vec<usize> = text.char_indices().map(|(b, _)| b).collect();
+
+    // Assign each grapheme cluster the BiDi level of its first scalar value.
+    let clusters: Vec<(usize, unicode_bidi::Level)> = text
+        .grapheme_indices(true)
+        .map(|(g_start, _g_str)| {
+            let ci = char_bytes.partition_point(|&b| b < g_start);
+            let level = if ci < levels.len() {
+                levels[ci]
+            } else {
+                unicode_bidi::Level::ltr()
+            };
+            (g_start, level)
+        })
+        .collect();
+
+    if clusters.is_empty() {
+        return serde_json::to_string(&serde_json::json!({
+            "ok": {
+                "paragraphLevel": para_level,
+                "paragraphDirection": para_dir,
+                "runs": [],
+                "reorderMap": []
+            }
+        }))
+        .unwrap();
+    }
+
+    let mut runs: Vec<BidiRun> = Vec::new();
+    let mut run_start = clusters[0].0;
+    let mut cur_level = clusters[0].1;
+
+    for &(g_start, level) in clusters.iter().skip(1) {
+        if level != cur_level {
+            runs.push(BidiRun {
+                text: text[run_start..g_start].to_string(),
+                level: cur_level.number(),
+                is_rtl: cur_level.is_rtl(),
+            });
+            run_start = g_start;
+            cur_level = level;
+        }
+    }
+    runs.push(BidiRun {
+        text: text[run_start..].to_string(),
+        level: cur_level.number(),
+        is_rtl: cur_level.is_rtl(),
+    });
+
+    // reorderMap: visual display order derived from the UBA L2 algorithm.
+    let run_levels: Vec<u8> = runs.iter().map(|r| r.level).collect();
+    let reorder_map = visual_order_of_runs(&run_levels);
+
+    serde_json::to_string(&serde_json::json!({
+        "ok": {
+            "paragraphLevel": para_level,
+            "paragraphDirection": para_dir,
+            "runs": runs,
+            "reorderMap": reorder_map
+        }
+    }))
+    .unwrap()
 }

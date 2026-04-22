@@ -33,9 +33,13 @@ describe('deriveMinLeft', () => {
 });
 
 describe('deriveMinRight', () => {
-  it('mirrors deriveMinLeft', () => {
-    expect(deriveMinRight(12)).toBe(deriveMinLeft(12));
-    expect(deriveMinRight(24)).toBe(deriveMinLeft(24));
+  it('is one larger than deriveMinLeft', () => {
+    expect(deriveMinRight(12)).toBe(deriveMinLeft(12) + 1);
+    expect(deriveMinRight(24)).toBe(deriveMinLeft(24) + 1);
+  });
+
+  it('never returns less than 3', () => {
+    expect(deriveMinRight(1)).toBeGreaterThanOrEqual(3);
   });
 });
 
@@ -313,5 +317,79 @@ describe('hyphenateWord — soft hyphen preservation', () => {
     });
     expect(result[0].hasSoftHyphen).toBe(true);
     expect(result[2].hasSoftHyphen).toBe(true);
+  });
+});
+
+// ─── Exception dictionary (#25) ──────────────────────────────────────────────
+
+describe('exceptions dictionary', () => {
+  it('false entry prevents hyphenation regardless of patterns', async () => {
+    // "typography" would normally be hyphenated by the en-us patterns
+    const result = hyphenateWord('typography', {
+      ...DEFAULT_HYPHENATE_OPTIONS,
+      exceptions: { typography: false },
+    });
+    expect(result.hyphenable).toBe(false);
+    expect(result.fragments).toEqual(['typography']);
+  });
+
+  it('string[] entry overrides pattern-based fragments', async () => {
+    const result = hyphenateWord('typography', {
+      ...DEFAULT_HYPHENATE_OPTIONS,
+      exceptions: { typography: ['ty', 'pog', 'raphy'] },
+    });
+    expect(result.hyphenable).toBe(true);
+    expect(result.fragments).toEqual(['ty', 'pog', 'raphy']);
+  });
+
+  it('exception lookup is case-insensitive', async () => {
+    const result = hyphenateWord('Typography', {
+      ...DEFAULT_HYPHENATE_OPTIONS,
+      processCapitalized: true,
+      exceptions: { typography: false },
+    });
+    expect(result.hyphenable).toBe(false);
+  });
+
+  it('single-fragment exception treated as no-break', async () => {
+    // A single-element override means no break points — word stays whole
+    const result = hyphenateWord('typography', {
+      ...DEFAULT_HYPHENATE_OPTIONS,
+      exceptions: { typography: ['typography'] },
+    });
+    // Only one fragment → not hyphenable (falls through to pattern lookup or single-frag)
+    // The single-element array branch is not > 1, so pattern hyphenation runs instead
+    // Verify original is unchanged and hasSoftHyphen is false
+    expect(result.hasSoftHyphen).toBe(false);
+  });
+
+  it('absent exception key uses pattern hyphenation normally', async () => {
+    const result = hyphenateWord('typography', {
+      ...DEFAULT_HYPHENATE_OPTIONS,
+      exceptions: { unrelated: false },
+    });
+    // pattern hyphenation should produce multiple fragments
+    expect(result.fragments.length).toBeGreaterThan(1);
+  });
+
+  it('no exceptions field — no behavioural change', async () => {
+    const withoutEx = hyphenateWord('typography', DEFAULT_HYPHENATE_OPTIONS);
+    const withEmptyEx = hyphenateWord('typography', {
+      ...DEFAULT_HYPHENATE_OPTIONS,
+      exceptions: {},
+    });
+    expect(withoutEx.fragments).toEqual(withEmptyEx.fragments);
+    expect(withoutEx.hyphenable).toBe(withEmptyEx.hyphenable);
+  });
+
+  it('hyphenateParagraph passes exceptions through to each word', async () => {
+    const result = hyphenateParagraph('typography and presentation', {
+      ...DEFAULT_HYPHENATE_OPTIONS,
+      exceptions: { typography: false, presentation: ['pre', 'sen', 'tation'] },
+    });
+    const typo = result.find((w) => w.original === 'typography')!;
+    expect(typo.hyphenable).toBe(false);
+    const pres = result.find((w) => w.original === 'presentation')!;
+    expect(pres.fragments).toEqual(['pre', 'sen', 'tation']);
   });
 });
