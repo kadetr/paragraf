@@ -216,7 +216,7 @@ if (process.argv[1]?.endsWith('mt-15-optical-margin.ts')) {
     extra: {
       omaOffVariance: varOff,
       omaOnVariance: varOn,
-      omaReduced: varOn <= varOff,
+      omaIncreasedVariance: varOn > varOff,
     },
   };
   writeJson('mt-15-optical-margin.metrics.json', metrics);

@@ -861,3 +861,207 @@ describe('ParagraphInput — lineHeight override', () => {
     }
   });
 });
+
+// ─── Corner cases — #63 ───────────────────────────────────────────────────────
+
+describe('corner cases — empty and minimal paragraphs', () => {
+  it('empty text produces 1 line with an empty word (current boundary behaviour)', () => {
+    // The KP node sequence always contains the terminal forced-break node, so an
+    // empty text string still yields one line with a single empty word. This test
+    // documents the current behaviour so a future change to return 0 lines is
+    // explicitly detectable.
+    const out = composer.compose({
+      text: '',
+      font: FONT_REGULAR,
+      lineWidth: 300,
+    });
+    expect(out.lines).toHaveLength(1);
+    expect(out.lines[0].words).toEqual(['']);
+  });
+
+  it('whitespace-only text produces 1 line (same boundary behaviour as empty)', () => {
+    const out = composer.compose({
+      text: '   ',
+      font: FONT_REGULAR,
+      lineWidth: 300,
+    });
+    expect(out.lines).toHaveLength(1);
+  });
+
+  it('single word produces exactly 1 line', () => {
+    const out = composer.compose({
+      text: 'Hello',
+      font: FONT_REGULAR,
+      lineWidth: 300,
+    });
+    expect(out.lines).toHaveLength(1);
+    expect(out.lines[0].words).toEqual(['Hello']);
+  });
+
+  it('single word with all-uppercase produces 1 line', () => {
+    const out = composer.compose({
+      text: 'HELLO',
+      font: FONT_REGULAR,
+      lineWidth: 300,
+    });
+    expect(out.lines).toHaveLength(1);
+  });
+
+  it('all-uppercase multi-word text composes without error', () => {
+    const out = composer.compose({
+      text: 'THE QUICK BROWN FOX JUMPS OVER THE LAZY DOG',
+      font: FONT_REGULAR,
+      lineWidth: 250,
+    });
+    expect(out.lineCount).toBeGreaterThan(0);
+    out.lines.forEach((l) => {
+      expect(Number.isFinite(l.ratio)).toBe(true);
+      expect(l.words.length).toBeGreaterThan(0);
+    });
+  });
+});
+
+describe('corner cases — empty spans input', () => {
+  it('empty spans array produces 1 line with an empty word (mirrors empty text)', () => {
+    const out = composer.compose({
+      spans: [],
+      font: FONT_REGULAR,
+      lineWidth: 300,
+    });
+    expect(out.lines).toHaveLength(1);
+    expect(out.lines[0].words).toEqual(['']);
+  });
+
+  it('single empty-string span produces 0 lines', () => {
+    const out = composer.compose({
+      spans: [{ text: '', font: FONT_REGULAR }],
+      font: FONT_REGULAR,
+      lineWidth: 300,
+    });
+    expect(out.lines).toHaveLength(0);
+  });
+
+  it('span with single word produces 1 line', () => {
+    const out = composer.compose({
+      spans: [{ text: 'Hello', font: FONT_REGULAR }],
+      font: FONT_REGULAR,
+      lineWidth: 300,
+    });
+    expect(out.lines).toHaveLength(1);
+  });
+});
+
+describe('corner cases — RTL with embedded LTR digits', () => {
+  it('LTR paragraph with embedded digits composes without NaN ratios', () => {
+    // Digits inside LTR text — digit runs are LTR within any direction paragraph.
+    // This verifies the pipeline handles digit-only words without NaN/Infinity.
+    const out = composer.compose({
+      text: 'The price is 1234 dollars and 56 cents per unit',
+      font: FONT_REGULAR,
+      lineWidth: 200,
+    });
+    expect(out.lineCount).toBeGreaterThan(0);
+    out.lines.forEach((l) => {
+      expect(Number.isFinite(l.ratio)).toBe(true);
+      l.words.forEach((w) => expect(w).toBeTruthy());
+    });
+  });
+
+  it('paragraph with mixed numbers and punctuation composes cleanly', () => {
+    const out = composer.compose({
+      text: 'Items: 1, 2, 3. Total: 100.00. Ref: A-23/B.',
+      font: FONT_REGULAR,
+      lineWidth: 150,
+    });
+    expect(out.lineCount).toBeGreaterThan(0);
+    out.lines.forEach((l) => expect(Number.isFinite(l.ratio)).toBe(true));
+  });
+});
+
+describe('corner cases — multi-font spans across hyphen fragments', () => {
+  it('span boundary mid-word: each fragment carries the correct font', () => {
+    // "inter" in regular, "national" in bold — forces hyphenation across fonts
+    const out = composer.compose({
+      spans: [
+        { text: 'inter', font: FONT_REGULAR },
+        { text: 'national', font: FONT_BOLD },
+      ],
+      font: FONT_REGULAR,
+      lineWidth: 60, // narrow enough to trigger a hyphen break
+      tolerance: 8,
+      emergencyStretch: 20,
+    });
+    expect(out.lineCount).toBeGreaterThan(0);
+    // All wordRun segments must have a defined, finite-size font
+    out.lines.forEach((l) =>
+      l.wordRuns.flat().forEach((seg) => {
+        expect(seg.font).toBeDefined();
+        expect(seg.font.size).toBeGreaterThan(0);
+      }),
+    );
+  });
+
+  it('three-font span across a single word: all fonts survive composition', () => {
+    const out = composer.compose({
+      spans: [
+        { text: 'A', font: FONT_REGULAR },
+        { text: 'B', font: FONT_BOLD },
+        { text: 'C', font: FONT_REGULAR },
+      ],
+      font: FONT_REGULAR,
+      lineWidth: 400,
+    });
+    const allFonts = out.lines.flatMap((l) =>
+      l.wordRuns.flat().map((s) => s.font.id),
+    );
+    expect(allFonts).toContain(FONT_REGULAR.id);
+    expect(allFonts).toContain(FONT_BOLD.id);
+  });
+
+  it('multi-font spans produce no undefined wordRun entries', () => {
+    const out = composer.compose({
+      spans: [
+        { text: 'The quick ', font: FONT_REGULAR },
+        { text: 'brown fox ', font: FONT_BOLD },
+        { text: 'jumps over', font: FONT_REGULAR },
+      ],
+      font: FONT_REGULAR,
+      lineWidth: 120,
+      emergencyStretch: 20,
+    });
+    out.lines.forEach((l) =>
+      l.wordRuns.forEach((runs) => {
+        expect(runs).toBeDefined();
+        runs.forEach((seg) => {
+          expect(seg).toBeDefined();
+          expect(seg.font).toBeDefined();
+        });
+      }),
+    );
+  });
+});
+
+describe('corner cases — single-line edge cases', () => {
+  it('text that fits in a single word on a very wide line: last-line ratio is 0', () => {
+    const out = composer.compose({
+      text: 'Hi',
+      font: FONT_REGULAR,
+      lineWidth: 1000,
+    });
+    expect(out.lines).toHaveLength(1);
+    expect(out.lines[0].ratio).toBe(0);
+  });
+
+  it('lineWidths array shorter than line count falls back to lineWidth', () => {
+    // Provide per-line widths for fewer lines than the paragraph produces.
+    // Should not throw; extra lines use the base lineWidth.
+    const out = composer.compose({
+      text: TEXT,
+      font: FONT_REGULAR,
+      lineWidth: 250,
+      lineWidths: [200], // only first line narrowed
+    });
+    expect(out.lineCount).toBeGreaterThan(1);
+    out.lines.forEach((l) => expect(Number.isFinite(l.ratio)).toBe(true));
+  });
+});

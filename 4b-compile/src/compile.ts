@@ -44,8 +44,7 @@ import type { FontEngine } from '@paragraf/font-engine';
 import { createMeasurer } from '@paragraf/font-engine';
 import { renderDocumentToPdf } from '@paragraf/render-pdf';
 import type { OutputIntent } from '@paragraf/render-pdf';
-import { loadColorWasm, createWasmTransform } from '@paragraf/color-wasm';
-import { loadBuiltinSrgb } from '@paragraf/color';
+import { loadBuiltinSrgb, createTransform } from '@paragraf/color';
 import type { ColorTransform } from '@paragraf/color';
 
 import type { CompileOptions, CompileResult } from './types.js';
@@ -300,9 +299,17 @@ export async function compile<T = unknown>(
   // output === 'pdf'
   let colorTransform: ColorTransform | undefined;
   if (outputIntent) {
-    const wasm = loadColorWasm();
     const srgb = await loadBuiltinSrgb();
-    colorTransform = createWasmTransform(wasm, srgb, outputIntent.profile);
+    // Try the WASM-accelerated path (optional dependency). Fall back to the
+    // pure-TS createTransform when @paragraf/color-wasm is not installed.
+    try {
+      const { loadColorWasm, createWasmTransform } =
+        await import('@paragraf/color-wasm');
+      const wasm = loadColorWasm();
+      colorTransform = createWasmTransform(wasm, srgb, outputIntent.profile);
+    } catch {
+      colorTransform = createTransform(srgb, outputIntent.profile);
+    }
   }
 
   const pdfBuf = await renderDocumentToPdf(renderedDoc, fontEngine, {

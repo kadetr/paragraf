@@ -420,6 +420,22 @@ export const configureMeasureCache = (
   return { ..._measureCacheConfig };
 };
 
+// ─── OMA helpers ─────────────────────────────────────────────────────────────
+
+/**
+ * Return true when two composed paragraphs have identical break structure:
+ * the same number of lines with the same words on each line.
+ * Used for OMA convergence detection.
+ */
+function _omaBreaksMatch(a: ComposedParagraph, b: ComposedParagraph): boolean {
+  if (a.length !== b.length) return false;
+  return a.every(
+    (la, i) =>
+      la.words.length === b[i].words.length &&
+      la.words.every((w, j) => w === b[i].words[j]),
+  );
+}
+
 // ─── Span helpers ─────────────────────────────────────────────────────────────
 
 const mapFragmentsToSegments = (
@@ -741,24 +757,34 @@ export const createParagraphComposer = async (
       direction,
     );
 
-    // Optical Margin Alignment — two-pass recompose.
-    // Pass 1 lines are used to compute per-line protrusion amounts.
-    // Pass 2 recomposes with wider lineWidths; xOffsets are applied afterwards.
+    // Optical Margin Alignment — converging recompose.
+    // We iterate until break positions stabilise (or reach MAX_OMA_PASSES).
+    // Each pass uses the protrusion amounts from the current line boundaries
+    // to widen lineWidths, then recomposes. When two successive passes produce
+    // the same word-level break structure the OMA widths and xOffsets are
+    // self-consistent and we stop. In practice this converges in ≤ 2 passes.
     if (
       input.opticalMarginAlignment &&
       direction !== 'rtl' &&
       lines.length > 0
     ) {
-      const adjustedInput = buildOmaInput(input, lines, measurer);
-      const pass2 = compose(adjustedInput);
-      // Compute xOffsets from pass-2 lines: pass 2 already has correct break
-      // positions, so its first/last characters are the true margin characters.
+      const MAX_OMA_PASSES = 5;
+      let omaLines = lines;
+
+      for (let pass = 0; pass < MAX_OMA_PASSES; pass++) {
+        const omaInput = buildOmaInput(input, omaLines, measurer);
+        const recomposed = compose(omaInput);
+        const converged = _omaBreaksMatch(omaLines, recomposed.lines);
+        omaLines = recomposed.lines;
+        if (converged) break;
+      }
+
       const { xOffsets, rightProtrusions } = buildOmaAdjustments(
-        pass2.lines,
+        omaLines,
         lineWidth,
         measurer,
       );
-      lines = pass2.lines.map((line, i) => ({
+      lines = omaLines.map((line, i) => ({
         ...line,
         xOffset: xOffsets[i] ?? 0,
         rightProtrusion: rightProtrusions[i] ?? 0,
