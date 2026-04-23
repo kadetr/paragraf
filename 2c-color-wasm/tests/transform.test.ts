@@ -63,16 +63,12 @@ describe('WasmColorTransform.apply', () => {
   });
 });
 
-// ─── WASM output vs known XYZ values ─────────────────────────────────────────
+// ─── WASM / pure-TS parity ───────────────────────────────────────────────────
 //
-// NOTE: the WASM binary currently implements only the source→PCS (XYZ) step,
-// i.e. the old MatrixTrcTransform behavior. The pure-TS createTransform was
-// updated to do the full round-trip (source→XYZ→dest device-space), so the
-// two no longer agree for white/colored inputs. The WASM binary must be rebuilt
-// from Rust once the inverse-matrix path is ported (workId 013 / WASM update).
-//
-// These tests verify WASM behavior against the expected sRGB→XYZ(D50) values
-// so we catch regressions in the binary without relying on createTransform parity.
+// These tests verify that the WASM transform matches the pure-TS
+// `createTransform` behavior for full source→XYZ→dest round-trips.
+// In particular, sRGB→sRGB should behave as an identity transform for
+// canonical inputs such as black and white.
 
 describe('WasmColorTransform parity with pure-TS createTransform', () => {
   it('sRGB→sRGB black [0,0,0] → [0,0,0] (both paths agree on black)', () => {

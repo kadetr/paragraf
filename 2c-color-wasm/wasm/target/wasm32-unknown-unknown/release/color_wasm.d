@@ -1,1 +1,0 @@
-/Users/kemaldenizteket/cs/2026-projects/paragraf/2c-color-wasm/wasm/target/wasm32-unknown-unknown/release/color_wasm.wasm: /Users/kemaldenizteket/cs/2026-projects/paragraf/2c-color-wasm/wasm/src/lib.rs

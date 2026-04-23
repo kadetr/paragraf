@@ -26,6 +26,14 @@ export interface HyphenateOptions {
   exceptions?: ExceptionDictionary;
 }
 
+/** Internal-only extension of HyphenateOptions used within hyphenateParagraph
+ *  to thread sentence-boundary context through to shouldSkip.
+ *  Not part of the public API — never exposed to callers.
+ */
+interface HyphenateOptionsInternal extends HyphenateOptions {
+  _prevWord?: string;
+}
+
 export interface HyphenatedWord {
   original: string;
   fragments: string[];
@@ -124,7 +132,7 @@ const extractSoftHyphenFragments = (word: string): string[] | null => {
 
 const shouldSkip = (
   word: string,
-  opts: HyphenateOptions,
+  opts: HyphenateOptionsInternal,
   isFirstWord: boolean,
 ): boolean => {
   // strip soft hyphens before length/pattern checks
@@ -137,9 +145,8 @@ const shouldSkip = (
     // Allow capitalised words at a sentence start (after .  !  ?  with optional
     // closing punctuation).  This prevents "Mr. Smith went…" from skipping
     // hyphenation on "Smith" because it happens to start with a capital.
-    const prevWord = (opts as any)._prevWord as string | undefined;
     const isSentenceStart =
-      prevWord !== undefined && /[.!?]['"\)\]\}]*$/.test(prevWord);
+      opts._prevWord !== undefined && /[.!?]['"\)\]\}]*$/.test(opts._prevWord);
     if (!isSentenceStart) return true;
   }
   return false;
@@ -254,8 +261,8 @@ export const hyphenateParagraph = (
   const words = text.trim().split(/\s+/);
   return words.map((word, index) => {
     // Pass the previous word so shouldSkip can detect sentence boundaries.
-    const optsWithPrev: HyphenateOptions =
-      index > 0 ? { ...(opts as any), _prevWord: words[index - 1] } : opts;
+    const optsWithPrev: HyphenateOptionsInternal =
+      index > 0 ? { ...opts, _prevWord: words[index - 1] } : opts;
     return hyphenateWord(
       word,
       optsWithPrev,

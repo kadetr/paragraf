@@ -4,6 +4,7 @@ dist/
 *.zip
 .DS_Store
 2a-shaping-wasm/wasm/target/
+2c-color-wasm/wasm/target/
 coverage/
 tests/manual/outputs/
 output/

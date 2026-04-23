@@ -216,19 +216,19 @@ function nearestWeight(
 
   let preference: number[];
   if (target === 400) {
-    // 400 → try 500 first, then ascending above 500, then descending below 400.
+    // 400 → check 400, then 500, then descending below 400, then ascending above 500.
     const above500 = sorted.filter((w) => w > 500);
     const below400 = sorted.filter((w) => w < 400).reverse();
     const exact400 = sorted.filter((w) => w === 400);
     const exact500 = sorted.filter((w) => w === 500);
-    preference = [...exact400, ...exact500, ...above500, ...below400];
+    preference = [...exact400, ...exact500, ...below400, ...above500];
   } else if (target === 500) {
-    // 500 → try 400 first, then ascending above 500, then descending below 400.
+    // 500 → check 500, then 400, then descending below 400, then ascending above 500.
     const above500 = sorted.filter((w) => w > 500);
     const below400 = sorted.filter((w) => w < 400).reverse();
     const exact400 = sorted.filter((w) => w === 400);
     const exact500 = sorted.filter((w) => w === 500);
-    preference = [...exact500, ...exact400, ...above500, ...below400];
+    preference = [...exact500, ...exact400, ...below400, ...above500];
   } else if (target < 400) {
     // Below 400: descending to 100, then ascending to 900.
     const below = sorted.filter((w) => w <= target).reverse();

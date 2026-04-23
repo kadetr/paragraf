@@ -275,7 +275,7 @@ export interface Paragraph {
    * Extra demerits added when adjacent lines are in fitness classes more than 1
    * apart (e.g. tight followed by loose). Prevents visually jarring density
    * transitions. TeX default is 10000; omit or set 0 to disable.
-   * @since v0.7
+   * @since v0.6
    */
   adjDemerits?: number;
 }
