@@ -159,8 +159,7 @@ for (const pair of PAIRS) {
     // Swatch rows
     const startY = MARGIN_TOP + 62;
     SWATCHES.forEach(({ name, rgb }, i) => {
-      const transform2 = createTransform(pair.src, pair.dst);
-      const out = transform2.apply(rgb);
+      const out = transform.apply(rgb);
       const inHex = toHex(rgb);
       const outHex2 =
         out.length >= 3 ? toHex([out[0], out[1], out[2]]) : '#888888';

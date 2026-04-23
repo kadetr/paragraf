@@ -244,10 +244,12 @@ function nearestWeight(
     const below = sorted.filter((w) => w < target).reverse();
     preference = [...above, ...below];
   } else {
-    // 401–499: descending from target to 400, then ascending above target.
-    const below = sorted.filter((w) => w <= target).reverse();
+    // 401–499: descend from target down to 400 only (do not go below 400),
+    // then ascend above target. CSS Fonts 4 §10.4.3.
+    const below = sorted.filter((w) => w >= 400 && w <= target).reverse();
     const above = sorted.filter((w) => w > target);
-    preference = [...below, ...above];
+    const belowFloor = sorted.filter((w) => w < 400).reverse();
+    preference = [...below, ...above, ...belowFloor];
   }
 
   const chosen = preference[0] ?? sorted[0]!;

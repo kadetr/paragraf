@@ -180,11 +180,16 @@ function applyFillTransform(
       Math.min(Math.max(out[3] ?? 0, 0), 1),
     ];
   }
-  // RGB output: convert [0,1] to a CSS hex string.
-  const r = Math.round(Math.min(Math.max(out[0] ?? 0, 0), 1) * 255);
-  const g = Math.round(Math.min(Math.max(out[1] ?? 0, 0), 1) * 255);
-  const b = Math.round(Math.min(Math.max(out[2] ?? 0, 0), 1) * 255);
-  return `#${r.toString(16).padStart(2, '0')}${g.toString(16).padStart(2, '0')}${b.toString(16).padStart(2, '0')}`;
+  if (out.length === 3) {
+    // RGB output: convert [0,1] to a CSS hex string.
+    const r = Math.round(Math.min(Math.max(out[0] ?? 0, 0), 1) * 255);
+    const g = Math.round(Math.min(Math.max(out[1] ?? 0, 0), 1) * 255);
+    const b = Math.round(Math.min(Math.max(out[2] ?? 0, 0), 1) * 255);
+    return `#${r.toString(16).padStart(2, '0')}${g.toString(16).padStart(2, '0')}${b.toString(16).padStart(2, '0')}`;
+  }
+  // Unsupported channel count (e.g. Gray=1, Lab=3 without a known mapping):
+  // pass through the original fill unchanged to avoid mis-encoding.
+  return fill;
 }
 
 // ─── Shared drawing helper ────────────────────────────────────────────────────

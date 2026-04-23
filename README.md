@@ -328,17 +328,12 @@ console.log(wasmStatus()); // { status: 'loaded' | 'absent' | 'error' }
 
 **Pre-release.** The core algorithm and rendering pipeline are stable and well-tested. APIs may change before v1.0. Not yet published to npm — GitHub only at this stage.
 
-Package versions are not yet unified across the monorepo:
+All packages are at **v0.6.0**.
 
-| Layer | Packages | Version |
-|---|---|:---:|
-| L0–L1, L4 | `@paragraf/types`, `@paragraf/linebreak`, `@paragraf/font-engine`, `@paragraf/layout`, `@paragraf/style`, `@paragraf/template`, `@paragraf/compile` | 0.5.0 |
-| L2–L3 | `@paragraf/shaping-wasm`, `@paragraf/render-core`, `@paragraf/typography`, `@paragraf/render-pdf`, `@paragraf/color`, `@paragraf/color-wasm` | 0.3.x |
-
-Versions will be unified to a single release number before the first npm publish.
-
-Planned before v1.0:
-- `@paragraf/color-wasm` — Rust/LCMS2 for ICC profiles and CMYK (replaces the pure-JS ICC implementation in `@paragraf/color`)
+| Layer | Packages |
+|---|---|
+| L0–L1, L4 | `@paragraf/types`, `@paragraf/linebreak`, `@paragraf/font-engine`, `@paragraf/layout`, `@paragraf/style`, `@paragraf/template`, `@paragraf/compile` |
+| L2–L3 | `@paragraf/shaping-wasm`, `@paragraf/render-core`, `@paragraf/typography`, `@paragraf/render-pdf`, `@paragraf/color`, `@paragraf/color-wasm` |
 
 See [`docs/`](docs/) for architecture details, IO schemas, and the document model reference.
 See [`docs/roadmap.md`](docs/roadmap.md) for the full product roadmap.

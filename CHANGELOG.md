@@ -12,13 +12,13 @@ All notable changes to this project will be documented in this file.
 
 **Affects:** `compileDocument()`, `compile()`, `CompilerSession`
 
-In v0.5, the `onOverflow` option defaulted to `'truncate'`, silently dropping text that did not fit in the target frame. In v0.6, the default is `'throw'`.
+In v0.5, the `onOverflow` option defaulted to `'silent'`, silently dropping text that did not fit in the target frame. In v0.6, the default is `'throw'`.
 
-**Migration:** any workflow that previously relied on silent truncation will now receive a `RangeError` at runtime. To restore the old behaviour, pass `onOverflow: 'truncate'` explicitly:
+**Migration:** any workflow that previously relied on silent truncation will now receive an `Error` at runtime. To restore the old behaviour, pass `onOverflow: 'silent'` explicitly:
 
 ```ts
 compileDocument(doc, fonts, {
-  onOverflow: 'truncate', // ← restore v0.5 behaviour
+  onOverflow: 'silent', // ← restore v0.5 behaviour
 });
 ```
 
