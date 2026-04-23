@@ -184,7 +184,7 @@ export function selectVariant(
   const best = nearestWeight(pool, weight);
 
   if (best.weight !== weight) {
-    const warnKey = `${familyLower}/${style}/${weight}`;
+    const warnKey = `${familyLower}/${style}/${weight}/${best.weight}`;
     if (!_warnedWeightMismatch.has(warnKey)) {
       _warnedWeightMismatch.add(warnKey);
       if (verbose) {
@@ -202,10 +202,11 @@ export function selectVariant(
 /** Nearest-weight selection following the CSS Fonts Level 4 order-of-preference.
  *
  * CSS Fonts 4 §10.4.3 — "font-weight matching":
- *  - target < 400: search descending below, then ascending above.
- *  - target > 500: search ascending above, then descending below.
- *  - target 400 or 500: search the other of the pair first (400→500, 500→400),
- *    then ascending above, then descending below.
+ *  - target < 400:         search descending below, then ascending above.
+ *  - target 400:           check 400, 500, descending below 400, ascending above 500.
+ *  - target 500:           check 500, 400, descending below 400, ascending above 500.
+ *  - target 401–499:       check descending from target to 400, then ascending above target.
+ *  - target > 500:         search ascending above, then descending below.
  */
 function nearestWeight(
   candidates: Array<{ id: FontId; weight?: number }>,
@@ -220,28 +221,33 @@ function nearestWeight(
   let preference: number[];
   if (target === 400) {
     // 400 → check 400, then 500, then descending below 400, then ascending above 500.
-    const above500 = sorted.filter((w) => w > 500);
-    const below400 = sorted.filter((w) => w < 400).reverse();
     const exact400 = sorted.filter((w) => w === 400);
     const exact500 = sorted.filter((w) => w === 500);
+    const below400 = sorted.filter((w) => w < 400).reverse();
+    const above500 = sorted.filter((w) => w > 500);
     preference = [...exact400, ...exact500, ...below400, ...above500];
   } else if (target === 500) {
     // 500 → check 500, then 400, then descending below 400, then ascending above 500.
-    const above500 = sorted.filter((w) => w > 500);
-    const below400 = sorted.filter((w) => w < 400).reverse();
-    const exact400 = sorted.filter((w) => w === 400);
     const exact500 = sorted.filter((w) => w === 500);
+    const exact400 = sorted.filter((w) => w === 400);
+    const below400 = sorted.filter((w) => w < 400).reverse();
+    const above500 = sorted.filter((w) => w > 500);
     preference = [...exact500, ...exact400, ...below400, ...above500];
   } else if (target < 400) {
     // Below 400: descending to 100, then ascending to 900.
     const below = sorted.filter((w) => w <= target).reverse();
     const above = sorted.filter((w) => w > target);
     preference = [...below, ...above];
-  } else {
+  } else if (target > 500) {
     // Above 500: ascending to 900, then descending to 100.
     const above = sorted.filter((w) => w >= target);
     const below = sorted.filter((w) => w < target).reverse();
     preference = [...above, ...below];
+  } else {
+    // 401–499: descending from target to 400, then ascending above target.
+    const below = sorted.filter((w) => w <= target).reverse();
+    const above = sorted.filter((w) => w > target);
+    preference = [...below, ...above];
   }
 
   const chosen = preference[0] ?? sorted[0]!;

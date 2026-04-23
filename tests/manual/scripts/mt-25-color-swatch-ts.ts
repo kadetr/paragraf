@@ -20,7 +20,6 @@
 //
 // Run:  tsx tests/manual/scripts/mt-25-color-swatch-ts.ts
 
-import * as path from 'path';
 import { readFileSync, existsSync } from 'fs';
 import {
   parseIccProfile,

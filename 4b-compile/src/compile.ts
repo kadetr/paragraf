@@ -302,16 +302,22 @@ export async function compile<T = unknown>(
   // output === 'pdf'
   let colorTransform: ColorTransform | undefined;
   if (outputIntent) {
-    const srgb = await loadBuiltinSrgb();
-    // Try the WASM-accelerated path (optional dependency). Fall back to the
-    // pure-TS createTransform when @paragraf/color-wasm is not installed.
-    try {
-      const { loadColorWasm, createWasmTransform } =
-        await import('@paragraf/color-wasm');
-      const wasm = loadColorWasm();
-      colorTransform = createWasmTransform(wasm, srgb, outputIntent.profile);
-    } catch {
-      colorTransform = createTransform(srgb, outputIntent.profile);
+    // Only create a color transform for CMYK destination profiles.
+    // Non-CMYK profiles (Lab, Gray, RGB) would produce device values that
+    // render-pdf cannot encode correctly without additional color-space handling.
+    const destColorSpace = outputIntent.profile.colorSpace;
+    if (destColorSpace === 'CMYK') {
+      const srgb = await loadBuiltinSrgb();
+      // Try the WASM-accelerated path (optional dependency). Fall back to the
+      // pure-TS createTransform when @paragraf/color-wasm is not installed.
+      try {
+        const { loadColorWasm, createWasmTransform } =
+          await import('@paragraf/color-wasm');
+        const wasm = loadColorWasm();
+        colorTransform = createWasmTransform(wasm, srgb, outputIntent.profile);
+      } catch {
+        colorTransform = createTransform(srgb, outputIntent.profile);
+      }
     }
   }
 

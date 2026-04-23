@@ -644,10 +644,7 @@ export const createParagraphComposer = async (
 
     const cacheCfg = effectiveCacheConfig(cacheOptions);
     if (cacheCfg.enabled && direction === 'rtl' && !_nonLtrCacheWarnIssued) {
-      console.warn(
-        '[paragraf] measure cache: non-LTR paragraph detected. ' +
-          'Direction is now included in the cache key (since v0.6).',
-      );
+      // Direction is included in the cache key since v0.6 — no longer warn.
       _nonLtrCacheWarnIssued = true;
     }
 

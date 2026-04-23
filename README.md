@@ -170,7 +170,7 @@ import { writeFileSync }   from 'fs';
 const registry = new Map([
   ['body', {
     id: 'body',
-    face: 'LiberationSerif',
+    family: 'LiberationSerif',
     filePath: './fonts/LiberationSerif-Regular.ttf',
   }],
 ]);
