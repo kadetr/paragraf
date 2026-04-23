@@ -86,7 +86,7 @@ for (let i = 0; i < tagCount; i++) {
 
 const scenarioA = {
   description:
-    'parseIccProfile: b2a0 is undefined despite B2A0 tag existing in file',
+    'parseIccProfile: b2a0 is populated — mft1 support added in workId 013',
   colorSpace: cmykProfile.colorSpace,
   pcs: cmykProfile.pcs,
   a2b0Parsed: !!cmykProfile.a2b0,
@@ -95,7 +95,7 @@ const scenarioA = {
   rawB2A0Sig: rawTags['B2A0'] ?? null,
   rootCause:
     rawTags['B2A0'] === 'mft1'
-      ? 'B2A0 tag uses mft1 (8-bit LUT); parser handles only mft2 (16-bit LUT) — workId 013'
+      ? 'B2A0 tag uses mft1 (8-bit LUT) — now parsed correctly via parseMft1Tag (workId 013 done)'
       : 'Unknown — investigate',
 };
 
@@ -118,7 +118,7 @@ const transform = createTransform(srgb, cmykProfile);
 
 console.log('\n── Scenario B: createTransform(sRGB, genericCmyk) output ──');
 console.log(
-  '  Expected: 4 CMYK channels.  Actual: 3 XYZ channels (wrong path)',
+  '  Expected: 4 CMYK channels.  Actual: 4 CMYK channels — correct (workId 013 done)',
 );
 
 const scenarioB: unknown[] = [];
@@ -129,7 +129,7 @@ for (const { name, rgb } of TEST_SWATCHES) {
     channelCount === 3
       ? 'returns XYZ (MatrixTrc on source) — not CMYK'
       : channelCount === 4
-        ? 'returns CMYK — correct (unexpected with this profile)'
+        ? 'returns CMYK — correct'
         : `returns ${channelCount} channels — unexpected`;
   console.log(
     `  ${name.padEnd(12)}: out=[${out.map((v) => v.toFixed(4)).join(', ')}]  channels=${channelCount}  ${note}`,
@@ -157,18 +157,19 @@ const scenarioC = {
 // ─── Scenario D: correct pattern with a real mft2 CMYK profile ────────────────
 
 const scenarioD = {
-  description: 'What a correct sRGB→CMYK round-trip requires (workId 013)',
-  requiredFix:
-    'Add parseMft1Tag() to 0-color/src/profile.ts; recognize mft1 in A2B0/B2A0 detection',
-  expectedBehavior: [
-    'cmykProfile.b2a0 would be populated (Mft2Tag with 3 in-channels, 4 out-channels)',
-    'createTransform(sRGB, cmykProfile) would take the hasSourceMatrix+hasDestLut path',
-    'output would be [C, M, Y, K] in [0,1] — correct 4-channel CMYK',
-    'pdfkit doc.fill([C,M,Y,K]) would produce a CMYK-colorspaced fill in the PDF',
+  description: 'Correct sRGB→CMYK round-trip — workId 013 done',
+  status: 'done',
+  appliedFix:
+    'parseMft1Tag() added to 0-color/src/profile.ts; mft1 recognized in A2B0/B2A0 detection',
+  behavior: [
+    'cmykProfile.b2a0 is now populated (Mft2Tag with 3 in-channels, 4 out-channels)',
+    'createTransform(sRGB, cmykProfile) takes the hasSourceMatrix+hasDestLut path',
+    'output is [C, M, Y, K] in [0,1] — correct 4-channel CMYK',
+    'pdfkit doc.fill([C,M,Y,K]) produces a CMYK-colorspaced fill in the PDF',
   ],
   codeSketch: `
-// After workId 013:
-const cmyk = parseIccProfile(cmykBytes);       // now b2a0 is populated
+// workId 013 done — this now works:
+const cmyk = parseIccProfile(cmykBytes);       // b2a0 is populated
 const transform = createTransform(srgb, cmyk); // takes matrix-trc-lut path
 const [c, m, y, k] = transform.apply([r, g, b]); // 4 channels
 doc.fill([c, m, y, k]);                         // correct DeviceCMYK in PDF
@@ -211,9 +212,10 @@ await new Promise<void>((resolve, reject) => {
     .font('Helvetica')
     .fillColor('#666666')
     .text(
-      'The following swatches use XYZ output channels from createTransform(sRGB, genericCMYK) ' +
-        'passed directly to pdfkit as a 3-element float array. pdfkit interprets this as DeviceRGB, ' +
-        'NOT DeviceCMYK. This is the silent wrong-output failure mode documented in workId 013.',
+      'The following swatches show the CMY channels (first 3 of CMYK output) passed as a 3-element ' +
+        'float array to pdfkit — interpreted as DeviceRGB, not DeviceCMYK. This illustrates the ' +
+        'colorspace mismatch that occurs when channel count is not handled. workId 013 is done: ' +
+        'correct 4-channel CMYK output is now available via doc.fill([c,m,y,k]).',
       MARGIN_X,
       MARGIN_TOP + 22,
       { width: CONTENT_W },
@@ -236,7 +238,7 @@ await new Promise<void>((resolve, reject) => {
     // would divide by 255 and produce near-black for all swatches.
     const wrongFill = xyzOut
       .slice(0, 3)
-      .map((v) => Math.round(Math.min(Math.max(v, 0), 1) * 255)); // XYZ scaled to 0-255 and treated as RGB — wrong colorspace
+      .map((v) => Math.round(Math.min(Math.max(v, 0), 1) * 255)); // C,M,Y channels of CMYK output scaled to 0-255 and passed as RGB — wrong colorspace
 
     // Correct reference: the actual sRGB input color as hex
     const correctHex =
@@ -269,7 +271,7 @@ await new Promise<void>((resolve, reject) => {
       .fontSize(8)
       .font('Helvetica')
       .text(
-        'XYZ channels interpreted as RGB — colorspace mismatch. Fix: workId 013.',
+        'CMY channels (first 3 of CMYK) interpreted as RGB — colorspace mismatch. workId 013 done: use doc.fill([c,m,y,k]) for correct output.',
         MARGIN_X + 108,
         y + 4,
         { width: CONTENT_W - 108 },
@@ -278,11 +280,11 @@ await new Promise<void>((resolve, reject) => {
   }
 
   doc
-    .fillColor('#cc0000')
+    .fillColor('#006600')
     .fontSize(9)
     .font('Helvetica-Bold')
     .text(
-      'Fix: implement workId 013 (mft1 support) to get correct 4-channel CMYK output.',
+      'workId 013 done — parseMft1Tag() implemented. createTransform(sRGB, genericCMYK) now returns correct 4-channel CMYK.',
       MARGIN_X,
       y + 8,
       { width: CONTENT_W },

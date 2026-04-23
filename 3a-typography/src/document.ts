@@ -174,7 +174,10 @@ export function composeDocument(
     const merged: ParagraphInput = {
       ...doc.styleDefaults,
       ...input,
-      lineWidth: textWidth,
+      lineWidth:
+        Number.isFinite(input.lineWidth) && input.lineWidth > 0
+          ? input.lineWidth
+          : textWidth,
     };
     const output = composer.compose(merged);
     return { output };

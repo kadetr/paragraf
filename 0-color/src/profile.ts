@@ -163,10 +163,12 @@ function parseMft1Tag(
     matrix.push(readS15Fixed16(_view, tagOffset + 12 + i * 4));
   }
 
-  const inputTableEntries = _view.getUint16(tagOffset + 48);
-  const outputTableEntries = _view.getUint16(tagOffset + 50);
+  // mft1 (lut8Type) has no entry-count fields after the matrix — input and
+  // output table sizes are always 256. Data starts immediately at byte 48.
+  const inputTableEntries = 256;
+  const outputTableEntries = 256;
 
-  let dataOffset = tagOffset + 52;
+  let dataOffset = tagOffset + 48;
 
   // Input curves: inCh × inputTableEntries × uint8, normalized /255
   const inputCurves: Float64Array[] = [];

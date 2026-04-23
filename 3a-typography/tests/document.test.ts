@@ -246,7 +246,7 @@ describe('composeDocument', () => {
     };
 
     const doc: Document = {
-      paragraphs: [makeInput()],
+      paragraphs: [makeInput(0)],
       frames: [makeFrame({ width: 400 })],
     };
     composeDocument(doc, spyComposer);
@@ -264,7 +264,7 @@ describe('composeDocument', () => {
     };
 
     const doc: Document = {
-      paragraphs: [makeInput()],
+      paragraphs: [makeInput(0)],
       frames: [makeFrame({ width: 400, columnCount: 2, gutter: 20 })],
     };
     composeDocument(doc, spyComposer);
