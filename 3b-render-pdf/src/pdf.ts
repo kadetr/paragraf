@@ -101,7 +101,10 @@ function emitOutputIntent(doc: any, intent: OutputIntent): void {
   profileRef.end();
 
   // OutputIntent dict object (no stream body).
-  // Subtype: CMYK destination → PDF/X (GTS_PDFX); RGB/Lab/Gray → PDF/A (GTS_PDFA1).
+  // Subtype heuristic: CMYK destination profile → PDF/X (GTS_PDFX); all others → PDF/A (GTS_PDFA1).
+  // This is correct for the common cases (Fogra39/SWOP CMYK → PDF/X; sRGB → PDF/A).
+  // It does not cover PDF/X with an RGB output intent (monitor-proof workflow) or
+  // PDF/A with a CMYK profile (archival CMYK). File an issue if you need those branches.
   const s = intent.profile.colorSpace === 'CMYK' ? 'GTS_PDFX' : 'GTS_PDFA1';
   const intentRef = doc.ref({
     Type: 'OutputIntent',
@@ -161,13 +164,23 @@ function parseCssToSrgb(css: string): [number, number, number] | null {
   return null;
 }
 
-function applyFillTransform(transform: ColorTransform, fill: string): string {
+function applyFillTransform(
+  transform: ColorTransform,
+  fill: string,
+): string | number[] {
   const srgb = parseCssToSrgb(fill);
   if (!srgb) return fill;
   const out = transform.apply(srgb);
-  // Convert [0,1] output back to a CSS hex string.
-  // PDFKit's fillColor([r,g,b]) expects 0-255 integers, so returning a hex
-  // string is the safest and most portable choice for RGB output.
+  if (out.length === 4) {
+    // CMYK output: return [C,M,Y,K] in [0,1] for PDFKit's DeviceCMYK colour space.
+    return [
+      Math.min(Math.max(out[0] ?? 0, 0), 1),
+      Math.min(Math.max(out[1] ?? 0, 0), 1),
+      Math.min(Math.max(out[2] ?? 0, 0), 1),
+      Math.min(Math.max(out[3] ?? 0, 0), 1),
+    ];
+  }
+  // RGB output: convert [0,1] to a CSS hex string.
   const r = Math.round(Math.min(Math.max(out[0] ?? 0, 0), 1) * 255);
   const g = Math.round(Math.min(Math.max(out[1] ?? 0, 0), 1) * 255);
   const b = Math.round(Math.min(Math.max(out[2] ?? 0, 0), 1) * 255);
@@ -188,7 +201,7 @@ function drawRenderedParagraph(
   selectableOpts?: SelectableOpts,
   colorTransform?: ColorTransform,
 ): void {
-  const effectiveFill: string = colorTransform
+  const effectiveFill: string | number[] = colorTransform
     ? applyFillTransform(colorTransform, fill)
     : fill;
   for (const line of rendered) {

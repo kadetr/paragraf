@@ -46,7 +46,7 @@ Every JavaScript library uses a greedy algorithm — fill each line as full as p
 | Knuth-Plass line breaking | ✅ | — | — | ✅ |
 | Real OpenType shaping (GSUB/GPOS) | ✅ | partial¹ | — | ✅ |
 | 22-language hyphenation | ✅ | — | — | ✅ |
-| Unicode BiDi (Arabic, Hebrew) | ✅ | ✅ | — | partial |
+| Unicode BiDi (Arabic, Hebrew) | partial³ | ✅ | — | partial |
 | Optical margin alignment | ✅ | — | — | ✅ |
 | Multi-frame / multi-column layout | ✅ | via CSS | ✅ | ✅ |
 | Selectable text in PDF output | ✅ | ✅ | ✅ | ✅ |
@@ -54,7 +54,8 @@ Every JavaScript library uses a greedy algorithm — fill each line as full as p
 | Open source | ✅ | ✅ | ✅ | ✅ |
 
 ¹ Puppeteer delegates shaping to the OS renderer (CoreText/DirectWrite). Quality varies by platform and cannot be controlled programmatically.  
-² The `FontEngine` interface is environment-agnostic, but the bundled fontkit adapter (`createMeasurer`, `FontkitEngine`) reads font files from disk via Node's `fs.openSync` and is Node-only. In a browser you must supply your own `FontEngine` implementation backed by `fetch`/`ArrayBuffer`.
+² The `FontEngine` interface is environment-agnostic, but the bundled fontkit adapter (`createMeasurer`, `FontkitEngine`) reads font files from disk via Node's `fs.openSync` and is Node-only. In a browser you must supply your own `FontEngine` implementation backed by `fetch`/`ArrayBuffer`.  
+³ Paragraph-level direction detection and visual reordering via the first-strong character heuristic. Full Unicode Bidirectional Algorithm (UBA) line-level reordering is not yet implemented.
 
 **Browser path.** The packages that run in a browser without modification are: `@paragraf/types`, `@paragraf/color`, `@paragraf/linebreak`, `@paragraf/layout`, `@paragraf/style`, and `@paragraf/render-core`. Pair them with a custom `FontEngine` that loads fonts via `fetch`. `@paragraf/typography`, `@paragraf/render-pdf`, `@paragraf/shaping-wasm`, `@paragraf/compile`, and `@paragraf/font-engine` (with the built-in adapters) are Node-only.
 
@@ -270,7 +271,7 @@ writeFileSync('document.pdf', pdfBuffer);
 `en-us` `en-gb` `de` `fr` `tr` `nl` `pl` `it` `es` `sv` `no` `da` `fi`
 `hu` `cs` `sk` `ro` `hr` `sl` `lt` `lv` `et`
 
-Note: pattern-based hyphenation does not support per-document exception dictionaries or sentence-start capitalisation detection (sentence-initial words may be suppressed as if they were proper nouns).
+Note: per-document exception dictionaries are supported via `hyphenation.exceptions`. Sentence-initial capitalised words are not suppressed by the hyphenation engine.
 
 **OpenType shaping** — via rustybuzz (Rust port of HarfBuzz):
 GSUB ligatures, GPOS kerning, superscript (`sups`), subscript (`subs`),
@@ -291,7 +292,7 @@ These are intentional gaps for the current release, not bugs:
 
 - **PDF output is vector-path, not PDF/X-conformant.** Text is rendered as filled glyph outlines. PDF/X and PDF/A require embedded fonts with `TJ` operators and ToUnicode CMaps. This is planned but not yet implemented.
 - **`widowPenalty` / `orphanPenalty` are single-line runt penalties**, not frame-level widow/orphan control. True widow/orphan handling (preventing the first or last line of a paragraph from being isolated on a different page) requires frame-level composition, which is not yet implemented. The penalty is best-effort and may not change the layout when no feasible alternative exists.
-- **No `adjdemerits`.** TeX's adjacent-line fitness-class mismatch penalty is not implemented. This means KP does not penalise jarring transitions between very tight and very loose consecutive lines.
+- **`adjDemerits`** is available via the paragraph input parameter; the default is `0`, which preserves backwards-compatible Knuth-Plass behaviour. Set to `10000` for TeX-equivalent quality (penalises jarring transitions between very tight and very loose consecutive lines).
 - **`spaceBefore` / `spaceAfter`** are defined in the style types but are not applied during composition. They are silently ignored.
 - **`hyphenation: false`** is defined in the style types but not wired through the composition pipeline. Hyphenation is always enabled.
 - **Character styles** (`CharacterStyleDef`) exist in the type system and style registry, but the compile pipeline does not yet apply them to inline text spans. They are resolved but not rendered differently.

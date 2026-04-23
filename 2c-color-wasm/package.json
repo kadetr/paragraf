@@ -1,6 +1,6 @@
 {
   "name": "@paragraf/color-wasm",
-  "version": "0.3.0",
+  "version": "0.6.0",
   "description": "Rust/WASM ICC color transform backend for @paragraf/color.",
   "license": "MIT",
   "repository": {
@@ -45,7 +45,7 @@
     "build:wasm": "cd wasm && wasm-pack build --target nodejs --out-dir pkg"
   },
   "dependencies": {
-    "@paragraf/color": "^0.3.0"
+    "@paragraf/color": "^0.6.0"
   },
   "devDependencies": {
     "@types/node": "^22.19.15",
