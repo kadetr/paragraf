@@ -64,6 +64,8 @@ type CompiledPlan =
       trc: [TrcStep, TrcStep, TrcStep];
       mat: Float64Array;
       wp: [number, number, number];
+      /** Bradford CAT (3×3 row-major) when source WP ≠ D50; undefined otherwise. */
+      bradfordCat?: Float64Array;
       clut: Float64Array;
       gridPoints: number;
       outCh: number;
@@ -78,6 +80,59 @@ function toTrcStep(trc: TrcCurve): TrcStep {
   if (trc.kind === 'linear') return { kind: 'linear' };
   if (trc.kind === 'gamma') return { kind: 'gamma', gamma: trc.gamma };
   return { kind: 'lut', values: trc.values };
+}
+
+/** True when two white points are within tolerance — no Bradford needed. */
+function whitePointsMatch(a: XYZValue, b: XYZValue, tol = 1e-4): boolean {
+  return (
+    Math.abs(a.x - b.x) < tol &&
+    Math.abs(a.y - b.y) < tol &&
+    Math.abs(a.z - b.z) < tol
+  );
+}
+
+/**
+ * Build a 3×3 Bradford chromatic adaptation matrix (row-major flat array)
+ * that converts XYZ from `srcWP` to `dstWP`.
+ */
+function buildBradfordCat(srcWP: XYZValue, dstWP: XYZValue): number[] {
+  const Mb = [
+    0.8951, 0.2664, -0.1614, -0.7502, 1.7135, 0.0367, 0.0389, -0.0685, 1.0296,
+  ];
+  const MbInv = [
+    0.9869929, -0.1470543, 0.1599627, 0.4323053, 0.5183603, 0.0492912,
+    -0.0085287, 0.0400428, 0.9684867,
+  ];
+  const sR = Mb[0] * srcWP.x + Mb[1] * srcWP.y + Mb[2] * srcWP.z;
+  const sG = Mb[3] * srcWP.x + Mb[4] * srcWP.y + Mb[5] * srcWP.z;
+  const sB = Mb[6] * srcWP.x + Mb[7] * srcWP.y + Mb[8] * srcWP.z;
+  const dR = Mb[0] * dstWP.x + Mb[1] * dstWP.y + Mb[2] * dstWP.z;
+  const dG = Mb[3] * dstWP.x + Mb[4] * dstWP.y + Mb[5] * dstWP.z;
+  const dB = Mb[6] * dstWP.x + Mb[7] * dstWP.y + Mb[8] * dstWP.z;
+  const sr = sR !== 0 ? dR / sR : 1;
+  const sg = sG !== 0 ? dG / sG : 1;
+  const sb = sB !== 0 ? dB / sB : 1;
+  const scaled = [
+    sr * Mb[0],
+    sr * Mb[1],
+    sr * Mb[2],
+    sg * Mb[3],
+    sg * Mb[4],
+    sg * Mb[5],
+    sb * Mb[6],
+    sb * Mb[7],
+    sb * Mb[8],
+  ];
+  const cat: number[] = new Array(9);
+  for (let r = 0; r < 3; r++) {
+    for (let c = 0; c < 3; c++) {
+      cat[r * 3 + c] =
+        MbInv[r * 3 + 0] * scaled[0 * 3 + c] +
+        MbInv[r * 3 + 1] * scaled[1 * 3 + c] +
+        MbInv[r * 3 + 2] * scaled[2 * 3 + c];
+    }
+  }
+  return cat;
 }
 
 function buildMatArray(profile: ColorProfile): Float64Array {
@@ -169,8 +224,21 @@ export class WasmColorTransform implements ColorTransform {
     }
 
     // matrix-trc-lut path: XYZ → ICC Lab → CLUT → output channels
+    // #15: Apply Bradford chromatic adaptation when source WP differs from D50
+    let ax = xyz[0] ?? 0,
+      ay = xyz[1] ?? 0,
+      az = xyz[2] ?? 0;
+    if (plan.bradfordCat) {
+      const cat = plan.bradfordCat;
+      const tx = cat[0] * ax + cat[1] * ay + cat[2] * az;
+      const ty = cat[3] * ax + cat[4] * ay + cat[5] * az;
+      const tz = cat[6] * ax + cat[7] * ay + cat[8] * az;
+      ax = tx;
+      ay = ty;
+      az = tz;
+    }
     const [wp_x, wp_y, wp_z] = plan.wp;
-    const lab = wasm.xyz_to_icc_lab(xyz[0], xyz[1], xyz[2], wp_x, wp_y, wp_z);
+    const lab = wasm.xyz_to_icc_lab(ax, ay, az, wp_x, wp_y, wp_z);
 
     const out = wasm.eval_clut_tetrahedral(
       plan.clut,
@@ -232,18 +300,33 @@ export function createWasmTransform(
   }
 
   if (hasSourceMatrix && hasDestLut) {
-    // RGB matrix → CMYK LUT: matrix-TRC + XYZ→Lab + B2A0 CLUT path
+    // RGB matrix → CMYK LUT: matrix-TRC + XYZ→Lab + B2Ax CLUT path
     const trc = source.trc!;
-    const wp = source.whitePoint ?? D50;
-    const b2a0 = dest.b2a0!;
+    const srcWP = source.whitePoint ?? D50;
+
+    // #14: Select B2A LUT based on rendering intent (mirrors b2aKeyForIntent in @paragraf/color)
+    const b2aTag =
+      intent === 'relative' || intent === 'absolute'
+        ? (dest.b2a1 ?? dest.b2a0)!
+        : intent === 'saturation'
+          ? (dest.b2a2 ?? dest.b2a0)!
+          : dest.b2a0!;
+
+    // #15: Bradford adaptation when source WP differs from PCS D50
+    const needsBradford = !whitePointsMatch(srcWP, D50);
+    const bradfordCat = needsBradford
+      ? new Float64Array(buildBradfordCat(srcWP, D50))
+      : undefined;
+
     const plan: CompiledPlan = {
       path: 'matrix-trc-lut',
       trc: [toTrcStep(trc[0]), toTrcStep(trc[1]), toTrcStep(trc[2])],
       mat: buildMatArray(source),
-      wp: [wp.x, wp.y, wp.z],
-      clut: new Float64Array(b2a0.clut),
-      gridPoints: b2a0.gridPoints,
-      outCh: b2a0.outChannels,
+      wp: [D50.x, D50.y, D50.z], // always PCS D50 — Bradford is applied before Lab
+      bradfordCat,
+      clut: new Float64Array(b2aTag.clut),
+      gridPoints: b2aTag.gridPoints,
+      outCh: b2aTag.outChannels,
     };
     return new WasmColorTransform(w, plan);
   }

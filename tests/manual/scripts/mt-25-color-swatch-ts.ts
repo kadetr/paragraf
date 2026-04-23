@@ -21,7 +21,7 @@
 // Run:  tsx tests/manual/scripts/mt-25-color-swatch-ts.ts
 
 import * as path from 'path';
-import { readFileSync } from 'fs';
+import { readFileSync, existsSync } from 'fs';
 import {
   parseIccProfile,
   loadBuiltinSrgb,
@@ -31,12 +31,18 @@ import { writeJson, writePdf } from '../fixtures/output.js';
 import { drawTestHeader } from '../fixtures/header.js';
 import { MARGIN_X, MARGIN_TOP, PAGE_W, PAGE_H } from '../fixtures/documents.js';
 
-// ─── Profiles ─────────────────────────────────────────────────────────────────
+// ─── Profiles ─────────────────────────────────────────────────────────────────────────────
+
+const ADOBE_RGB_PATH = '/System/Library/ColorSync/Profiles/AdobeRGB1998.icc';
+if (!existsSync(ADOBE_RGB_PATH)) {
+  console.log(
+    '[mt-25] macOS ColorSync profiles not found — skipping on this platform.',
+  );
+  process.exit(0);
+}
 
 const srgb = loadBuiltinSrgb();
-const adobeRgbBuf = readFileSync(
-  '/System/Library/ColorSync/Profiles/AdobeRGB1998.icc',
-);
+const adobeRgbBuf = readFileSync(ADOBE_RGB_PATH);
 const adobeRgb = parseIccProfile(
   new Uint8Array(
     adobeRgbBuf.buffer,

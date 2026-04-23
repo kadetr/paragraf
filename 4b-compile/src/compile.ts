@@ -184,6 +184,7 @@ export async function compile<T = unknown>(
             styleRegistry.resolve(slot.style),
             slot.style,
             registry,
+            verbose,
           ),
         );
         continue;
@@ -197,6 +198,7 @@ export async function compile<T = unknown>(
           styleRegistry.resolve(slot.style),
           slot.style,
           registry,
+          verbose,
         ),
       );
       continue;
@@ -212,6 +214,7 @@ export async function compile<T = unknown>(
         styleRegistry.resolve(slot.style),
         slot.style,
         registry,
+        verbose,
       ),
     );
   }
@@ -362,6 +365,7 @@ function buildFont(
   style: ResolvedParagraphStyle,
   styleName: string,
   registry: FontRegistry,
+  verbose = true,
 ): Font {
   const {
     family,
@@ -387,6 +391,7 @@ function buildFont(
     numericWeight,
     fontStyle as FontStyle,
     registry,
+    verbose,
   );
 
   return {
@@ -406,10 +411,11 @@ function buildInput(
   style: ResolvedParagraphStyle,
   styleName: string,
   registry: FontRegistry,
+  verbose = true,
 ): ParagraphInput {
   return {
     text,
-    font: buildFont(style, styleName, registry),
+    font: buildFont(style, styleName, registry, verbose),
     // lineWidth is overridden by composeDocument; 0 is a valid placeholder
     lineWidth: 0,
     alignment: style.alignment,

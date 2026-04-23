@@ -15,11 +15,10 @@ import {
   createWasmTransform,
   type OutputIntent,
 } from '@paragraf/color-wasm';
-import { loadBuiltinSrgb, parseIccProfile } from '@paragraf/color';
-import { renderToPdf, renderDocumentToPdf } from '@paragraf/render-pdf';
+import { loadBuiltinSrgb } from '@paragraf/color';
+import { renderDocumentToPdf } from '@paragraf/render-pdf';
 
 const FONTS_DIR = path.resolve(__dirname, '../fonts');
-const ICC_DIR = path.resolve(__dirname, '../fonts'); // adjust if ICC profiles are elsewhere
 
 // ─── Fixtures ─────────────────────────────────────────────────────────────────
 
@@ -82,28 +81,27 @@ describe('render-pdf: colorTransform option', () => {
 
     const applySpy = vi.spyOn(transform, 'apply');
 
-    // Build a minimal RenderedParagraph to feed renderToPdf
-    // We use compile in rendered mode to get a real RenderedDocument
+    const template = makeTemplate();
     const result = await compile({
-      template: makeTemplate(),
+      template,
       data: SAMPLE_DATA,
       output: 'rendered',
       shaping: 'fontkit',
     });
 
-    const { renderDocumentToPdf: renderFn } =
-      await import('@paragraf/render-pdf');
     const { createDefaultFontEngine } = await import('@paragraf/typography');
     const { buildFontRegistry } = await import('@paragraf/compile');
+    const registry = buildFontRegistry(template.fonts, FONTS_DIR);
+    const fontEngine = await createDefaultFontEngine(registry, {
+      useWasm: false,
+    });
 
-    // Use renderToPdf with colorTransform directly
-    // We verify the transform.apply is called when colorTransform is set
-    const doc = result.data as any;
-    // Verify result is a RenderedDocument
-    expect(doc).toHaveProperty('pages');
-    expect(doc.pages.length).toBeGreaterThan(0);
+    // Render to PDF with colorTransform — transform.apply must be called for each page draw
+    await renderDocumentToPdf(result.data as any, fontEngine, {
+      colorTransform: transform,
+    });
 
-    expect(applySpy).not.toHaveBeenCalled(); // not called by compile (rendered mode)
+    expect(applySpy).toHaveBeenCalled();
   });
 
   it('does not call colorTransform.apply when not provided', async () => {

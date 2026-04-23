@@ -162,6 +162,7 @@ export function selectVariant(
   weight: number,
   style: FontStyle,
   registry: FontRegistry,
+  verbose = true,
 ): FontId {
   const familyLower = family.toLowerCase();
   const all = [...registry.values()].filter(
@@ -183,13 +184,15 @@ export function selectVariant(
   const best = nearestWeight(pool, weight);
 
   if (best.weight !== weight) {
-    const warnKey = `${family}/${style}/${weight}`;
+    const warnKey = `${familyLower}/${style}/${weight}`;
     if (!_warnedWeightMismatch.has(warnKey)) {
       _warnedWeightMismatch.add(warnKey);
-      console.warn(
-        `[paragraf/compile] No exact weight ${weight} for family "${family}" (style: ${style}). ` +
-          `Using weight ${best.weight} (id: ${best.id}).`,
-      );
+      if (verbose) {
+        console.warn(
+          `[paragraf/compile] No exact weight ${weight} for family "${family}" (style: ${style}). ` +
+            `Using weight ${best.weight} (id: ${best.id}).`,
+        );
+      }
     }
   }
 

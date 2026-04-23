@@ -44,9 +44,9 @@ export interface CompileOptions<T = unknown> {
   basePath?: string;
   /**
    * Behaviour when composed content overflows the maximum page count.
+   * - 'throw'  — throw an Error describing the overflow (default).
    * - 'silent' — truncate silently; `metadata.overflowLines` reports the count.
-   * - 'throw'  — throw an Error describing the overflow.
-   * @default 'silent'
+   * @default 'throw'
    */
   onOverflow?: OverflowBehavior;
   /**

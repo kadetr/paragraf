@@ -14,13 +14,20 @@
 //
 // Run:  tsx tests/manual/scripts/mt-24-color-profile-inspect.ts
 
-import { readFileSync } from 'fs';
+import { readFileSync, existsSync } from 'fs';
 import { parseIccProfile, loadBuiltinSrgb } from '@paragraf/color';
 import { writeJson } from '../fixtures/output.js';
 
-// ─── Profiles under inspection ────────────────────────────────────────────────
+// ─── Profiles under inspection ─────────────────────────────────────────────────────────
 
 const SYSTEM = '/System/Library/ColorSync/Profiles';
+
+if (!existsSync(SYSTEM)) {
+  console.log(
+    '[mt-24] macOS ColorSync profiles not found — skipping on this platform.',
+  );
+  process.exit(0);
+}
 
 const PROFILE_PATHS: Array<{ label: string; path: string | null }> = [
   { label: 'builtin-srgb', path: null }, // synthesized in memory
