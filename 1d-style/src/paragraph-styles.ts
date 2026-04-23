@@ -83,7 +83,8 @@ function mergeFont(
         ? override.letterSpacing
         : base.letterSpacing,
     variant: override.variant !== undefined ? override.variant : base.variant,
-    ligatures: override.ligatures !== undefined ? override.ligatures : base.ligatures,
+    ligatures:
+      override.ligatures !== undefined ? override.ligatures : base.ligatures,
   };
 }
 

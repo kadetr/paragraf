@@ -1,0 +1,11 @@
+{
+  "name": "color-wasm",
+  "version": "0.1.0",
+  "files": [
+    "color_wasm_bg.wasm",
+    "color_wasm.js",
+    "color_wasm.d.ts"
+  ],
+  "main": "color_wasm.js",
+  "types": "color_wasm.d.ts"
+}
