@@ -1,6 +1,6 @@
 {
   "name": "@paragraf/template",
-  "version": "0.5.0",
+  "version": "0.6.0",
   "description": "Document schema and content slot definitions for the paragraf typesetter.",
   "license": "MIT",
   "repository": {
@@ -34,16 +34,16 @@
   "scripts": {
     "build": "tsup",
     "prepublishOnly": "npm run build",
-    "test": "vitest run",
+    "test": "vitest run --passWithNoTests",
     "test:watch": "vitest",
     "typecheck": "tsc --noEmit",
     "prepack": "node ../scripts/publishconfig-swap.mjs apply",
     "postpack": "node ../scripts/publishconfig-swap.mjs restore"
   },
   "dependencies": {
-    "@paragraf/types": "^0.5.0",
-    "@paragraf/layout": "^0.5.0",
-    "@paragraf/style": "^0.5.0"
+    "@paragraf/types": "^0.6.0",
+    "@paragraf/layout": "^0.6.0",
+    "@paragraf/style": "^0.6.0"
   },
   "devDependencies": {
     "@types/node": "^22.19.15",

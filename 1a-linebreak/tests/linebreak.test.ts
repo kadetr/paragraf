@@ -6,7 +6,14 @@ import { hyphenateParagraph, loadLanguages } from '../src/hyphenate';
 import { createMeasurer } from './helpers/measure';
 import { mockMeasure, mockSpace } from '../src/testing';
 import { traceback } from '../src/traceback';
-import { Font, FontRegistry, Paragraph, BreakpointNode } from '@paragraf/types';
+import {
+  Font,
+  FontRegistry,
+  Paragraph,
+  BreakpointNode,
+  Node,
+  FORCED_BREAK,
+} from '@paragraf/types';
 
 // ─── Fixtures ────────────────────────────────────────────────────────────────
 
@@ -670,5 +677,174 @@ describe('computeBreakpoints — lineWidths (multi-column)', () => {
     expect(() => computeBreakpoints(para)).not.toThrow();
     const breaks = traceback(computeBreakpoints(para).node);
     expect(breaks.length).toBe(1);
+  });
+});
+
+// ─── adjDemerits ──────────────────────────────────────────────────────────────
+
+describe('computeBreakpoints — adjDemerits', () => {
+  // ── Helpers for direct node construction ────────────────────────────────────
+  // These bypass buildNodeSequence so we can set exact widths and ratios.
+
+  const TEST_FONT: Font = {
+    id: 'test-adj',
+    size: 12,
+    weight: 400,
+    style: 'normal',
+    stretch: 'normal',
+  };
+
+  const mkBox = (w: number): Node => ({
+    type: 'box',
+    width: w,
+    content: 'x',
+    font: TEST_FONT,
+  });
+
+  const mkGlue = (w: number, s: number, sh: number): Node => ({
+    type: 'glue',
+    kind: 'word',
+    width: w,
+    stretch: s,
+    shrink: sh,
+  });
+
+  const mkTerm = (): Node => ({
+    type: 'glue',
+    kind: 'termination',
+    width: 0,
+    stretch: 1e6,
+    shrink: 0,
+  });
+
+  const mkForced = (): Node => ({
+    type: 'penalty',
+    width: 0,
+    penalty: FORCED_BREAK,
+    flagged: false,
+  });
+
+  // ── Engineered 2-line paragraph ─────────────────────────────────────────────
+  //
+  // lineWidth = 30, tolerance = 5
+  //
+  // Line 1: box(5) + glue(3, 20, 0)   → sumWidth=8, sumStretch=20
+  //         ratio = (30−8)/20 = 1.10  → fitnessClass 3 (very loose)
+  //         startNode fitnessClass = 1 (normal)  → |3−1|=2 > 1 → fires
+  //
+  // Line 2: box(28) + glue(3, 3, 8) + term + forced
+  //         sumWidth from pos 2 = 31, sumShrink = 8
+  //         ratio = (30−31)/8 = −0.125  → fitnessClass 1 (normal)
+  //         prev fitnessClass = 3 (very loose) → |1−3|=2 > 1 → fires again
+  //
+  // D_base (adj=0):
+  //   line1: badness=round(100×1.1³)=133, penalty=FORCED_BREAK → d=(1+133)²=17956
+  //   line2: badness=round(100×0.125³)=0, penalty=FORCED_BREAK → d=(1+0)²=1
+  //   total = 17957
+  //
+  // D_adj (adj=10000): 17957 + 10000 + 10000 = 37957
+
+  const JUMP_NODES: Node[] = [
+    mkBox(5),
+    mkGlue(3, 20, 0), // line 1 break point (glue after box)
+    mkForced(), //   …but we use the forced break below
+    mkBox(28),
+    mkGlue(3, 3, 8),
+    mkTerm(),
+    mkForced(),
+  ];
+  // (Breaking at the glue — node 1 — gives ratio=Infinity since sumStretch at
+  //  that prefix is 0. The forced break at node 2 is the actual line-1 break.)
+
+  const LINE_WIDTH = 30;
+  const TOLERANCE = 5;
+
+  it('fitnessClass is present on every node in the traceback chain', () => {
+    const para = buildParagraph(
+      'In olden times when wishing still helped one',
+      200,
+      2,
+    );
+    const result = computeBreakpoints(para);
+    let node: BreakpointNode | null = result.node;
+    while (node !== null) {
+      expect(node.fitnessClass).toBeDefined();
+      node = node.previous;
+    }
+  });
+
+  it('fitnessClass is always in {0, 1, 2, 3}', () => {
+    const para = buildParagraph(
+      'In olden times when wishing still helped one',
+      200,
+      2,
+    );
+    const result = computeBreakpoints(para);
+    let node: BreakpointNode | null = result.node;
+    while (node !== null) {
+      expect([0, 1, 2, 3]).toContain(node.fitnessClass);
+      node = node.previous;
+    }
+  });
+
+  it('adjDemerits=0 produces the same result as omitting adjDemerits', () => {
+    const base = buildParagraph(
+      'In olden times when wishing still helped one',
+      200,
+      2,
+    );
+    const withZero = { ...base, adjDemerits: 0 };
+
+    const r1 = computeBreakpoints(base);
+    const r2 = computeBreakpoints(withZero);
+
+    expect(r2.node.totalDemerits).toBe(r1.node.totalDemerits);
+    expect(traceback(r2.node).map((b) => b.position)).toEqual(
+      traceback(r1.node).map((b) => b.position),
+    );
+  });
+
+  it('adjDemerits fires when consecutive fitness classes differ by more than 1', () => {
+    // Engineered paragraph: both line transitions cross a gap of 2 classes.
+    const base: Paragraph = {
+      nodes: JUMP_NODES,
+      lineWidth: LINE_WIDTH,
+      tolerance: TOLERANCE,
+    };
+    const withAdj: Paragraph = { ...base, adjDemerits: 10000 };
+
+    const dBase = computeBreakpoints(base).node.totalDemerits;
+    const dAdj = computeBreakpoints(withAdj).node.totalDemerits;
+
+    // Two transitions fire → demerits increase by 2 × 10000
+    expect(dAdj).toBe(dBase + 20000);
+  });
+
+  it('adjDemerits does not fire when consecutive fitness classes differ by 1 or less', () => {
+    // glue(3,40,0) on line 1 → ratio=(30−8)/40=0.55 → class 2 (loose)
+    // line 2 ratio=−0.125 → class 1 (normal) → |2−1|=1, no fire
+    // startNode class=1, line1 class=2 → |2−1|=1, no fire
+    const noJumpNodes: Node[] = [
+      mkBox(5),
+      mkGlue(3, 40, 0), // larger stretch → smaller ratio → class 2
+      mkForced(),
+      mkBox(28),
+      mkGlue(3, 3, 8),
+      mkTerm(),
+      mkForced(),
+    ];
+
+    const base: Paragraph = {
+      nodes: noJumpNodes,
+      lineWidth: LINE_WIDTH,
+      tolerance: TOLERANCE,
+    };
+    const withAdj: Paragraph = { ...base, adjDemerits: 10000 };
+
+    const dBase = computeBreakpoints(base).node.totalDemerits;
+    const dAdj = computeBreakpoints(withAdj).node.totalDemerits;
+
+    // No transition fires — adj demerits must not have changed the total
+    expect(dAdj).toBe(dBase);
   });
 });

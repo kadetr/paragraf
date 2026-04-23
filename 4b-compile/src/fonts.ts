@@ -135,6 +135,14 @@ export function buildFontRegistry(
 
 // ─── selectVariant ────────────────────────────────────────────────────────────
 
+// Module-level set to deduplicate non-exact-weight warnings across compileBatch runs.
+const _warnedWeightMismatch = new Set<string>();
+
+/** Clears the weight-mismatch deduplication cache. Intended for use in tests. */
+export function _clearWeightMismatchWarnings(): void {
+  _warnedWeightMismatch.clear();
+}
+
 /**
  * Return the `FontId` of the closest variant for a given family, weight, and
  * style using a simplified CSS font-weight matching algorithm.
@@ -154,8 +162,12 @@ export function selectVariant(
   weight: number,
   style: FontStyle,
   registry: FontRegistry,
+  verbose = true,
 ): FontId {
-  const all = [...registry.values()].filter((d) => d.family === family);
+  const familyLower = family.toLowerCase();
+  const all = [...registry.values()].filter(
+    (d) => d.family.toLowerCase() === familyLower,
+  );
   if (all.length === 0) {
     throw new Error(
       `[paragraf/compile] No fonts registered for family "${family}". ` +
@@ -172,29 +184,74 @@ export function selectVariant(
   const best = nearestWeight(pool, weight);
 
   if (best.weight !== weight) {
-    console.warn(
-      `[paragraf/compile] No exact weight ${weight} for family "${family}" (style: ${style}). ` +
-        `Using weight ${best.weight} (id: ${best.id}).`,
-    );
+    const warnKey = `${familyLower}/${style}/${weight}/${best.weight}`;
+    if (!_warnedWeightMismatch.has(warnKey)) {
+      _warnedWeightMismatch.add(warnKey);
+      if (verbose) {
+        console.warn(
+          `[paragraf/compile] No exact weight ${weight} for family "${family}" (style: ${style}). ` +
+            `Using weight ${best.weight} (id: ${best.id}).`,
+        );
+      }
+    }
   }
 
   return best.id;
 }
 
-/** Nearest-weight selection with CSS-style tie-breaking. */
+/** Nearest-weight selection following the CSS Fonts Level 4 order-of-preference.
+ *
+ * CSS Fonts 4 §10.4.3 — "font-weight matching":
+ *  - target < 400:         search descending below, then ascending above.
+ *  - target 400:           check 400, 500, descending below 400, ascending above 500.
+ *  - target 500:           check 500, 400, descending below 400, ascending above 500.
+ *  - target 401–499:       check descending from target to 400, then ascending above target.
+ *  - target > 500:         search ascending above, then descending below.
+ */
 function nearestWeight(
   candidates: Array<{ id: FontId; weight?: number }>,
   target: number,
 ): { id: FontId; weight: number } {
   const pool = candidates.map((c) => ({ id: c.id, weight: c.weight ?? 400 }));
 
-  pool.sort((a, b) => {
-    const da = Math.abs(a.weight - target);
-    const db = Math.abs(b.weight - target);
-    if (da !== db) return da - db;
-    // Tie-break: target <= 500 → prefer lower weight; target > 500 → prefer higher
-    return target > 500 ? b.weight - a.weight : a.weight - b.weight;
-  });
+  // Build ordered preference list per CSS Fonts 4 §10.4.3.
+  const weights = pool.map((c) => c.weight);
+  const sorted = [...new Set(weights)].sort((a, b) => a - b);
 
-  return pool[0]!;
+  let preference: number[];
+  if (target === 400) {
+    // 400 → check 400, then 500, then descending below 400, then ascending above 500.
+    const exact400 = sorted.filter((w) => w === 400);
+    const exact500 = sorted.filter((w) => w === 500);
+    const below400 = sorted.filter((w) => w < 400).reverse();
+    const above500 = sorted.filter((w) => w > 500);
+    preference = [...exact400, ...exact500, ...below400, ...above500];
+  } else if (target === 500) {
+    // 500 → check 500, then 400, then descending below 400, then ascending above 500.
+    const exact500 = sorted.filter((w) => w === 500);
+    const exact400 = sorted.filter((w) => w === 400);
+    const below400 = sorted.filter((w) => w < 400).reverse();
+    const above500 = sorted.filter((w) => w > 500);
+    preference = [...exact500, ...exact400, ...below400, ...above500];
+  } else if (target < 400) {
+    // Below 400: descending to 100, then ascending to 900.
+    const below = sorted.filter((w) => w <= target).reverse();
+    const above = sorted.filter((w) => w > target);
+    preference = [...below, ...above];
+  } else if (target > 500) {
+    // Above 500: ascending to 900, then descending to 100.
+    const above = sorted.filter((w) => w >= target);
+    const below = sorted.filter((w) => w < target).reverse();
+    preference = [...above, ...below];
+  } else {
+    // 401–499: descend from target down to 400 only (do not go below 400),
+    // then ascend above target. CSS Fonts 4 §10.4.3.
+    const below = sorted.filter((w) => w >= 400 && w <= target).reverse();
+    const above = sorted.filter((w) => w > target);
+    const belowFloor = sorted.filter((w) => w < 400).reverse();
+    preference = [...below, ...above, ...belowFloor];
+  }
+
+  const chosen = preference[0] ?? sorted[0]!;
+  return pool.find((c) => c.weight === chosen) ?? pool[0]!;
 }

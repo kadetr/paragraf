@@ -3,6 +3,8 @@
 // ─── Main entry points ────────────────────────────────────────────────────────
 export { compile } from './compile.js';
 export { compileBatch } from './batch.js';
+export { createCompilerSession } from './session.js';
+export type { CompilerSession, SessionOptions } from './session.js';
 
 // ─── Option and result types ──────────────────────────────────────────────────
 export type {
@@ -23,6 +25,9 @@ export {
   resolveVariantEntry,
   VARIANT_CONVENTIONS,
 } from './fonts.js';
+
+// ─── Template ────────────────────────────────────────────────────────────────
+export { defineTemplate } from '@paragraf/template';
 
 // ─── Interpolation ────────────────────────────────────────────────────────────
 export { resolveText } from './interpolate.js';
@@ -92,3 +97,6 @@ export type {
 
 // Layout + SVG render
 export { layoutParagraph, renderToSvg } from '@paragraf/render-core';
+
+// Color / ICC
+export type { OutputIntent } from '@paragraf/render-pdf';

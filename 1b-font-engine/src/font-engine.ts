@@ -49,8 +49,9 @@ export interface FontEngine {
 
   /**
    * Convert text to glyphs, applying layout and shaping.
-   * Does NOT apply GSUB features (ligatures, sups/subs) —
-   * the caller applies those via applyLigatures() / applySingleSubstitution().
+   * GSUB features (ligatures, sups/subs) are applied by the engine internally
+   * at shaping time — callers do not need to call applyLigatures() or
+   * applySingleSubstitution() separately.
    * Pass `font` so engines that apply GSUB at shape time (e.g. WasmFontEngine)
    * can access Font.variant for sups/subs.
    */
@@ -66,15 +67,15 @@ export interface FontEngine {
 
   /**
    * Apply GSUB ligature substitution (liga, rlig features).
-   * Modifies glyph sequence in place; returns the substituted glyphs.
-   * If GSUB not supported or no rules match, returns [glyphs unchanged].
+   * @deprecated GSUB is now applied inside glyphsForString. This method is a
+   *   no-op on all built-in engines and will be removed in a future release.
    */
   applyLigatures(fontId: string, glyphs: Glyph[]): Glyph[];
 
   /**
    * Apply GSUB single substitution (sups, subs features).
-   * Maps each input glyph to its substituted form, if a rule exists.
-   * If GSUB not supported or no rules match, returns [glyphs unchanged].
+   * @deprecated GSUB is now applied inside glyphsForString. This method is a
+   *   no-op on all built-in engines and will be removed in a future release.
    */
   applySingleSubstitution(
     fontId: string,

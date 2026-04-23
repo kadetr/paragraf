@@ -233,7 +233,20 @@ describe('compile() — onMissing behaviour', () => {
 // ─── compile() — onOverflow ───────────────────────────────────────────────────
 
 describe('compile() — overflow handling', () => {
-  it('silently truncates when maxPages is exceeded (default silent)', async () => {
+  it('throws by default when content overflows (default onOverflow="throw")', async () => {
+    const longBody = 'word '.repeat(5000);
+    await expect(
+      compile({
+        template: makeTemplate(),
+        data: { title: 'Overflow Test', body: longBody },
+        output: 'rendered',
+        shaping: 'fontkit',
+        maxPages: 2,
+      }),
+    ).rejects.toThrow(/overflow/i);
+  });
+
+  it('silently truncates when onOverflow is "silent"', async () => {
     const longBody = 'word '.repeat(5000);
     const result = await compile({
       template: makeTemplate(),
@@ -241,6 +254,7 @@ describe('compile() — overflow handling', () => {
       output: 'rendered',
       shaping: 'fontkit',
       maxPages: 2,
+      onOverflow: 'silent',
     });
     // Only 2 pages generated; overflow reported
     expect(result.metadata.pageCount).toBeLessThanOrEqual(2);

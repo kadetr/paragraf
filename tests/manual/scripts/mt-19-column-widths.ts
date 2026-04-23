@@ -14,6 +14,7 @@ import { layoutParagraph, renderToSvg } from '@paragraf/render-core';
 import { serifRegistry, F12 } from '../fixtures/fonts.js';
 import { EN_BODY } from '../fixtures/text.js';
 import { writeSvg, writeJson, type TestMetrics } from '../fixtures/output.js';
+import { addSvgTestHeader } from '../fixtures/header.js';
 import { MARGIN_X, MARGIN_TOP, PAGE_H } from '../fixtures/documents.js';
 
 const WIDTHS = [200, 300, 400, 500, 600];
@@ -57,7 +58,7 @@ for (const width of WIDTHS) {
     width: pageW,
     height: PAGE_H,
   });
-  writeSvg(`mt-19-column-width-${width}pt.svg`, svg);
+  writeSvg(`mt-19-column-width-${width}pt.svg`, addSvgTestHeader(svg, 'MT-19'));
 
   console.log(
     `  ${String(width).padEnd(6)} ${String(out.lines.length).padEnd(6)} ${ms.toFixed(1).padEnd(9)} ${out.usedEmergency ? 'YES' : 'no'}`,

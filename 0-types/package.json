@@ -1,6 +1,6 @@
 {
   "name": "@paragraf/types",
-  "version": "0.5.0",
+  "version": "0.6.0",
   "description": "Shared TypeScript interfaces and constants for the paragraf typography library",
   "license": "MIT",
   "repository": {
@@ -36,7 +36,7 @@
     "typecheck": "tsc --noEmit",
     "prepack": "node ../scripts/publishconfig-swap.mjs apply",
     "postpack": "node ../scripts/publishconfig-swap.mjs restore",
-    "test": "vitest run",
+    "test": "vitest run --passWithNoTests",
     "test:watch": "vitest"
   },
   "devDependencies": {

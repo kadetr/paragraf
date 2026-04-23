@@ -14,6 +14,7 @@ import { layoutParagraph, renderToSvg } from '@paragraf/render-core';
 import { serifRegistry, F12 } from '../fixtures/fonts.js';
 import { EN_BODY } from '../fixtures/text.js';
 import { writeSvg, writeJson, type TestMetrics } from '../fixtures/output.js';
+import { addSvgTestHeader } from '../fixtures/header.js';
 import {
   MARGIN_X,
   MARGIN_TOP,
@@ -23,6 +24,11 @@ import {
 } from '../fixtures/documents.js';
 
 const LOOSENESSES = [-2, -1, 0, 1, 2];
+// CONTENT_W ≈ 451 pt — at that width all looseness values produce 11 lines,
+// so looseness has no visible effect (false assurance).  280 pt gives a range
+// of [-2,-1,0,+1,+2] → [18,17,18,18,19], demonstrating real compression (-1)
+// and real expansion (+2).
+const LINE_W = 280;
 
 const registry = serifRegistry();
 const composer = await createParagraphComposer(registry);
@@ -43,7 +49,7 @@ for (const looseness of LOOSENESSES) {
   const out = composer.compose({
     text: EN_BODY,
     font: F12,
-    lineWidth: CONTENT_W,
+    lineWidth: LINE_W,
     tolerance: 3,
     looseness,
   });
@@ -58,7 +64,7 @@ for (const looseness of LOOSENESSES) {
     height: PAGE_H,
   });
   const sign = looseness >= 0 ? `+${looseness}` : String(looseness);
-  writeSvg(`mt-21-looseness-${sign}.svg`, svg);
+  writeSvg(`mt-21-looseness-${sign}.svg`, addSvgTestHeader(svg, 'MT-21'));
 
   console.log(
     `  ${String(sign).padEnd(6)} ${String(out.lines.length).padEnd(6)} ${ms.toFixed(1)}`,
@@ -68,7 +74,15 @@ for (const looseness of LOOSENESSES) {
   rows.push({ looseness, lines: out.lines.length, ms });
 }
 
-// Negative looseness should not produce more lines than looseness=0
+// Negative looseness should produce fewer lines than looseness=0
+const negRows = rows.filter((r) => r.looseness < 0);
+const compressionWorks = negRows.some((r) => r.lines < zeroLines);
+if (!compressionWorks) {
+  console.log(
+    `  FAIL  no negative-looseness value produced fewer lines than looseness=0 (${zeroLines} lines)`,
+  );
+  failures++;
+}
 const mRow = rows.find((r) => r.looseness === -2);
 if (mRow && mRow.lines > zeroLines) {
   console.log(
@@ -77,7 +91,15 @@ if (mRow && mRow.lines > zeroLines) {
   failures++;
 }
 
-// Positive looseness should produce same or more lines than looseness=0
+// Positive looseness should produce more lines than looseness=0
+const posRows = rows.filter((r) => r.looseness > 0);
+const expansionWorks = posRows.some((r) => r.lines > zeroLines);
+if (!expansionWorks) {
+  console.log(
+    `  FAIL  no positive-looseness value produced more lines than looseness=0 (${zeroLines} lines)`,
+  );
+  failures++;
+}
 const pRow = rows.find((r) => r.looseness === 2);
 if (pRow && pRow.lines < zeroLines) {
   // This is expected to warn, not fail — looseness 2 may not change a short paragraph

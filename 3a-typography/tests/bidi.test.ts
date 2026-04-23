@@ -142,6 +142,78 @@ describe('analyze_bidi — WASM BiDi run analysis', () => {
   });
 });
 
+// ─── Phase 0: WASM analyze_bidi_v2 ──────────────────────────────────────────
+
+describe('analyze_bidi_v2 — paragraph level + reorder map', () => {
+  let wasm: any;
+
+  beforeAll(() => {
+    wasm = loadShapingWasm();
+  });
+
+  it('empty string → paragraphLevel 0, ltr, empty arrays', () => {
+    const r = JSON.parse(wasm.analyze_bidi_v2(''));
+    expect(r.ok.paragraphLevel).toBe(0);
+    expect(r.ok.paragraphDirection).toBe('ltr');
+    expect(r.ok.runs).toEqual([]);
+    expect(r.ok.reorderMap).toEqual([]);
+  });
+
+  it('pure LTR text → paragraphLevel 0, direction ltr', () => {
+    const r = JSON.parse(wasm.analyze_bidi_v2('Hello world'));
+    expect(r.ok.paragraphLevel).toBe(0);
+    expect(r.ok.paragraphDirection).toBe('ltr');
+  });
+
+  it('pure Hebrew text → paragraphLevel 1, direction rtl', () => {
+    const r = JSON.parse(wasm.analyze_bidi_v2('שלום עולם'));
+    expect(r.ok.paragraphLevel).toBe(1);
+    expect(r.ok.paragraphDirection).toBe('rtl');
+  });
+
+  it('pure Arabic text → paragraphLevel 1, direction rtl', () => {
+    const r = JSON.parse(wasm.analyze_bidi_v2('مرحبا'));
+    expect(r.ok.paragraphLevel).toBe(1);
+    expect(r.ok.paragraphDirection).toBe('rtl');
+  });
+
+  it('LTR text → reorderMap is identity permutation', () => {
+    const r = JSON.parse(wasm.analyze_bidi_v2('Hello world'));
+    const map: number[] = r.ok.reorderMap;
+    // For a single-run LTR paragraph, reorderMap is [0]
+    expect(map).toEqual(map.map((_: number, i: number) => i));
+  });
+
+  it('runs array has same fields as analyze_bidi', () => {
+    const r = JSON.parse(wasm.analyze_bidi_v2('Hello שלום'));
+    for (const run of r.ok.runs) {
+      expect(typeof run.text).toBe('string');
+      expect(typeof run.level).toBe('number');
+      expect(typeof run.isRtl).toBe('boolean');
+    }
+  });
+
+  it('run texts concatenate back to the original string', () => {
+    const text = 'Hello שלום World';
+    const r = JSON.parse(wasm.analyze_bidi_v2(text));
+    const joined = r.ok.runs.map((run: { text: string }) => run.text).join('');
+    expect(joined).toBe(text);
+  });
+
+  it('reorderMap length equals runs length', () => {
+    const r = JSON.parse(wasm.analyze_bidi_v2('Hello שלום World'));
+    expect(r.ok.reorderMap.length).toBe(r.ok.runs.length);
+  });
+
+  it('reorderMap is a permutation of run indices', () => {
+    const r = JSON.parse(wasm.analyze_bidi_v2('Hello שלום World'));
+    const map: number[] = r.ok.reorderMap;
+    const n = r.ok.runs.length;
+    const sorted = [...map].sort((a, b) => a - b);
+    expect(sorted).toEqual(Array.from({ length: n }, (_, i) => i));
+  });
+});
+
 // ─── End-to-end: RTL paragraph composition ───────────────────────────────────
 
 describe('RTL paragraph composition', () => {

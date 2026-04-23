@@ -5,6 +5,14 @@ import { Language } from '@paragraf/types';
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
+/** Per-document hyphenation override dictionary (mirrors TeX `\hyphenation{…}`).
+ *  Keys are words (case-insensitive).  Values:
+ *  - `string[]` — explicit break fragments (e.g. `{ 'present': ['pre', 'sent'] }`).
+ *    `minLeft`/`minRight` boundaries are still enforced.
+ *  - `false`    — never hyphenate this word, overriding any pattern output.
+ */
+export type ExceptionDictionary = Record<string, string[] | false>;
+
 export interface HyphenateOptions {
   minWordLength: number;
   fontSize: number;
@@ -14,6 +22,16 @@ export interface HyphenateOptions {
   minRight?: number; // override deriveMinRight(fontSize); 1 = allow single-char right fragments
   processCapitalized?: boolean; // default false — skip non-first capitalized words (proper noun heuristic)
   // set true to hyphenate all words regardless of capitalisation
+  /** Per-document exception dictionary checked before pattern-based hyphenation. */
+  exceptions?: ExceptionDictionary;
+}
+
+/** Internal-only extension of HyphenateOptions used within hyphenateParagraph
+ *  to thread sentence-boundary context through to shouldSkip.
+ *  Not part of the public API — never exposed to callers.
+ */
+interface HyphenateOptionsInternal extends HyphenateOptions {
+  _prevWord?: string;
 }
 
 export interface HyphenatedWord {
@@ -37,8 +55,11 @@ export const DEFAULT_HYPHENATE_OPTIONS: HyphenateOptions = {
 export const deriveMinLeft = (fontSize: number): number =>
   Math.max(2, Math.round(fontSize / 6));
 
+// minRight is intentionally one unit larger than minLeft so that the trailing
+// fragment is always at least as long as the leading one.  This avoids very
+// short hanging suffixes like "-s" or "-ed" at the end of a line.
 export const deriveMinRight = (fontSize: number): number =>
-  Math.max(2, Math.round(fontSize / 6));
+  Math.max(3, Math.round(fontSize / 6) + 1);
 
 // ─── Pattern map ─────────────────────────────────────────────────────────────
 
@@ -47,6 +68,7 @@ export const deriveMinRight = (fontSize: number): number =>
 const PATTERN_LOADERS: Record<Language, () => Promise<any>> = {
   'en-us': () => import('hyphen/patterns/en-us.js'),
   'en-gb': () => import('hyphen/patterns/en-gb.js'),
+  // de-1996: reformed German orthography (post-1996 spelling reform)
   de: () => import('hyphen/patterns/de-1996.js'),
   fr: () => import('hyphen/patterns/fr.js'),
   tr: () => import('hyphen/patterns/tr.js'),
@@ -55,6 +77,7 @@ const PATTERN_LOADERS: Record<Language, () => Promise<any>> = {
   it: () => import('hyphen/patterns/it.js'),
   es: () => import('hyphen/patterns/es.js'),
   sv: () => import('hyphen/patterns/sv.js'),
+  // no: Bokmål + Nynorsk combined patterns (covers both official written standards)
   no: () => import('hyphen/patterns/no.js'),
   da: () => import('hyphen/patterns/da.js'),
   fi: () => import('hyphen/patterns/fi.js'),
@@ -109,7 +132,7 @@ const extractSoftHyphenFragments = (word: string): string[] | null => {
 
 const shouldSkip = (
   word: string,
-  opts: HyphenateOptions,
+  opts: HyphenateOptionsInternal,
   isFirstWord: boolean,
 ): boolean => {
   // strip soft hyphens before length/pattern checks
@@ -118,8 +141,14 @@ const shouldSkip = (
   if (/\d/.test(clean)) return true;
   if (/^https?:\/\//.test(clean)) return true;
   if (/^[A-Z][A-Z]+$/.test(clean)) return true;
-  if (!opts.processCapitalized && !isFirstWord && /^[A-Z]/.test(clean))
-    return true;
+  if (!opts.processCapitalized && !isFirstWord && /^[A-Z]/.test(clean)) {
+    // Allow capitalised words at a sentence start (after .  !  ?  with optional
+    // closing punctuation).  This prevents "Mr. Smith went…" from skipping
+    // hyphenation on "Smith" because it happens to start with a capital.
+    const isSentenceStart =
+      opts._prevWord !== undefined && /[.!?]['"\)\]\}]*$/.test(opts._prevWord);
+    if (!isSentenceStart) return true;
+  }
   return false;
 };
 
@@ -189,6 +218,30 @@ export const hyphenateWord = (
 
   const minLeft = opts.minLeft ?? deriveMinLeft(opts.fontSize);
   const minRight = opts.minRight ?? deriveMinRight(opts.fontSize);
+
+  // Exception dictionary — checked before pattern-based hyphenation.
+  if (opts.exceptions) {
+    const key = clean.toLowerCase();
+    const override = opts.exceptions[key];
+    if (override === false) {
+      return {
+        original: clean,
+        fragments: [clean],
+        hyphenable: false,
+        hasSoftHyphen: false,
+      };
+    }
+    if (Array.isArray(override) && override.length > 1) {
+      const frags = enforceMinBoundaries(override, minLeft, minRight);
+      return {
+        original: clean,
+        fragments: frags,
+        hyphenable: frags.length > 1,
+        hasSoftHyphen: false,
+      };
+    }
+  }
+
   const hyphenated = hyphenator(clean);
   const all = hyphenated.split(INPUT_SOFT_HYPHEN);
   const fragments = enforceMinBoundaries(all, minLeft, minRight);
@@ -206,7 +259,15 @@ export const hyphenateParagraph = (
   opts: HyphenateOptions = DEFAULT_HYPHENATE_OPTIONS,
 ): HyphenatedWord[] => {
   const words = text.trim().split(/\s+/);
-  return words.map((word, index) =>
-    hyphenateWord(word, opts, index === 0, opts.preserveSoftHyphens ?? true),
-  );
+  return words.map((word, index) => {
+    // Pass the previous word so shouldSkip can detect sentence boundaries.
+    const optsWithPrev: HyphenateOptionsInternal =
+      index > 0 ? { ...opts, _prevWord: words[index - 1] } : opts;
+    return hyphenateWord(
+      word,
+      optsWithPrev,
+      index === 0,
+      opts.preserveSoftHyphens ?? true,
+    );
+  });
 };

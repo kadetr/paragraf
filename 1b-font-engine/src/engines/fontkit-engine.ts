@@ -148,7 +148,8 @@ export class FontkitEngine implements FontEngine {
   }
 
   private featuresFor(font?: Font): string[] {
-    const features = ['liga', 'rlig'];
+    const features: string[] = ['calt'];
+    if (font?.ligatures !== false) features.push('liga', 'rlig');
     if (font?.variant === 'superscript') features.push('sups');
     else if (font?.variant === 'subscript') features.push('subs');
     return features;

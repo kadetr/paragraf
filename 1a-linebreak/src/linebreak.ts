@@ -8,6 +8,8 @@ import {
   FORCED_BREAK,
   PROHIBITED,
   DOUBLE_HYPHEN_PENALTY,
+  isForced,
+  isProhibited,
 } from '@paragraf/types';
 
 // ─── Prefix sums ─────────────────────────────────────────────────────────────
@@ -48,7 +50,21 @@ const isFeasible = (ratio: number, tolerance: number): boolean =>
   ratio >= -1 && ratio <= tolerance;
 
 const computeBadness = (ratio: number): number =>
-  Math.round(100 * Math.pow(Math.abs(ratio), 3));
+  Math.min(10000, Math.round(100 * Math.pow(Math.abs(ratio), 3)));
+
+/**
+ * Maps an adjustment ratio to one of TeX's four fitness classes:
+ *   0 = tight      (r < −0.5)
+ *   1 = normal     (−0.5 ≤ r ≤ 0.5)
+ *   2 = loose      (0.5 < r ≤ 1.0)
+ *   3 = very loose (r > 1.0)
+ */
+const fitnessClassOf = (ratio: number): 0 | 1 | 2 | 3 => {
+  if (ratio < -0.5) return 0;
+  if (ratio <= 0.5) return 1;
+  if (ratio <= 1.0) return 2;
+  return 3;
+};
 
 const computeDemerits = (
   badness: number,
@@ -60,7 +76,7 @@ const computeDemerits = (
 
   if (penalty >= 0) {
     demerits = Math.pow(1 + badness + penalty, 2);
-  } else if (penalty !== FORCED_BREAK) {
+  } else if (!isForced(penalty)) {
     demerits = Math.pow(1 + badness, 2) - Math.pow(penalty, 2);
   } else {
     demerits = Math.pow(1 + badness, 2);
@@ -75,7 +91,7 @@ const computeDemerits = (
 
 const isValidBreak = (nodes: Node[], index: number): boolean => {
   const node = nodes[index];
-  if (node.type === 'penalty') return node.penalty < PROHIBITED;
+  if (node.type === 'penalty') return !isProhibited(node.penalty);
   if (node.type === 'glue') {
     if (index > 0 && nodes[index - 1].type === 'box') return true;
   }
@@ -125,6 +141,7 @@ const forwardPass = (
   widowPenalty: number = 0,
   orphanPenalty: number = 0,
   lineWidths: number[] = [],
+  adjDemerits: number = 0,
 ): BreakpointNode[] => {
   const startNode: BreakpointNode = {
     position: 0,
@@ -134,6 +151,7 @@ const forwardPass = (
     previous: null,
     flagged: false,
     consecutiveHyphens: 0,
+    fitnessClass: 1, // initial node is treated as normal (ratio 0)
   };
 
   let active: BreakpointNode[] = [startNode];
@@ -145,7 +163,7 @@ const forwardPass = (
     const penaltyWidth = node.type === 'penalty' ? node.width : 0;
     const penaltyValue = node.type === 'penalty' ? node.penalty : 0;
     const isFlagged = node.type === 'penalty' ? node.flagged : false;
-    const isForcedBreak = penaltyValue <= FORCED_BREAK;
+    const isForcedBreak = isForced(penaltyValue);
 
     const nextActive: BreakpointNode[] = [];
     const bestAtI = new Map<number, BreakpointNode>();
@@ -190,6 +208,11 @@ const forwardPass = (
           isFlagged,
         );
 
+        if (adjDemerits > 0) {
+          const fc = fitnessClassOf(ratio);
+          if (Math.abs(fc - a.fitnessClass) > 1) demerits += adjDemerits;
+        }
+
         if (isForcedBreak && widowPenalty > 0) {
           const lastLineBoxes = countContentBoxes(nodes, a.position, i);
           if (lastLineBoxes === 1) demerits += widowPenalty;
@@ -207,6 +230,7 @@ const forwardPass = (
           previous: a,
           flagged: isFlagged,
           consecutiveHyphens,
+          fitnessClass: fitnessClassOf(ratio),
         };
 
         const existing = bestAtI.get(candidate.line);
@@ -243,10 +267,15 @@ export const computeBreakpoints = (paragraph: Paragraph): BreakpointResult => {
     tolerance,
     emergencyStretch = 0,
     consecutiveHyphenLimit = 0,
-    widowPenalty = 0,
-    orphanPenalty = 0,
     looseness = 0,
   } = paragraph;
+
+  // Accept both canonical (runtPenalty / singleLinePenalty) and deprecated
+  // (widowPenalty / orphanPenalty) names. Canonical names take precedence.
+  const widowPenalty = paragraph.runtPenalty ?? paragraph.widowPenalty ?? 0;
+  const orphanPenalty =
+    paragraph.singleLinePenalty ?? paragraph.orphanPenalty ?? 0;
+  const adjDemerits = paragraph.adjDemerits ?? 0;
 
   const sums = buildPrefixSums(nodes);
 
@@ -260,6 +289,7 @@ export const computeBreakpoints = (paragraph: Paragraph): BreakpointResult => {
     widowPenalty,
     orphanPenalty,
     lineWidths,
+    adjDemerits,
   );
 
   let usedEmergency = false;
@@ -276,6 +306,7 @@ export const computeBreakpoints = (paragraph: Paragraph): BreakpointResult => {
         widowPenalty,
         orphanPenalty,
         lineWidths,
+        adjDemerits,
       );
       usedEmergency = true;
     }

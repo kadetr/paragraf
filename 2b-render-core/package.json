@@ -1,6 +1,6 @@
 {
   "name": "@paragraf/render-core",
-  "version": "0.3.1",
+  "version": "0.6.0",
   "description": "Canvas/SVG layout engine for the paragraf typesetter.",
   "license": "MIT",
   "repository": {
@@ -35,18 +35,18 @@
   "scripts": {
     "build": "tsup",
     "prepublishOnly": "npm run build",
-    "test": "vitest run",
+    "test": "vitest run --passWithNoTests",
     "test:watch": "vitest",
     "typecheck": "tsc --noEmit",
     "prepack": "node ../scripts/publishconfig-swap.mjs apply",
     "postpack": "node ../scripts/publishconfig-swap.mjs restore"
   },
   "dependencies": {
-    "@paragraf/types": "^0.5.0",
-    "@paragraf/font-engine": "^0.5.0"
+    "@paragraf/types": "^0.6.0",
+    "@paragraf/font-engine": "^0.6.0"
   },
   "devDependencies": {
-    "@paragraf/typography": "^0.3.0",
+    "@paragraf/typography": "^0.6.0",
     "@types/node": "^22.19.15",
     "tsx": "^4.21.0",
     "typescript": "^5.4.0",

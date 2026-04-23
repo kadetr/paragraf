@@ -23,6 +23,7 @@ import {
   type LineMetrics,
   type TestMetrics,
 } from '../fixtures/output.js';
+import { drawTestHeader } from '../fixtures/header.js';
 import {
   MARGIN_X,
   MARGIN_TOP,
@@ -141,6 +142,7 @@ writeSvg('mt-11-wasm-ts-parity-ts.svg', svg);
 const pdf = await renderToPdf(rendered, fontEngine, {
   width: PAGE_W,
   height: PAGE_H,
+  preDraw: (doc) => drawTestHeader(doc, 'MT-11'),
 });
 writePdf('mt-11-wasm-ts-parity.pdf', pdf);
 

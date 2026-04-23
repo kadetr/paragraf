@@ -1,6 +1,7 @@
 // pdf.ts
 
 import { createRequire } from 'module';
+import type { OutputIntent, ColorTransform } from '@paragraf/color';
 import {
   RenderedParagraph,
   RenderedDocument,
@@ -50,7 +51,12 @@ export interface PdfOptions {
   title?: string; // PDF document title (Info dict)
   lang?: string; // document language tag (Info dict)
   compress?: boolean; // pdfkit compression; defaults to pdfkit's own default
+  outputIntent?: OutputIntent; // embed ICC OutputIntent in PDF catalog (PDF/A, PDF/X)
+  colorTransform?: ColorTransform; // optional ICC color transform; converts fill from sRGB to output color space
+  preDraw?: (doc: any) => void; // called once after the doc is created, before content is drawn
 }
+
+export type { OutputIntent };
 
 export interface DocumentPdfOptions {
   pageWidth?: number; // default 595.28 (A4)
@@ -61,11 +67,129 @@ export interface DocumentPdfOptions {
   title?: string; // PDF document title (Info dict)
   lang?: string; // document language tag (Info dict)
   compress?: boolean; // pdfkit compression; defaults to pdfkit's own default
+  outputIntent?: OutputIntent; // embed ICC OutputIntent in PDF catalog (PDF/A, PDF/X)
+  colorTransform?: ColorTransform; // optional ICC color transform; converts fill from sRGB to output color space
+  preDraw?: (doc: any) => void; // called once per page after addPage(), before content is drawn
+}
+
+// ─── OutputIntent emitter ─────────────────────────────────────────────────────
+//
+// Creates an ICC profile stream object and an OutputIntent dict object, then
+// wires the intent into the PDF catalog via doc._root.data (internal pdfkit API).
+// Must be called before doc.end() so the references are registered in the xref.
+
+const ICC_CHANNELS: Record<string, number> = {
+  Gray: 1,
+  RGB: 3,
+  Lab: 3,
+  CMYK: 4,
+};
+
+function emitOutputIntent(doc: any, intent: OutputIntent): void {
+  const profileBytes = Buffer.from(intent.profile.bytes);
+  const n = ICC_CHANNELS[intent.profile.colorSpace] ?? 3;
+
+  // ICC profile stream object.
+  const profileRef = doc.ref({
+    Length: profileBytes.length,
+    Subtype: 'ICC',
+    N: n,
+  });
+  if (profileBytes.length > 0) {
+    profileRef.write(profileBytes);
+  }
+  profileRef.end();
+
+  // OutputIntent dict object (no stream body).
+  // Subtype heuristic: CMYK destination profile → PDF/X (GTS_PDFX); all others → PDF/A (GTS_PDFA1).
+  // This is correct for the common cases (Fogra39/SWOP CMYK → PDF/X; sRGB → PDF/A).
+  // It does not cover PDF/X with an RGB output intent (monitor-proof workflow) or
+  // PDF/A with a CMYK profile (archival CMYK). File an issue if you need those branches.
+  const s = intent.profile.colorSpace === 'CMYK' ? 'GTS_PDFX' : 'GTS_PDFA1';
+  const intentRef = doc.ref({
+    Type: 'OutputIntent',
+    S: s,
+    OutputConditionIdentifier: intent.condition,
+    DestOutputProfile: profileRef,
+  });
+  intentRef.end();
+
+  // Wire into the PDF catalog. pdfkit serializes _root.data entries when
+  // finalizing the document, producing /OutputIntents [ X 0 R ] in the catalog.
+  doc._root.data.OutputIntents = [intentRef];
 }
 
 // Internal: opts passed through to drawRenderedParagraph
 interface SelectableOpts {
   fontRegistry: FontRegistry;
+}
+
+// ─── Color transform helper ───────────────────────────────────────────────────
+//
+// Parses a CSS color string (named, hex, rgb()) to normalized sRGB [0,1] and
+// applies the ColorTransform. Returns a PDFKit-compatible fill value:
+// - 4-element array [C,M,Y,K] in [0,1] for CMYK output
+// - original string if parsing fails (safe passthrough)
+
+function parseCssToSrgb(css: string): [number, number, number] | null {
+  const s = css.trim().toLowerCase();
+  // Named colors (common subset)
+  const NAMED: Record<string, [number, number, number]> = {
+    black: [0, 0, 0],
+    white: [1, 1, 1],
+    red: [1, 0, 0],
+    green: [0, 0.502, 0],
+    blue: [0, 0, 1],
+    cyan: [0, 1, 1],
+    magenta: [1, 0, 1],
+    yellow: [1, 1, 0],
+  };
+  if (NAMED[s]) return NAMED[s];
+  // #rrggbb or #rgb
+  const hex6 = s.match(/^#([0-9a-f]{6})$/);
+  if (hex6) {
+    const v = parseInt(hex6[1], 16);
+    return [(v >> 16) / 255, ((v >> 8) & 0xff) / 255, (v & 0xff) / 255];
+  }
+  const hex3 = s.match(/^#([0-9a-f]{3})$/);
+  if (hex3) {
+    const [r, g, b] = hex3[1].split('').map((c) => parseInt(c + c, 16) / 255);
+    return [r, g, b];
+  }
+  // rgb(r, g, b)
+  const rgb = s.match(/^rgb\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*\)$/);
+  if (rgb) {
+    return [Number(rgb[1]) / 255, Number(rgb[2]) / 255, Number(rgb[3]) / 255];
+  }
+  return null;
+}
+
+function applyFillTransform(
+  transform: ColorTransform,
+  fill: string,
+): string | number[] {
+  const srgb = parseCssToSrgb(fill);
+  if (!srgb) return fill;
+  const out = transform.apply(srgb);
+  if (out.length === 4) {
+    // CMYK output: return [C,M,Y,K] in [0,1] for PDFKit's DeviceCMYK colour space.
+    return [
+      Math.min(Math.max(out[0] ?? 0, 0), 1),
+      Math.min(Math.max(out[1] ?? 0, 0), 1),
+      Math.min(Math.max(out[2] ?? 0, 0), 1),
+      Math.min(Math.max(out[3] ?? 0, 0), 1),
+    ];
+  }
+  if (out.length === 3) {
+    // RGB output: convert [0,1] to a CSS hex string.
+    const r = Math.round(Math.min(Math.max(out[0] ?? 0, 0), 1) * 255);
+    const g = Math.round(Math.min(Math.max(out[1] ?? 0, 0), 1) * 255);
+    const b = Math.round(Math.min(Math.max(out[2] ?? 0, 0), 1) * 255);
+    return `#${r.toString(16).padStart(2, '0')}${g.toString(16).padStart(2, '0')}${b.toString(16).padStart(2, '0')}`;
+  }
+  // Unsupported channel count (e.g. Gray=1, Lab=3 without a known mapping):
+  // pass through the original fill unchanged to avoid mis-encoding.
+  return fill;
 }
 
 // ─── Shared drawing helper ────────────────────────────────────────────────────
@@ -80,7 +204,11 @@ function drawRenderedParagraph(
   fontEngine: FontEngine,
   fill: string,
   selectableOpts?: SelectableOpts,
+  colorTransform?: ColorTransform,
 ): void {
+  const effectiveFill: string | number[] = colorTransform
+    ? applyFillTransform(colorTransform, fill)
+    : fill;
   for (const line of rendered) {
     for (const seg of line.segments) {
       if (!seg.text) continue;
@@ -137,7 +265,7 @@ function drawRenderedParagraph(
           }
         }
 
-        if (hasCommands) doc.fill(fill);
+        if (hasCommands) doc.fill(effectiveFill);
         doc.restore();
 
         const kern =
@@ -189,6 +317,9 @@ export const renderToPdf = (
     title,
     lang,
     compress,
+    outputIntent,
+    colorTransform,
+    preDraw,
   } = options;
 
   if (selectable && !fontRegistry) {
@@ -214,7 +345,16 @@ export const renderToPdf = (
   return new Promise<Buffer>((resolve, reject) => {
     doc.on('end', () => resolve(Buffer.concat(chunks)));
     doc.on('error', reject);
-    drawRenderedParagraph(doc, rendered, fontEngine, fill, selectableOpts);
+    if (preDraw) preDraw(doc);
+    drawRenderedParagraph(
+      doc,
+      rendered,
+      fontEngine,
+      fill,
+      selectableOpts,
+      colorTransform,
+    );
+    if (outputIntent) emitOutputIntent(doc, outputIntent);
     doc.end();
   });
 };
@@ -240,6 +380,9 @@ export const renderDocumentToPdf = (
     title,
     lang,
     compress,
+    outputIntent,
+    colorTransform,
+    preDraw,
   } = options;
 
   if (selectable && !fontRegistry) {
@@ -271,6 +414,7 @@ export const renderDocumentToPdf = (
 
     for (let pi = 0; pi < renderedDoc.pages.length; pi++) {
       doc.addPage({ size: [pageWidth, pageHeight] });
+      if (preDraw) preDraw(doc);
       const page = renderedDoc.pages[pi];
       for (const item of page.items) {
         drawRenderedParagraph(
@@ -279,10 +423,12 @@ export const renderDocumentToPdf = (
           fontEngine,
           fill,
           selectableOpts,
+          colorTransform,
         );
       }
     }
 
+    if (outputIntent) emitOutputIntent(doc, outputIntent);
     doc.end();
   });
 };

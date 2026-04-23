@@ -209,9 +209,10 @@ const extractLine = (
     wordRuns,
     wordSpacing,
     hyphenated: flagged,
-    ratio: effectiveRatio,
+    ratio: alignment === 'justified' ? effectiveRatio : 0,
     alignment,
-    isWidow: false, // set by composeParagraph post-pass
+    isWidow: false, // @deprecated — use isRunt
+    isRunt: false, // set by composeParagraph post-pass
     lineWidth,
     lineHeight,
     baseline,
@@ -262,12 +263,12 @@ export const composeParagraph = (
     previousPosition = lineBreak.position;
   }
 
-  // mark widow — last line with single non-empty content word
+  // Mark runt — last line with a single non-empty content word.
   if (lines.length > 1) {
     const last = lines[lines.length - 1];
     const contentWords = last.words.filter((w) => w !== '');
     if (contentWords.length === 1) {
-      lines[lines.length - 1] = { ...last, isWidow: true };
+      lines[lines.length - 1] = { ...last, isWidow: true, isRunt: true };
     }
   }
 

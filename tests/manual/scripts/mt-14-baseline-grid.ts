@@ -23,6 +23,7 @@ import {
   writeJson,
   type TestMetrics,
 } from '../fixtures/output.js';
+import { drawTestHeader } from '../fixtures/header.js';
 import {
   PAGE_W,
   PAGE_H,
@@ -163,6 +164,7 @@ writeSvg('mt-14-baseline-grid.svg', finalSvg);
 const pdf = await renderDocumentToPdf(laid, fontEngine, {
   pageWidth: PAGE_W,
   pageHeight: PAGE_H,
+  preDraw: (doc) => drawTestHeader(doc, 'MT-14'),
 });
 writePdf('mt-14-baseline-grid.pdf', pdf);
 

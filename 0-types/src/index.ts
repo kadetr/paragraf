@@ -71,6 +71,8 @@ export interface Font {
   // default 0 — no tracking
   // applied to (glyphCount-1) gaps after GSUB substitution
   variant?: FontVariant; // triggers GSUB sups/subs measurement; default 'normal'
+  /** When false, disables the `liga` and `rlig` OpenType ligature features. Default true. */
+  ligatures?: boolean;
 }
 
 /**
@@ -86,6 +88,8 @@ export interface FontSpec {
   stretch?: FontStretch; // 'condensed' | 'normal' | 'expanded' | …; default 'normal'
   letterSpacing?: number; // extra tracking in points; default 0
   variant?: FontVariant; // 'normal' | 'superscript' | 'subscript'; default 'normal'
+  /** When false, disables the `liga` and `rlig` OpenType ligature features. Default true. */
+  ligatures?: boolean;
 }
 
 export interface FontDescriptor {
@@ -96,6 +100,12 @@ export interface FontDescriptor {
   /** Optional variant metadata — used by the compile layer for family+variant → FontId resolution. */
   weight?: number;
   style?: FontStyle;
+  /**
+   * Font stretch (condensed / normal / expanded etc.).
+   * Stored in the registry and accepted by the API, but not yet consulted
+   * during variant selection (`selectVariant` in @paragraf/compile). Reserved
+   * for future CSS Fonts Level 4 stretch-matching support.
+   */
   stretch?: FontStretch;
 }
 
@@ -163,8 +173,28 @@ export type AlignmentMode = 'justified' | 'left' | 'right' | 'center';
 
 // ─── Constants ───────────────────────────────────────────────────────────────
 
+/**
+ * Sentinel penalty value that forces a line break (TeX's −∞).
+ * The WASM boundary (wasm-binary.ts `sentinel()`) maps this to −1e30 so that
+ * Rust prefix-sum subtraction never produces NaN (∞ − ∞ = NaN).
+ * On the TS side, forced-break nodes are never glue/box nodes and therefore
+ * never contribute to prefix-sum arrays, so the NaN risk is contained.
+ */
 export const FORCED_BREAK = -Infinity;
+
+/**
+ * Sentinel penalty value that prohibits a line break (TeX's +∞).
+ * The WASM boundary maps this to +1e30 for Rust. Legitimate penalties stay
+ * well below this value (DOUBLE_HYPHEN_PENALTY is 3000).
+ */
 export const PROHIBITED = +Infinity;
+
+/** Returns true when `penalty` represents a forced line break. */
+export const isForced = (penalty: number): boolean => penalty <= FORCED_BREAK;
+
+/** Returns true when `penalty` prohibits a line break. */
+export const isProhibited = (penalty: number): boolean => penalty >= PROHIBITED;
+
 export const HYPHEN_PENALTY = 50;
 export const DOUBLE_HYPHEN_PENALTY = 3000;
 export const SOFT_HYPHEN_PENALTY = 0;
@@ -207,6 +237,11 @@ export interface BreakpointNode {
   previous: BreakpointNode | null;
   flagged: boolean;
   consecutiveHyphens: number;
+  /**
+   * Fitness class of this breakpoint (0=tight, 1=normal, 2=loose, 3=very-loose).
+   * Used by adjDemerits to penalise abrupt changes in line tightness.
+   */
+  fitnessClass: 0 | 1 | 2 | 3;
 }
 
 // ─── Paragraph I/O ───────────────────────────────────────────────────────────
@@ -222,8 +257,27 @@ export interface Paragraph {
   looseness?: number;
   justifyLastLine?: boolean;
   consecutiveHyphenLimit?: number;
+  /**
+   * Demerit added when the final line of a paragraph contains a single word (runt line).
+   * @since v0.6
+   */
+  runtPenalty?: number;
+  /**
+   * Demerit added when the first line of a paragraph contains a single word.
+   * @since v0.6
+   */
+  singleLinePenalty?: number;
+  /** @deprecated Use `runtPenalty` instead. Will be removed in v1.0. */
   widowPenalty?: number;
+  /** @deprecated Use `singleLinePenalty` instead. Will be removed in v1.0. */
   orphanPenalty?: number;
+  /**
+   * Extra demerits added when adjacent lines are in fitness classes more than 1
+   * apart (e.g. tight followed by loose). Prevents visually jarring density
+   * transitions. TeX default is 10000; omit or set 0 to disable.
+   * @since v0.6
+   */
+  adjDemerits?: number;
 }
 
 export interface ComposedLine {
@@ -234,7 +288,8 @@ export interface ComposedLine {
   hyphenated: boolean;
   ratio: number;
   alignment: AlignmentMode;
-  isWidow: boolean;
+  isWidow: boolean; // @deprecated — use isRunt
+  isRunt: boolean; // true when this is the last line and contains a single word
   lineWidth: number; // actual lineWidth used for this line
   lineHeight: number; // max(ascender - descender + lineGap) across all fonts on the line
   baseline: number; // ascender from OS/2, relative to line top

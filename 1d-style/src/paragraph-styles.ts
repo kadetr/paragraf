@@ -12,6 +12,7 @@ const DEFAULTS: ResolvedParagraphStyle = {
     stretch: 'normal',
     letterSpacing: 0,
     variant: 'normal',
+    ligatures: true,
   },
   language: 'en-us',
   alignment: 'justified',
@@ -82,6 +83,8 @@ function mergeFont(
         ? override.letterSpacing
         : base.letterSpacing,
     variant: override.variant !== undefined ? override.variant : base.variant,
+    ligatures:
+      override.ligatures !== undefined ? override.ligatures : base.ligatures,
   };
 }
 

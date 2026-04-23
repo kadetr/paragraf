@@ -14,6 +14,7 @@ import { layoutParagraph, renderToSvg } from '@paragraf/render-core';
 import { serifRegistry, font } from '../fixtures/fonts.js';
 import { EN_BODY } from '../fixtures/text.js';
 import { writeSvg, writeJson, type TestMetrics } from '../fixtures/output.js';
+import { addSvgTestHeader } from '../fixtures/header.js';
 import {
   MARGIN_X,
   MARGIN_TOP,
@@ -63,7 +64,7 @@ for (const size of SIZES) {
     width: PAGE_W,
     height: PAGE_H,
   });
-  writeSvg(`mt-16-font-size-${size}pt.svg`, svg);
+  writeSvg(`mt-16-font-size-${size}pt.svg`, addSvgTestHeader(svg, 'MT-16'));
 
   console.log(
     `  ${String(size).padEnd(5)} ${String(out.lines.length).padEnd(6)} ${ms.toFixed(1).padEnd(9)} ${out.usedEmergency ? 'YES' : 'no'}`,

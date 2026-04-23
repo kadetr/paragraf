@@ -83,20 +83,38 @@ export function composeKP(
     return runKP(lineWidth);
   }
 
-  // Two-pass OMA: first pass at base width → extract per-line protrusions →
-  // second pass with wider line widths → recompute xOffsets from second-pass
-  // line boundaries (mirrors createParagraphComposer in @paragraf/typography).
-  const firstPass = runKP(lineWidth);
-  const { lineWidths } = buildOmaAdjustments(firstPass, lineWidth, measurer);
-  const secondPass = runKP(lineWidth, lineWidths);
+  // Converging OMA loop — mirrors createParagraphComposer in @paragraf/typography.
+  // Iterate until break positions stabilise (or MAX_OMA_PASSES is reached):
+  // each pass widens lineWidths based on the current line boundaries, recomposes,
+  // and checks if the word-level line structure changed. Converges in ≤ 2 passes
+  // for typical paragraphs.
+  const MAX_OMA_PASSES = 5;
+  let omaLines = runKP(lineWidth);
+
+  const breaksMatch = (a: ComposedParagraph, b: ComposedParagraph): boolean => {
+    if (a.length !== b.length) return false;
+    return a.every(
+      (la, i) =>
+        la.words.length === b[i].words.length &&
+        la.words.every((w, j) => w === b[i].words[j]),
+    );
+  };
+
+  for (let pass = 0; pass < MAX_OMA_PASSES; pass++) {
+    const { lineWidths } = buildOmaAdjustments(omaLines, lineWidth, measurer);
+    const recomposed = runKP(lineWidth, lineWidths);
+    const converged = breaksMatch(omaLines, recomposed);
+    omaLines = recomposed;
+    if (converged) break;
+  }
+
   const { xOffsets, rightProtrusions } = buildOmaAdjustments(
-    secondPass,
+    omaLines,
     lineWidth,
     measurer,
   );
 
-  // Apply xOffsets and rightProtrusions from OMA onto the final composed lines.
-  return secondPass.map((line, i) => ({
+  return omaLines.map((line, i) => ({
     ...line,
     xOffset: xOffsets[i] ?? 0,
     rightProtrusion: rightProtrusions[i] ?? 0,

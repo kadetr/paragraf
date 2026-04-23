@@ -28,6 +28,39 @@ function analyze_bidi(text) {
 exports.analyze_bidi = analyze_bidi;
 
 /**
+ * Extended BiDi analysis: paragraph base level (P2/P3 first-strong), logical
+ * runs, and a visual reorder map derived from the UBA L2 algorithm.
+ *
+ * Returns:
+ * ```json
+ * { "ok": { "paragraphLevel": 0|1, "paragraphDirection": "ltr"|"rtl",
+ *           "runs": [{"text","level","isRtl"}],
+ *           "reorderMap": [<logical run index at visual position 0>, …] } }
+ * ```
+ * or `{ "error": "…" }`.
+ *
+ * `reorderMap[i]` is the logical run index that should be rendered at visual
+ * position `i`.  For LTR text it is the identity permutation.
+ * @param {string} text
+ * @returns {string}
+ */
+function analyze_bidi_v2(text) {
+    let deferred2_0;
+    let deferred2_1;
+    try {
+        const ptr0 = passStringToWasm0(text, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
+        const len0 = WASM_VECTOR_LEN;
+        const ret = wasm.analyze_bidi_v2(ptr0, len0);
+        deferred2_0 = ret[0];
+        deferred2_1 = ret[1];
+        return getStringFromWasm0(ret[0], ret[1]);
+    } finally {
+        wasm.__wbindgen_free(deferred2_0, deferred2_1, 1);
+    }
+}
+exports.analyze_bidi_v2 = analyze_bidi_v2;
+
+/**
  * Run the full Knuth-Plass forward pass (with multi-pass tolerance ladder) on
  * a serialized ParagraphInput and return JSON.
  *

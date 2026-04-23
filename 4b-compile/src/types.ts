@@ -2,8 +2,10 @@
 
 import type { Template } from '@paragraf/template';
 import type { RenderedDocument } from '@paragraf/typography';
+import type { OutputIntent } from '@paragraf/render-pdf';
+import type { CompilerSession } from './session.js';
 
-export type { Template };
+export type { Template, OutputIntent, CompilerSession };
 
 /** Output format produced by compile(). */
 export type OutputFormat = 'pdf' | 'svg' | 'rendered';
@@ -42,9 +44,9 @@ export interface CompileOptions<T = unknown> {
   basePath?: string;
   /**
    * Behaviour when composed content overflows the maximum page count.
+   * - 'throw'  — throw an Error describing the overflow (default).
    * - 'silent' — truncate silently; `metadata.overflowLines` reports the count.
-   * - 'throw'  — throw an Error describing the overflow.
-   * @default 'silent'
+   * @default 'throw'
    */
   onOverflow?: OverflowBehavior;
   /**
@@ -62,12 +64,31 @@ export interface CompileOptions<T = unknown> {
   /** Add an invisible searchable text layer to the PDF. Requires `output: 'pdf'`. */
   selectable?: boolean;
   /**
+   * Embed an ICC OutputIntent in the PDF catalog for PDF/A or PDF/X compliance.
+   * Has no effect when `output` is not `'pdf'`; emits a console.warn in that case.
+   */
+  outputIntent?: OutputIntent;
+  /**
    * Maximum number of pages to generate. Must be >= 1. Content that exceeds
    * this limit is silently truncated (or throws if `onOverflow: 'throw'`).
    * Throws a RangeError if set to 0 or a negative value.
    * @default 100
    */
   maxPages?: number;
+  /**
+   * Pre-built compilation session. When provided, `compile()` skips font
+   * registry construction and composer/engine initialisation — useful for
+   * batch compiles where the same template is compiled many times.
+   * Create via {@link createCompilerSession}.
+   */
+  session?: CompilerSession;
+  /**
+   * When `false`, suppresses all non-critical `console.warn` output from
+   * the compile pipeline (style compatibility warnings, non-exact weight
+   * matches, etc.). Error-level conditions still throw.
+   * @default true
+   */
+  verbose?: boolean;
 }
 
 /** Result returned by compile(). */

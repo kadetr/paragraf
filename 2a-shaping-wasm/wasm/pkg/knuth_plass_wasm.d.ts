@@ -13,6 +13,23 @@
 export function analyze_bidi(text: string): string;
 
 /**
+ * Extended BiDi analysis: paragraph base level (P2/P3 first-strong), logical
+ * runs, and a visual reorder map derived from the UBA L2 algorithm.
+ *
+ * Returns:
+ * ```json
+ * { "ok": { "paragraphLevel": 0|1, "paragraphDirection": "ltr"|"rtl",
+ *           "runs": [{"text","level","isRtl"}],
+ *           "reorderMap": [<logical run index at visual position 0>, …] } }
+ * ```
+ * or `{ "error": "…" }`.
+ *
+ * `reorderMap[i]` is the logical run index that should be rendered at visual
+ * position `i`.  For LTR text it is the identity permutation.
+ */
+export function analyze_bidi_v2(text: string): string;
+
+/**
  * Run the full Knuth-Plass forward pass (with multi-pass tolerance ladder) on
  * a serialized ParagraphInput and return JSON.
  *

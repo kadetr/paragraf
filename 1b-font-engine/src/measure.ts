@@ -48,7 +48,8 @@ export const resolveFontkitFont = (font: Font, registry: FontRegistry): any => {
 // ─── Real implementations ────────────────────────────────────────────────────
 
 const featuresFor = (font: Font): string[] => {
-  const features = ['liga', 'rlig'];
+  const features: string[] = ['calt'];
+  if (font.ligatures !== false) features.push('liga', 'rlig');
   if (font.variant === 'superscript') features.push('sups');
   else if (font.variant === 'subscript') features.push('subs');
   return features;
@@ -137,3 +138,47 @@ export const createMeasurer = (
   metrics: metrics ?? realMetrics(registry),
   registry,
 });
+
+// ─── createFontRegistry ────────────────────────────────────────────────────────
+
+/**
+ * Build a validated `FontRegistry` (`Map<FontId, FontDescriptor>`) from an
+ * array of descriptors.
+ *
+ * Validates at construction time:
+ *  - `id` is a non-empty string
+ *  - `family` is a non-empty string
+ *  - `filePath` is a non-empty string
+ *  - No duplicate `id` values
+ *
+ * @throws {Error} on the first validation failure.
+ */
+export function createFontRegistry(
+  descriptors: import('@paragraf/types').FontDescriptor[],
+): FontRegistry {
+  const registry: FontRegistry = new Map();
+  for (const desc of descriptors) {
+    if (!desc.id || typeof desc.id !== 'string') {
+      throw new Error(
+        `createFontRegistry: descriptor has an empty or missing 'id' field.`,
+      );
+    }
+    if (!desc.family || typeof desc.family !== 'string') {
+      throw new Error(
+        `createFontRegistry: descriptor "${desc.id}" has an empty or missing 'family' field.`,
+      );
+    }
+    if (!desc.filePath || typeof desc.filePath !== 'string') {
+      throw new Error(
+        `createFontRegistry: descriptor "${desc.id}" has an empty or missing 'filePath' field.`,
+      );
+    }
+    if (registry.has(desc.id)) {
+      throw new Error(
+        `createFontRegistry: duplicate font id "${desc.id}". Each descriptor must have a unique id.`,
+      );
+    }
+    registry.set(desc.id, desc);
+  }
+  return registry;
+}

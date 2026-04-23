@@ -54,6 +54,7 @@ function makeLine(lineHeight = 12, baseline = 9.6): ComposedLine {
     ratio: 0,
     alignment: 'left',
     isWidow: false,
+    isRunt: false,
     lineWidth: 200,
     lineHeight,
     baseline,
@@ -195,16 +196,6 @@ describe('composeDocument', () => {
     expect(result.paragraphs[0].output.lines).toHaveLength(4);
   });
 
-  it('passes the input through on each paragraph output', () => {
-    const input = makeInput(300);
-    const doc: Document = {
-      paragraphs: [input],
-      frames: [makeFrame()],
-    };
-    const result = composeDocument(doc, makeMockComposer());
-    expect(result.paragraphs[0].input).toBe(input);
-  });
-
   it('merges styleDefaults (per-paragraph wins)', () => {
     const composer = makeMockComposer();
     const spy = vi.fn(
@@ -255,7 +246,7 @@ describe('composeDocument', () => {
     };
 
     const doc: Document = {
-      paragraphs: [makeInput()],
+      paragraphs: [makeInput(0)],
       frames: [makeFrame({ width: 400 })],
     };
     composeDocument(doc, spyComposer);
@@ -273,7 +264,7 @@ describe('composeDocument', () => {
     };
 
     const doc: Document = {
-      paragraphs: [makeInput()],
+      paragraphs: [makeInput(0)],
       frames: [makeFrame({ width: 400, columnCount: 2, gutter: 20 })],
     };
     composeDocument(doc, spyComposer);

@@ -16,10 +16,12 @@ import { parseTokens } from './interpolate.js';
  *    thrown by @paragraf/style's defineStyles(). If that package changes its
  *    error message wording, tests that match against /Circular/ or /extends "…"/
  *    will break.
- * 3. Every content slot's `style` field references a defined style.
- * 4. Every content slot with `onMissing: 'fallback'` has a non-empty `fallbackText`.
- * 5. `fallbackText` is not set without `onMissing: 'fallback'` (would be silently ignored).
- * 6. Every content slot's `text` field is non-empty and has valid `{{...}}` syntax.
+ * 3. Every style's `font.family`, when explicitly set, is declared in `template.fonts`.
+ *    Matching is case-insensitive (CSS Fonts specification).
+ * 4. Every content slot's `style` field references a defined style.
+ * 5. Every content slot with `onMissing: 'fallback'` has a non-empty `fallbackText`.
+ * 6. `fallbackText` is not set without `onMissing: 'fallback'` (would be silently ignored).
+ * 7. Every content slot's `text` field is non-empty and has valid `{{...}}` syntax.
  */
 export function validateTemplate(t: Template): void {
   // 1. Layout — validate all Dimension values are parseable.
@@ -41,26 +43,41 @@ export function validateTemplate(t: Template): void {
   //    NOTE: error messages originate from @paragraf/style — see JSDoc above.
   defineStyles(t.styles);
 
+  // 3. Validate that every style's font.family, when explicitly set, refers to
+  //    a key declared in template.fonts. Matching is case-insensitive (CSS spec).
+  const fontFamilies = new Set(
+    Object.keys(t.fonts).map((f) => f.toLowerCase()),
+  );
+  for (const [styleName, def] of Object.entries(t.styles)) {
+    const family = def.font?.family;
+    if (family !== undefined && !fontFamilies.has(family.toLowerCase())) {
+      throw new Error(
+        `styles["${styleName}"].font.family "${family}" is not declared in template.fonts. ` +
+          `Available families: ${[...Object.keys(t.fonts)].join(', ')}`,
+      );
+    }
+  }
+
   const styleNames = new Set(Object.keys(t.styles));
 
   for (let i = 0; i < t.content.length; i++) {
     const slot = t.content[i];
 
-    // 3. Style reference must exist.
+    // 4. Style reference must exist.
     if (!styleNames.has(slot.style)) {
       throw new Error(
         `content[${i}].style "${slot.style}" is not defined in this template's styles`,
       );
     }
 
-    // 4. Fallback invariant: onMissing:'fallback' requires fallbackText.
+    // 5. Fallback invariant: onMissing:'fallback' requires fallbackText.
     if (slot.onMissing === 'fallback' && !slot.fallbackText) {
       throw new Error(
         `content[${i}]: onMissing is 'fallback' but fallbackText is not set`,
       );
     }
 
-    // 5. Inverse fallback invariant: fallbackText without onMissing:'fallback' would
+    // 6. Inverse fallback invariant: fallbackText without onMissing:'fallback' would
     //    be silently discarded by the compile layer — catch this early.
     if (slot.fallbackText !== undefined && slot.onMissing !== 'fallback') {
       throw new Error(
@@ -68,7 +85,7 @@ export function validateTemplate(t: Template): void {
       );
     }
 
-    // 6. text must be non-empty and have valid {{...}} interpolation syntax.
+    // 7. text must be non-empty and have valid {{...}} interpolation syntax.
     if (slot.text === '') {
       throw new Error(
         `content[${i}].text is empty — provide literal text or a {{binding}}`,

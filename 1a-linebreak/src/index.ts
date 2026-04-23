@@ -22,7 +22,11 @@ export {
   deriveMinRight,
   DEFAULT_HYPHENATE_OPTIONS,
 } from './hyphenate.js';
-export type { HyphenateOptions, HyphenatedWord } from './hyphenate.js';
+export type {
+  HyphenateOptions,
+  HyphenatedWord,
+  ExceptionDictionary,
+} from './hyphenate.js';
 
 // ─── Test utilities ──────────────────────────────────────────────────────────
 export { mockMeasure, mockSpace, mockMetrics } from './testing.js';

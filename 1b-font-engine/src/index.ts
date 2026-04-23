@@ -5,7 +5,12 @@ export type { FontEngine, Glyph, GlyphPath, PathCommand } from './font-engine';
 export { FontkitEngine } from './engines/fontkit-engine';
 
 // Measurer factory + fontkit helpers
-export { createMeasurer, loadFontkitFont, resolveFontkitFont } from './measure';
+export {
+  createMeasurer,
+  loadFontkitFont,
+  resolveFontkitFont,
+  createFontRegistry,
+} from './measure';
 
 // Testing utilities
 export { mockMeasure, mockSpace, mockMetrics } from './testing';

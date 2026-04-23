@@ -2,6 +2,7 @@
 /* eslint-disable */
 export const memory: WebAssembly.Memory;
 export const analyze_bidi: (a: number, b: number) => [number, number];
+export const analyze_bidi_v2: (a: number, b: number) => [number, number];
 export const compute_breakpoints_wasm: (a: number, b: number) => [number, number];
 export const create_face: (a: number, b: number) => number;
 export const drop_face: (a: number) => void;
