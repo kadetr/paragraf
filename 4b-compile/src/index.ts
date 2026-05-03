@@ -24,6 +24,7 @@ export {
   selectVariant,
   resolveVariantEntry,
   VARIANT_CONVENTIONS,
+  clearCompileWarnings,
 } from './fonts.js';
 
 // ─── Template ────────────────────────────────────────────────────────────────

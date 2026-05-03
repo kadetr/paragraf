@@ -53,6 +53,7 @@ export interface PdfOptions {
   compress?: boolean; // pdfkit compression; defaults to pdfkit's own default
   outputIntent?: OutputIntent; // embed ICC OutputIntent in PDF catalog (PDF/A, PDF/X)
   colorTransform?: ColorTransform; // optional ICC color transform; converts fill from sRGB to output color space
+  pdfxConformance?: 'PDF/X-3:2002' | 'PDF/X-3:2003'; // opt-in PDF/X-3 conformance markers in Info dict and OutputIntent
   preDraw?: (doc: any) => void; // called once after the doc is created, before content is drawn
 }
 
@@ -69,6 +70,7 @@ export interface DocumentPdfOptions {
   compress?: boolean; // pdfkit compression; defaults to pdfkit's own default
   outputIntent?: OutputIntent; // embed ICC OutputIntent in PDF catalog (PDF/A, PDF/X)
   colorTransform?: ColorTransform; // optional ICC color transform; converts fill from sRGB to output color space
+  pdfxConformance?: 'PDF/X-3:2002' | 'PDF/X-3:2003'; // opt-in PDF/X-3 conformance markers in Info dict and OutputIntent
   preDraw?: (doc: any) => void; // called once per page after addPage(), before content is drawn
 }
 
@@ -85,7 +87,11 @@ const ICC_CHANNELS: Record<string, number> = {
   CMYK: 4,
 };
 
-function emitOutputIntent(doc: any, intent: OutputIntent): void {
+function emitOutputIntent(
+  doc: any,
+  intent: OutputIntent,
+  pdfxConformance?: 'PDF/X-3:2002' | 'PDF/X-3:2003',
+): void {
   const profileBytes = Buffer.from(intent.profile.bytes);
   const n = ICC_CHANNELS[intent.profile.colorSpace] ?? 3;
 
@@ -101,11 +107,15 @@ function emitOutputIntent(doc: any, intent: OutputIntent): void {
   profileRef.end();
 
   // OutputIntent dict object (no stream body).
-  // Subtype heuristic: CMYK destination profile → PDF/X (GTS_PDFX); all others → PDF/A (GTS_PDFA1).
-  // This is correct for the common cases (Fogra39/SWOP CMYK → PDF/X; sRGB → PDF/A).
-  // It does not cover PDF/X with an RGB output intent (monitor-proof workflow) or
+  // When pdfxConformance is explicitly set, force GTS_PDFX regardless of color space.
+  // Otherwise use the CMYK heuristic: CMYK destination profile → PDF/X (GTS_PDFX); all others → PDF/A (GTS_PDFA1).
+  // The heuristic does not cover PDF/X with an RGB output intent (monitor-proof workflow) or
   // PDF/A with a CMYK profile (archival CMYK). File an issue if you need those branches.
-  const s = intent.profile.colorSpace === 'CMYK' ? 'GTS_PDFX' : 'GTS_PDFA1';
+  const s = pdfxConformance
+    ? 'GTS_PDFX'
+    : intent.profile.colorSpace === 'CMYK'
+      ? 'GTS_PDFX'
+      : 'GTS_PDFA1';
   const intentRef = doc.ref({
     Type: 'OutputIntent',
     S: s,
@@ -187,7 +197,7 @@ function applyFillTransform(
     const b = Math.round(Math.min(Math.max(out[2] ?? 0, 0), 1) * 255);
     return `#${r.toString(16).padStart(2, '0')}${g.toString(16).padStart(2, '0')}${b.toString(16).padStart(2, '0')}`;
   }
-  // Unsupported channel count (e.g. Gray=1, Lab=3 without a known mapping):
+  // Unsupported channel count (e.g. Gray=1) or unrecognised output channel mapping:
   // pass through the original fill unchanged to avoid mis-encoding.
   return fill;
 }
@@ -319,6 +329,7 @@ export const renderToPdf = (
     compress,
     outputIntent,
     colorTransform,
+    pdfxConformance,
     preDraw,
   } = options;
 
@@ -337,7 +348,15 @@ export const renderToPdf = (
   const chunks: Buffer[] = [];
   doc.on('data', (chunk: Buffer) => chunks.push(chunk));
 
-  if (title || lang) applyMetadata(doc, title, lang);
+  const effectivePdfx =
+    pdfxConformance && outputIntent ? pdfxConformance : undefined;
+  if (pdfxConformance && !outputIntent) {
+    console.warn(
+      '[paragraf/render-pdf] pdfxConformance has no effect without outputIntent.',
+    );
+  }
+  if (title || lang || effectivePdfx)
+    applyMetadata(doc, title, lang, effectivePdfx);
 
   const selectableOpts =
     selectable && fontRegistry ? { fontRegistry } : undefined;
@@ -354,7 +373,7 @@ export const renderToPdf = (
       selectableOpts,
       colorTransform,
     );
-    if (outputIntent) emitOutputIntent(doc, outputIntent);
+    if (outputIntent) emitOutputIntent(doc, outputIntent, effectivePdfx);
     doc.end();
   });
 };
@@ -382,6 +401,7 @@ export const renderDocumentToPdf = (
     compress,
     outputIntent,
     colorTransform,
+    pdfxConformance,
     preDraw,
   } = options;
 
@@ -403,7 +423,15 @@ export const renderDocumentToPdf = (
   const chunks: Buffer[] = [];
   doc.on('data', (chunk: Buffer) => chunks.push(chunk));
 
-  if (title || lang) applyMetadata(doc, title, lang);
+  const effectivePdfx =
+    pdfxConformance && outputIntent ? pdfxConformance : undefined;
+  if (pdfxConformance && !outputIntent) {
+    console.warn(
+      '[paragraf/render-pdf] pdfxConformance has no effect without outputIntent.',
+    );
+  }
+  if (title || lang || effectivePdfx)
+    applyMetadata(doc, title, lang, effectivePdfx);
 
   const selectableOpts =
     selectable && fontRegistry ? { fontRegistry } : undefined;
@@ -428,7 +456,7 @@ export const renderDocumentToPdf = (
       }
     }
 
-    if (outputIntent) emitOutputIntent(doc, outputIntent);
+    if (outputIntent) emitOutputIntent(doc, outputIntent, effectivePdfx);
     doc.end();
   });
 };

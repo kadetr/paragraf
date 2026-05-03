@@ -643,7 +643,126 @@ describe('layoutDocument — paragraphSpacing on Frame', () => {
   });
 });
 
-// ─── Phase 5 — deriveLineWidths ───────────────────────────────────────────────
+// ─── Phase 5 — spaceBefore / spaceAfter ──────────────────────────────────────
+
+describe('layoutDocument — spaceBefore', () => {
+  it('R1: spaceBefore shifts first line down by that many points', () => {
+    // frame.y=50; without spaceBefore origin.y=50; with spaceBefore=10 → 60
+    const frame = makeFrame({ y: 50, height: 400 });
+    const input: ParagraphInput = { ...makeInput(), spaceBefore: 10 };
+    const composed = composeDocument(
+      { paragraphs: [input], frames: [frame] },
+      makeMockComposer(2),
+    );
+    const result = layoutDocument(composed, [frame], mockMeasurer);
+    const items = result.pages.flatMap((p) => p.items);
+    expect(items[0].origin.y).toBeCloseTo(60, 4);
+  });
+
+  it('R3: spaceBefore is NOT applied to continuation batch when paragraph splits across columns', () => {
+    // 5 lines (5*12=60pt) in a 2-col frame (col height=36, gutter=0)
+    // col1: 3 lines fit (36pt), paragraph continues into col2
+    // col1 first batch → spaceBefore=10 applied: origin.y = 0+10 = 10
+    // col2 continuation batch → NO spaceBefore: origin.y = frame.y = 0
+    const frame: Frame = {
+      page: 0,
+      x: 0,
+      y: 0,
+      width: 400,
+      height: 36,
+      columnCount: 2,
+      gutter: 0,
+    };
+    const mockOutput: ParagraphOutput = {
+      lines: Array.from({ length: 5 }, () => makeLine()),
+      lineCount: 5,
+      usedEmergency: false,
+    };
+    const splitComposer: ParagraphComposer = {
+      compose: () => mockOutput,
+      ensureLanguage: async () => {},
+    };
+    const input: ParagraphInput = { ...makeInput(), spaceBefore: 10 };
+    const composed = composeDocument(
+      { paragraphs: [input], frames: [frame] },
+      splitComposer,
+    );
+    const result = layoutDocument(composed, [frame], mockMeasurer);
+    const allItems = result.pages.flatMap((p) => p.items);
+    const col1Item = allItems.find((item) => item.origin.x === 0);
+    const col2Item = allItems.find((item) => item.origin.x === 200);
+    expect(col1Item).toBeDefined();
+    expect(col2Item).toBeDefined();
+    expect(col1Item!.origin.y).toBeCloseTo(10, 4); // spaceBefore applied on first batch
+    expect(col2Item!.origin.y).toBeCloseTo(0, 4); // NOT applied on continuation
+  });
+});
+
+describe('layoutDocument — spaceAfter', () => {
+  it('R2: spaceAfter adds gap after last line before next paragraph', () => {
+    // frame.y=50; para1: 2 lines (24pt), spaceAfter=10 → cursorY=50+24+10=84
+    // para2 starts at origin.y=84
+    const frame = makeFrame({ y: 50, height: 400 });
+    const para1: ParagraphInput = { ...makeInput(), spaceAfter: 10 };
+    const para2: ParagraphInput = makeInput();
+    const composed = composeDocument(
+      { paragraphs: [para1, para2], frames: [frame] },
+      makeMockComposer(2),
+    );
+    const result = layoutDocument(composed, [frame], mockMeasurer);
+    const items = result.pages.flatMap((p) => p.items);
+    expect(items[0].origin.y).toBeCloseTo(50, 4);
+    expect(items[1].origin.y).toBeCloseTo(84, 4); // 50 + 24 + 10
+  });
+
+  it('R4: spaceAfter is NOT applied after intermediate batches when paragraph splits across columns', () => {
+    // para1: 5 lines, spaceAfter=10; para2: 2 lines
+    // col1: para1 first 3 lines (36pt) → para continues; NO spaceAfter here
+    // col2: para1 last 2 lines (24pt) → last batch → spaceAfter=10 → cursorY=34
+    // para2 in col2: origin.y = 34
+    const frame: Frame = {
+      page: 0,
+      x: 0,
+      y: 0,
+      width: 400,
+      height: 36,
+      columnCount: 2,
+      gutter: 0,
+    };
+    const mockOutput5: ParagraphOutput = {
+      lines: Array.from({ length: 5 }, () => makeLine()),
+      lineCount: 5,
+      usedEmergency: false,
+    };
+    const mockOutput2: ParagraphOutput = {
+      lines: Array.from({ length: 2 }, () => makeLine()),
+      lineCount: 2,
+      usedEmergency: false,
+    };
+    let callCount = 0;
+    const splitComposer: ParagraphComposer = {
+      compose: () => (callCount++ === 0 ? mockOutput5 : mockOutput2),
+      ensureLanguage: async () => {},
+    };
+    const para1: ParagraphInput = { ...makeInput(), spaceAfter: 10 };
+    const para2: ParagraphInput = makeInput();
+    const composed = composeDocument(
+      { paragraphs: [para1, para2], frames: [frame] },
+      splitComposer,
+    );
+    const result = layoutDocument(composed, [frame], mockMeasurer);
+    const allItems = result.pages.flatMap((p) => p.items);
+    // para2 is placed after para1's last batch in col2; col2 items have origin.x=200
+    const col2Items = allItems.filter((item) => item.origin.x === 200);
+    // col2Items[0] = para1 continuation (2 lines, y=0, height=24)
+    // col2Items[1] = para2 (origin.y = 24 + spaceAfter=10 = 34)
+    expect(col2Items.length).toBe(2);
+    expect(col2Items[0].origin.y).toBeCloseTo(0, 4); // continuation, no spaceBefore
+    expect(col2Items[1].origin.y).toBeCloseTo(34, 4); // after last batch + spaceAfter
+  });
+});
+
+// ─── Phase 6 — deriveLineWidths ───────────────────────────────────────────────
 
 describe('deriveLineWidths', () => {
   it('all paragraphs get colWidth of frames[0] when no assignments given', () => {
@@ -683,5 +802,96 @@ describe('deriveLineWidths', () => {
     const frame = makeFrame({ width: 200 });
     const result = deriveLineWidths([makeInput()], [frame], [99]); // no frame at index 99
     expect(result[0]).toBeDefined();
+  });
+});
+
+// ─── F018: deriveLineWidths → composeDocument integration ────────────────────
+
+describe('composeDocument — deriveLineWidths integration (F018)', () => {
+  it('per-frame lineWidth survives through composeDocument in a multi-frame document', () => {
+    // frame0 width=200, frame1 width=400 — different column widths.
+    // Without deriveLineWidths, composeDocument uses frame[0] colWidth (200) for all paragraphs.
+    // With deriveLineWidths, para0 gets 200 and para1 gets 400.
+    const spy = vi.fn(
+      (_input: ParagraphInput): ParagraphOutput => makeParagraphOutput(2),
+    );
+    const spyComposer: ParagraphComposer = {
+      compose: spy,
+      ensureLanguage: async () => {},
+    };
+
+    const frame0 = makeFrame({ width: 200 });
+    const frame1 = makeFrame({ width: 400 });
+    const inputs = [makeInput(0), makeInput(0)]; // lineWidth=0 so fallback would fire without derive
+
+    const derived = deriveLineWidths(inputs, [frame0, frame1], [0, 1]);
+    composeDocument(
+      { paragraphs: derived, frames: [frame0, frame1] },
+      spyComposer,
+    );
+
+    // para0 must be composed at frame0's colWidth (200)
+    expect(spy.mock.calls[0][0].lineWidth).toBe(200);
+    // para1 must be composed at frame1's colWidth (400), not frame0's (200)
+    expect(spy.mock.calls[1][0].lineWidth).toBe(400);
+  });
+});
+
+// ─── F001: styleDefaults.lineWidth ───────────────────────────────────────────
+
+describe('composeDocument — styleDefaults.lineWidth (F001)', () => {
+  it('RT1: uses styleDefaults.lineWidth when paragraph omits lineWidth', () => {
+    // frame width=500 (col width=500). styleDefaults.lineWidth=400.
+    // Paragraph has lineWidth=0 (not set explicitly).
+    // Before fix: composeDocument falls through to textWidth=500.
+    // After fix: composeDocument uses styleDefaults.lineWidth=400.
+    const spy = vi.fn(
+      (_input: ParagraphInput): ParagraphOutput => makeParagraphOutput(2),
+    );
+    const spyComposer: ParagraphComposer = {
+      compose: spy,
+      ensureLanguage: async () => {},
+    };
+    const doc: Document = {
+      paragraphs: [{ text: 'hello', font: makeFont(), lineWidth: 0 }],
+      frames: [makeFrame({ width: 500 })],
+      styleDefaults: { lineWidth: 400 },
+    };
+    composeDocument(doc, spyComposer);
+    expect(spy.mock.calls[0][0].lineWidth).toBe(400);
+  });
+
+  it('RT2: per-paragraph lineWidth wins over styleDefaults.lineWidth', () => {
+    const spy = vi.fn(
+      (_input: ParagraphInput): ParagraphOutput => makeParagraphOutput(2),
+    );
+    const spyComposer: ParagraphComposer = {
+      compose: spy,
+      ensureLanguage: async () => {},
+    };
+    const doc: Document = {
+      paragraphs: [{ text: 'hello', font: makeFont(), lineWidth: 300 }],
+      frames: [makeFrame({ width: 500 })],
+      styleDefaults: { lineWidth: 400 },
+    };
+    composeDocument(doc, spyComposer);
+    expect(spy.mock.calls[0][0].lineWidth).toBe(300);
+  });
+
+  it('RT3: falls back to frame-derived textWidth when neither paragraph nor styleDefaults provides lineWidth', () => {
+    const spy = vi.fn(
+      (_input: ParagraphInput): ParagraphOutput => makeParagraphOutput(2),
+    );
+    const spyComposer: ParagraphComposer = {
+      compose: spy,
+      ensureLanguage: async () => {},
+    };
+    const doc: Document = {
+      paragraphs: [{ text: 'hello', font: makeFont(), lineWidth: 0 }],
+      frames: [makeFrame({ width: 500 })],
+      // no styleDefaults
+    };
+    composeDocument(doc, spyComposer);
+    expect(spy.mock.calls[0][0].lineWidth).toBe(500);
   });
 });

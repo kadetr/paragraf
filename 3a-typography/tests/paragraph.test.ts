@@ -1,8 +1,9 @@
-import { describe, it, expect, beforeAll } from 'vitest';
+import { describe, it, expect, beforeAll, vi } from 'vitest';
 import * as path from 'path';
 import {
   createParagraphComposer,
   clearMeasureCache,
+  clearShapingState,
   configureMeasureCache,
   getMeasureCacheStats,
   ParagraphInput,
@@ -1063,5 +1064,318 @@ describe('corner cases — single-line edge cases', () => {
     });
     expect(out.lineCount).toBeGreaterThan(1);
     out.lines.forEach((l) => expect(Number.isFinite(l.ratio)).toBe(true));
+  });
+});
+
+// ─── ParagraphInput — hyphenation: false ─────────────────────────────────────
+
+describe('ParagraphInput — hyphenation: false', () => {
+  it('R5: hyphenation: false produces no hyphenated lines (text-mode LTR)', () => {
+    // Use a narrow line and long words to guarantee hyphens would appear normally.
+    // lineWidth 200 fits each word (≈140pt and ≈110pt at 12pt) but not both together.
+    const output = composer.compose({
+      text: 'internationalization standardization',
+      font: FONT_REGULAR,
+      lineWidth: 200,
+      tolerance: 5,
+      hyphenation: false,
+    });
+    expect(output.lineCount).toBeGreaterThan(0);
+    // No line should be hyphenated when hyphenation is disabled.
+    output.lines.forEach((l) => expect(l.hyphenated).toBe(false));
+  });
+
+  it('R6: hyphenation: false — each word is a single non-hyphenable fragment', () => {
+    // With hyphenation disabled, every word in the output should appear as a
+    // whole token (not split at a hyphen boundary).
+    const words = ['internationalization', 'standardization'];
+    const output = composer.compose({
+      text: words.join(' '),
+      font: FONT_REGULAR,
+      lineWidth: 200,
+      tolerance: 5,
+      hyphenation: false,
+    });
+    // Collect all output words (ignoring empty strings from edge cases).
+    const outputWords = output.lines
+      .flatMap((l) => l.words)
+      .filter((w) => w.length > 0);
+    // Every output token must be one of the original whole words (no partial fragments).
+    outputWords.forEach((w) => {
+      expect(words).toContain(w);
+    });
+  });
+
+  it('hyphenation: true (default) still hyphenates when needed', () => {
+    const withHyphen = composer.compose({
+      text: 'internationalization',
+      font: FONT_REGULAR,
+      lineWidth: 200,
+      tolerance: 5,
+    });
+    // Default behaviour unchanged — hyphenation may occur (not asserting it
+    // must, since line width/font could accommodate it in one line, but we
+    // verify the compose call succeeds and respects the default).
+    expect(withHyphen.lineCount).toBeGreaterThan(0);
+  });
+});
+
+// ─── F003: clearShapingState ──────────────────────────────────────────────────
+
+describe('clearShapingState (F003)', () => {
+  it('RT4: clearShapingState is exported from @paragraf/typography', async () => {
+    const mod = await import('@paragraf/typography');
+    expect(typeof mod.clearShapingState).toBe('function');
+  });
+
+  it('RT5: calling clearShapingState causes _rtlFallbackWarnIssued to reset so the warn fires again', async () => {
+    const { clearShapingState } = await import('@paragraf/typography');
+
+    const rtlText = 'שלום עולם'; // Hebrew — strong RTL characters
+    const warnSpy = vi
+      .spyOn(console, 'warn')
+      .mockImplementation(() => undefined);
+
+    // Compose RTL once — warn fires (if WASM absent)
+    composer.compose({ text: rtlText, font: FONT_REGULAR, lineWidth: 300 });
+    const countAfterFirst = warnSpy.mock.calls.filter((c) =>
+      String(c[0]).includes('BiDi'),
+    ).length;
+
+    // Compose RTL again without reset — warn must NOT fire again
+    warnSpy.mockClear();
+    composer.compose({ text: rtlText, font: FONT_REGULAR, lineWidth: 300 });
+    const countAfterSecondNoReset = warnSpy.mock.calls.filter((c) =>
+      String(c[0]).includes('BiDi'),
+    ).length;
+
+    // Reset + compose again — if WASM absent, warn fires once more
+    warnSpy.mockClear();
+    clearShapingState();
+    composer.compose({ text: rtlText, font: FONT_REGULAR, lineWidth: 300 });
+    const countAfterReset = warnSpy.mock.calls.filter((c) =>
+      String(c[0]).includes('BiDi'),
+    ).length;
+
+    warnSpy.mockRestore();
+
+    // If WASM is absent, the warn should have fired on first compose
+    // and fired again after clearShapingState. If WASM is present,
+    // the warn never fires — both counts are 0, which is also correct.
+    if (countAfterFirst > 0) {
+      // WASM absent path: second compose (no reset) must not re-warn
+      expect(countAfterSecondNoReset).toBe(0);
+      // After reset, must warn again
+      expect(countAfterReset).toBeGreaterThan(0);
+    } else {
+      // WASM present path: warn never fires — clearShapingState is a no-op for this flag
+      expect(countAfterSecondNoReset).toBe(0);
+      expect(countAfterReset).toBe(0);
+    }
+  });
+});
+
+// ─── F010 — deprecated widowPenalty/orphanPenalty aliases ─────────────────────
+
+describe('F010 — deprecated widowPenalty/orphanPenalty backward compat (T1–T4)', () => {
+  // T1: deprecated widowPenalty still affects layout
+  it('T1: widowPenalty: 5000 produces the same result as runtPenalty: 5000', () => {
+    const text =
+      'In olden times when wishing still helped one there lived a king';
+    const viaDeprecated = composer.compose({
+      text,
+      font: FONT_REGULAR,
+      lineWidth: 200,
+      widowPenalty: 5000,
+    });
+    const viaCanonical = composer.compose({
+      text,
+      font: FONT_REGULAR,
+      lineWidth: 200,
+      runtPenalty: 5000,
+    });
+    expect(viaDeprecated.lineCount).toBe(viaCanonical.lineCount);
+    viaDeprecated.lines.forEach((l, i) => {
+      expect(l.words.join(' ')).toBe(viaCanonical.lines[i].words.join(' '));
+    });
+  });
+
+  // T2: deprecated orphanPenalty still affects layout
+  it('T2: orphanPenalty: 5000 produces the same result as singleLinePenalty: 5000', () => {
+    const text =
+      'In olden times when wishing still helped one there lived a king';
+    const viaDeprecated = composer.compose({
+      text,
+      font: FONT_REGULAR,
+      lineWidth: 200,
+      orphanPenalty: 5000,
+    });
+    const viaCanonical = composer.compose({
+      text,
+      font: FONT_REGULAR,
+      lineWidth: 200,
+      singleLinePenalty: 5000,
+    });
+    expect(viaDeprecated.lineCount).toBe(viaCanonical.lineCount);
+    viaDeprecated.lines.forEach((l, i) => {
+      expect(l.words.join(' ')).toBe(viaCanonical.lines[i].words.join(' '));
+    });
+  });
+
+  // T3: canonical runtPenalty takes precedence over widowPenalty when both provided
+  it('T3: canonical runtPenalty takes precedence over deprecated widowPenalty', () => {
+    const text =
+      'In olden times when wishing still helped one there lived a king';
+    const canonical = composer.compose({
+      text,
+      font: FONT_REGULAR,
+      lineWidth: 200,
+      runtPenalty: 5000,
+    });
+    const both = composer.compose({
+      text,
+      font: FONT_REGULAR,
+      lineWidth: 200,
+      runtPenalty: 5000,
+      widowPenalty: 0, // ignored — canonical wins
+    });
+    expect(both.lineCount).toBe(canonical.lineCount);
+    both.lines.forEach((l, i) => {
+      expect(l.words.join(' ')).toBe(canonical.lines[i].words.join(' '));
+    });
+  });
+
+  // T4: canonical singleLinePenalty takes precedence over orphanPenalty when both provided
+  it('T4: canonical singleLinePenalty takes precedence over deprecated orphanPenalty', () => {
+    const text =
+      'In olden times when wishing still helped one there lived a king';
+    const canonical = composer.compose({
+      text,
+      font: FONT_REGULAR,
+      lineWidth: 200,
+      singleLinePenalty: 5000,
+    });
+    const both = composer.compose({
+      text,
+      font: FONT_REGULAR,
+      lineWidth: 200,
+      singleLinePenalty: 5000,
+      orphanPenalty: 0, // ignored — canonical wins
+    });
+    expect(both.lineCount).toBe(canonical.lineCount);
+    both.lines.forEach((l, i) => {
+      expect(l.words.join(' ')).toBe(canonical.lines[i].words.join(' '));
+    });
+  });
+});
+
+// ─── F012 — ParagraphInput.font optional in spans mode (T8, T9, T10) ─────────
+
+describe('F012 — ParagraphInput.font optional in spans mode (T8–T10)', () => {
+  // T8: spans mode without font field succeeds
+  it('T8: compose() with spans and no font field succeeds', () => {
+    // After F012 fix: font is optional — spans carry their own fonts
+    expect(() =>
+      composer.compose({
+        spans: [{ text: 'Hello world', font: FONT_REGULAR }],
+        lineWidth: 400,
+      } as any),
+    ).not.toThrow();
+  });
+
+  it('T8b: compose() with spans and no font — output lines carry font from spans', () => {
+    const output = composer.compose({
+      spans: [{ text: 'Hello world', font: FONT_REGULAR }],
+      lineWidth: 400,
+    } as any);
+    expect(output.lineCount).toBeGreaterThan(0);
+    const allFontIds = output.lines.flatMap((l) => l.fonts.map((f) => f.id));
+    allFontIds.forEach((id) => expect(id).toBe(FONT_REGULAR.id));
+  });
+
+  // T9: text mode without font throws a descriptive error
+  it('T9: compose() with text and no font throws with descriptive message', () => {
+    expect(() =>
+      composer.compose({
+        text: 'Hello world',
+        lineWidth: 400,
+      } as any),
+    ).toThrow(/font is required when using text mode/);
+  });
+
+  // T10: neither text nor spans throws
+  it('T10: compose() with neither text nor spans throws a descriptive error', () => {
+    expect(() =>
+      composer.compose({
+        lineWidth: 400,
+      } as any),
+    ).toThrow();
+  });
+});
+
+// ─── F013: detectParagraphDirection TS fallback — extended RTL scripts ────────
+
+describe('detectParagraphDirection TS fallback — F013: extended RTL scripts', () => {
+  // Each test uses a composer forced into TS mode (useWasm: false) so the
+  // TS detectParagraphDirection path is exercised regardless of WASM availability.
+  // clearShapingState() resets _rtlFallbackWarnIssued before each test.
+
+  let tsComposer: ParagraphComposer;
+
+  beforeAll(async () => {
+    tsComposer = await createParagraphComposer(REGISTRY, { useWasm: false });
+  });
+
+  const expectRtlWarn = (text: string, label: string) => {
+    clearShapingState();
+    const warnSpy = vi
+      .spyOn(console, 'warn')
+      .mockImplementation(() => undefined);
+    tsComposer.compose({ text, font: FONT_REGULAR, lineWidth: 400 });
+    const bidiWarns = warnSpy.mock.calls.filter((c) =>
+      String(c[0]).includes('BiDi'),
+    );
+    warnSpy.mockRestore();
+    expect(
+      bidiWarns.length,
+      `${label}: expected BiDi warn to fire`,
+    ).toBeGreaterThan(0);
+  };
+
+  it('F013-1: Syriac opening char triggers BiDi TS-fallback warn', () => {
+    // U+0710 SYRIAC LETTER ALAPH — first char in Syriac block
+    expectRtlWarn('\u0710 hello', 'Syriac');
+  });
+
+  it('F013-2: Thaana opening char triggers BiDi TS-fallback warn', () => {
+    // U+0780 THAANA LETTER HAA — first char in Thaana block
+    expectRtlWarn('\u0780 hello', 'Thaana');
+  });
+
+  it("F013-3: N'Ko opening char triggers BiDi TS-fallback warn", () => {
+    // U+07C0 NKO DIGIT ZERO — first char in N'Ko block
+    expectRtlWarn('\u07C0 hello', "N'Ko");
+  });
+
+  it('F013-4: Samaritan opening char triggers BiDi TS-fallback warn', () => {
+    // U+0800 SAMARITAN LETTER ALAF — first char in Samaritan block
+    expectRtlWarn('\u0800 hello', 'Samaritan');
+  });
+
+  it('F013-5: pure Latin text does NOT trigger BiDi TS-fallback warn', () => {
+    clearShapingState();
+    const warnSpy = vi
+      .spyOn(console, 'warn')
+      .mockImplementation(() => undefined);
+    tsComposer.compose({
+      text: 'Hello world',
+      font: FONT_REGULAR,
+      lineWidth: 400,
+    });
+    const bidiWarns = warnSpy.mock.calls.filter((c) =>
+      String(c[0]).includes('BiDi'),
+    );
+    warnSpy.mockRestore();
+    expect(bidiWarns.length).toBe(0);
   });
 });

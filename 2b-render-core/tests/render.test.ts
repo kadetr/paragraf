@@ -4,6 +4,7 @@ import {
   layoutParagraph,
   renderToSvg,
   renderToCanvas,
+  clearRenderCaches,
   RenderedParagraph,
 } from '@paragraf/render-core';
 import { ComposedLine, Font, FontRegistry, Measurer } from '@paragraf/types';
@@ -48,7 +49,11 @@ const SERIF_FONT: Font = {
 const SERIF_REGISTRY: FontRegistry = new Map([
   [
     'liberation-serif',
-    { id: 'liberation-serif', family: 'Liberation Serif', filePath: SERIF_PATH },
+    {
+      id: 'liberation-serif',
+      family: 'Liberation Serif',
+      filePath: SERIF_PATH,
+    },
   ],
 ]);
 
@@ -445,5 +450,129 @@ describe('renderToCanvas', () => {
     renderToCanvas(rend, fontEngine, ctx);
     // H, 2, O — at least 3 fill calls (one per glyph minimum)
     expect(ctx.fill.mock.calls.length).toBeGreaterThanOrEqual(3);
+  });
+});
+
+// ─── clearRenderCaches ────────────────────────────────────────────────────────
+
+describe('clearRenderCaches', () => {
+  let fontEngine: FontkitEngine;
+  let rendered: RenderedParagraph;
+
+  beforeAll(async () => {
+    fontEngine = new FontkitEngine();
+    await fontEngine.loadFont('liberation-serif', SERIF_PATH);
+
+    const composer = await createParagraphComposer(SERIF_REGISTRY);
+    const output = composer.compose({
+      text: 'Hello world',
+      font: SERIF_FONT,
+      lineWidth: 600,
+    });
+    const measurer = createMeasurer(SERIF_REGISTRY);
+    rendered = layoutParagraph(output.lines, measurer, { x: 10, y: 30 });
+  });
+
+  it('returns undefined', () => {
+    expect(clearRenderCaches()).toBeUndefined();
+  });
+
+  it('can be called multiple times without throwing', () => {
+    expect(() => {
+      clearRenderCaches();
+      clearRenderCaches();
+      clearRenderCaches();
+    }).not.toThrow();
+  });
+
+  it('renderToSvg works normally after cache is cleared', () => {
+    clearRenderCaches();
+    const svg = renderToSvg(rendered, fontEngine, { width: 400, height: 200 });
+    expect(svg).toContain('<path');
+  });
+
+  it('renderToSvg result is cache-transparent — output matches pre-clear result', () => {
+    const before = renderToSvg(rendered, fontEngine, {
+      width: 400,
+      height: 200,
+    });
+    clearRenderCaches();
+    const after = renderToSvg(rendered, fontEngine, {
+      width: 400,
+      height: 200,
+    });
+    expect(after).toBe(before);
+  });
+
+  it('renderToCanvas works normally after cache is cleared', () => {
+    clearRenderCaches();
+    const ctx = {
+      beginPath: vi.fn(),
+      moveTo: vi.fn(),
+      lineTo: vi.fn(),
+      quadraticCurveTo: vi.fn(),
+      bezierCurveTo: vi.fn(),
+      closePath: vi.fn(),
+      fill: vi.fn(),
+    };
+    expect(() => renderToCanvas(rendered, fontEngine, ctx)).not.toThrow();
+    expect(ctx.fill.mock.calls.length).toBeGreaterThan(0);
+  });
+});
+
+// ─── F017: RTL multi-segment word ordering ────────────────────────────────────
+
+describe('layoutParagraph — RTL multi-segment word, segment ordering', () => {
+  // Two-segment word ["ab", "cd"] in an RTL line.
+  // mockMeasure('ab', FONT_12) = 2 * 12 * 0.6 = 14.4
+  // mockMeasure('cd', FONT_12) = 2 * 12 * 0.6 = 14.4
+  // wordWidth = 28.8; lineWidth = 200; origin.x = 10
+  // rightEdge = 10 + 200 = 210; wordStart = 210 - 28.8 = 181.2
+  //
+  // After F017 fix (reversed iteration):
+  //   segments[0] = { text: 'cd', x: 181.2 }  (last logical seg — placed leftmost)
+  //   segments[1] = { text: 'ab', x: 195.6 }  (first logical seg — placed rightmost)
+  const LINE_RTL_MSEG: ComposedLine = {
+    words: ['abcd'],
+    fonts: [FONT_12],
+    wordRuns: [
+      [
+        { text: 'ab', font: FONT_12 },
+        { text: 'cd', font: FONT_12 },
+      ],
+    ],
+    wordSpacing: 0,
+    hyphenated: false,
+    ratio: 0,
+    alignment: 'right',
+    isWidow: false,
+    lineWidth: 200,
+    lineHeight: 12,
+    baseline: 9.6,
+    direction: 'rtl',
+  };
+
+  let rendered: RenderedParagraph;
+
+  beforeAll(() => {
+    rendered = layoutParagraph([LINE_RTL_MSEG], MOCK_MEASURER, ORIGIN);
+  });
+
+  it('produces two segments', () => {
+    expect(rendered[0].segments).toHaveLength(2);
+  });
+
+  it('segments[0] is the last logical segment (cd) — placed leftmost in the word', () => {
+    expect(rendered[0].segments[0].text).toBe('cd');
+    expect(rendered[0].segments[0].x).toBeCloseTo(181.2);
+  });
+
+  it('segments[1] is the first logical segment (ab) — placed rightmost in the word', () => {
+    expect(rendered[0].segments[1].text).toBe('ab');
+    expect(rendered[0].segments[1].x).toBeCloseTo(195.6);
+  });
+
+  it('segments within the RTL word are ordered left-to-right by x (last logical first)', () => {
+    expect(rendered[0].segments[0].x).toBeLessThan(rendered[0].segments[1].x);
   });
 });

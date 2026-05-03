@@ -52,7 +52,11 @@ export interface Document {
 
 /** Intermediate result after composition but before layout. */
 export interface ComposedDocument {
-  paragraphs: Array<{ output: ParagraphOutput }>;
+  paragraphs: Array<{
+    output: ParagraphOutput;
+    spaceBefore?: number;
+    spaceAfter?: number;
+  }>;
 }
 
 // ─── Baseline-grid helpers (exported for unit tests) ─────────────────────────
@@ -177,10 +181,17 @@ export function composeDocument(
       lineWidth:
         Number.isFinite(input.lineWidth) && input.lineWidth > 0
           ? input.lineWidth
-          : textWidth,
+          : Number.isFinite(doc.styleDefaults?.lineWidth) &&
+              (doc.styleDefaults?.lineWidth ?? 0) > 0
+            ? doc.styleDefaults!.lineWidth!
+            : textWidth,
     };
     const output = composer.compose(merged);
-    return { output };
+    return {
+      output,
+      spaceBefore: merged.spaceBefore,
+      spaceAfter: merged.spaceAfter,
+    };
   });
 
   return { paragraphs };
@@ -219,9 +230,10 @@ export function layoutDocument(
   let cursorY = frames.length > 0 ? frames[0].y : 0;
   let oversetLineCount = 0;
 
-  for (const { output } of composed.paragraphs) {
+  for (const { output, spaceBefore, spaceAfter } of composed.paragraphs) {
     const lines = output.lines;
     let lineIdx = 0;
+    let isFirstBatch = true;
 
     while (lineIdx < lines.length) {
       if (frameIdx >= frames.length) {
@@ -305,6 +317,11 @@ export function layoutDocument(
         cursorY = snappedY;
       }
 
+      // Apply spaceBefore on the first batch of this paragraph only.
+      if (isFirstBatch && spaceBefore) {
+        cursorY += spaceBefore;
+      }
+
       // Place this batch as one item.
       const origin = { x: colX(frame, colIdx), y: cursorY };
       const rendered = layoutParagraph(fitLines, measurer, origin);
@@ -314,11 +331,13 @@ export function layoutDocument(
         ...(isForcePlaced ? { forcePlaced: true } : {}),
       });
       cursorY += totalHeight;
+      isFirstBatch = false;
       // Paragraph spacing: only applied after the *last* batch of a paragraph
       // (not mid-split when the paragraph continues into the next column/frame).
       const paragraphContinues = lineIdx < lines.length;
       if (!paragraphContinues && frameIdx < frames.length) {
         cursorY += frames[frameIdx].paragraphSpacing ?? 0;
+        if (spaceAfter) cursorY += spaceAfter;
       }
       // (TODO v0.12: per-paragraph override via ParagraphInput.paragraphSpacing)
 

@@ -17,6 +17,7 @@ import type {
   Font,
   FontId,
   FontStyle,
+  FontStretch,
   FontRegistry,
   Language,
 } from '@paragraf/types';
@@ -32,6 +33,7 @@ import {
   createDefaultFontEngine,
   composeDocument,
   layoutDocument,
+  deriveLineWidths,
 } from '@paragraf/typography';
 import type {
   ParagraphInput,
@@ -55,10 +57,6 @@ import type { CompilerSession } from './session.js';
 
 const DEFAULT_MAX_PAGES = 100;
 
-// Module-level sets to deduplicate development-time warnings (one warn per style
-// name per process, avoiding spam in high-volume compileBatch runs).
-const _warnedSpacing = new Set<string>();
-const _warnedHyphenation = new Set<string>();
 // ─── Main entry point ─────────────────────────────────────────────────────────
 
 /**
@@ -82,6 +80,7 @@ export async function compile<T = unknown>(
     selectable = false,
     maxPages = DEFAULT_MAX_PAGES,
     outputIntent,
+    pdfxConformance,
     session,
     verbose = true,
   } = options;
@@ -95,6 +94,12 @@ export async function compile<T = unknown>(
   if (verbose && outputIntent && output !== 'pdf') {
     console.warn(
       '[paragraf/compile] outputIntent has no effect when output is not "pdf".',
+    );
+  }
+
+  if (verbose && pdfxConformance && output !== 'pdf') {
+    console.warn(
+      '[paragraf/compile] pdfxConformance has no effect when output is not "pdf".',
     );
   }
 
@@ -135,32 +140,6 @@ export async function compile<T = unknown>(
 
   // ── 4. Resolve styles ──────────────────────────────────────────────────────
   const styleRegistry = defineStyles(template.styles);
-
-  // Warn when properties are declared but not yet implemented.
-  // Uses module-level sets so warnings fire at most once per style name across
-  // the lifetime of the process (avoids flooding in compileBatch workloads).
-  if (verbose) {
-    for (const name of styleRegistry.names()) {
-      const s = styleRegistry.resolve(name);
-      if (
-        (s.spaceBefore > 0 || s.spaceAfter > 0) &&
-        !_warnedSpacing.has(name)
-      ) {
-        _warnedSpacing.add(name);
-        console.warn(
-          `[paragraf/compile] Style "${name}": spaceBefore/spaceAfter are not yet ` +
-            `implemented and will be ignored. (planned v0.6)`,
-        );
-      }
-      if (s.hyphenation === false && !_warnedHyphenation.has(name)) {
-        _warnedHyphenation.add(name);
-        console.warn(
-          `[paragraf/compile] Style "${name}": hyphenation: false is not yet supported; ` +
-            `paragraphs will still be hyphenated according to their language setting. (planned v0.6)`,
-        );
-      }
-    }
-  }
 
   // ── 5. Resolve data ────────────────────────────────────────────────────────
   const record: Record<string, unknown> = normalize
@@ -242,7 +221,10 @@ export async function compile<T = unknown>(
   }
 
   // ── 9. Compose document ───────────────────────────────────────────────────
-  const doc: Document = { paragraphs, frames };
+  const doc: Document = {
+    paragraphs: deriveLineWidths(paragraphs, frames),
+    frames,
+  };
   const composedDoc = composeDocument(doc, composer);
 
   // ── 10. Layout document ──────────────────────────────────────────────────
@@ -253,15 +235,7 @@ export async function compile<T = unknown>(
   const measurer = composer.measurer ?? createMeasurer(registry);
   const renderedDoc = layoutDocument(composedDoc, frames, measurer);
 
-  // Count overflow lines (lines composed but not placed due to page limit)
-  const totalComposedLines = composedDoc.paragraphs.reduce(
-    (sum, p) => sum + p.output.lineCount,
-    0,
-  );
-  const totalRenderedLines = renderedDoc.pages
-    .flatMap((p) => p.items)
-    .reduce((sum, item) => sum + item.rendered.length, 0);
-  const overflowLines = Math.max(0, totalComposedLines - totalRenderedLines);
+  const overflowLines = renderedDoc.oversetLineCount ?? 0;
 
   if (onOverflow === 'throw' && overflowLines > 0) {
     throw new Error(
@@ -331,6 +305,7 @@ export async function compile<T = unknown>(
     compress: true,
     outputIntent,
     colorTransform,
+    pdfxConformance,
   });
 
   return {
@@ -398,6 +373,7 @@ function buildFont(
     fontStyle as FontStyle,
     registry,
     verbose,
+    stretch as FontStretch,
   );
 
   return {
@@ -435,8 +411,9 @@ function buildInput(
     ...(Number.isFinite(style.lineHeight) && style.lineHeight > 0
       ? { lineHeight: style.lineHeight }
       : {}),
-    // NOTE v0.6: style.hyphenation === false is not yet supported by ParagraphInput;
-    // all paragraphs are hyphenated according to their language setting.
+    ...(style.spaceBefore > 0 ? { spaceBefore: style.spaceBefore } : {}),
+    ...(style.spaceAfter > 0 ? { spaceAfter: style.spaceAfter } : {}),
+    ...(style.hyphenation === false ? { hyphenation: false } : {}),
   };
 }
 

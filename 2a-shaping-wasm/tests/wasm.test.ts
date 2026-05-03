@@ -5,6 +5,7 @@ import { describe, it, expect, beforeAll } from 'vitest';
 import { computeBreakpoints, traceback } from '@paragraf/linebreak';
 import { FORCED_BREAK, PROHIBITED } from '@paragraf/types';
 import { createMeasurer } from '@paragraf/font-engine';
+import { serializeNodesToBinary } from '../src/wasm-binary.js';
 
 const require = createRequire(import.meta.url);
 
@@ -527,6 +528,54 @@ describe('Phase 3 — equivalence with TypeScript traceback', () => {
       expect(rs[i].position).toBe(ts[i].position);
       expect(Math.abs(rs[i].ratio - ts[i].ratio)).toBeLessThan(1e-6);
     }
+  });
+});
+
+// ─── F005: forced-break last-line ratio must be exactly 0 from Rust ──────────
+// Tests the raw WASM output directly (no JS clamp) to confirm Rust emits 0.0
+// for forced-break final lines. Fails before the Rust fix; passes after.
+
+describe('F005 — forced-break last-line ratio is exactly 0 from Rust', () => {
+  beforeAll(() => loadWasm());
+
+  it('1-line paragraph: raw Rust ratio for forced-break line is exactly 0', () => {
+    const [f64s, u8s] = serializeNodesToBinary(MOCK_PARA_1LINE.nodes as any);
+    const result = JSON.parse(
+      wasm.traceback_wasm_binary(
+        f64s,
+        u8s,
+        new Float64Array([]),
+        MOCK_PARA_1LINE.lineWidth,
+        MOCK_PARA_1LINE.tolerance,
+        0, 0, 0, 0, 0,
+      ),
+    );
+    expect(result.ok).toBeDefined();
+    const breaks = result.ok.breaks;
+    expect(breaks.length).toBeGreaterThan(0);
+    // Last break is always a forced break — Rust must return ratio 0.0 directly,
+    // not a near-zero approximation from target/termination_stretch.
+    expect(breaks[breaks.length - 1].ratio).toBe(0);
+  });
+
+  it('2-line paragraph: raw Rust ratio for last forced-break line is exactly 0', () => {
+    const [f64s, u8s] = serializeNodesToBinary(MOCK_PARA_2LINE.nodes as any);
+    const result = JSON.parse(
+      wasm.traceback_wasm_binary(
+        f64s,
+        u8s,
+        new Float64Array([]),
+        MOCK_PARA_2LINE.lineWidth,
+        MOCK_PARA_2LINE.tolerance,
+        0, 0, 0, 0, 0,
+      ),
+    );
+    expect(result.ok).toBeDefined();
+    const breaks = result.ok.breaks;
+    expect(breaks.length).toBe(2);
+    // Non-forced first break may have non-zero ratio — that is fine.
+    // Only the last forced-break line must be exactly 0.
+    expect(breaks[breaks.length - 1].ratio).toBe(0);
   });
 });
 

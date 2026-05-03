@@ -17,7 +17,11 @@ export type {
   XYZValue,
   Mft2Tag,
 } from './profile.js';
-export { parseIccProfile, loadProfile } from './profile.js';
+export {
+  parseIccProfile,
+  loadProfile,
+  sampleParametricCurve,
+} from './profile.js';
 
 // Built-in sRGB profile
 export { buildSrgbProfileBytes, loadBuiltinSrgb } from './srgb.js';

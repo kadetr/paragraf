@@ -138,8 +138,8 @@ export function buildFontRegistry(
 // Module-level set to deduplicate non-exact-weight warnings across compileBatch runs.
 const _warnedWeightMismatch = new Set<string>();
 
-/** Clears the weight-mismatch deduplication cache. Intended for use in tests. */
-export function _clearWeightMismatchWarnings(): void {
+/** Clears all compile-time warning deduplication caches. Intended for test isolation. */
+export function clearCompileWarnings(): void {
   _warnedWeightMismatch.clear();
 }
 
@@ -150,7 +150,8 @@ export function _clearWeightMismatchWarnings(): void {
  * Matching order:
  * 1. Filter by family name.
  * 2. Prefer exact style match; fall back to 'normal', then ignore style.
- * 3. Among remaining candidates, find the nearest weight.
+ * 3. Prefer exact stretch match; fall back to 'normal', then ignore stretch.
+ * 4. Among remaining candidates, find the nearest weight.
  *    Tie-breaking: target ≤ 500 prefers the lower weight; target > 500 prefers higher.
  *
  * Emits `console.warn` when no exact weight match exists.
@@ -163,6 +164,7 @@ export function selectVariant(
   style: FontStyle,
   registry: FontRegistry,
   verbose = true,
+  stretch: FontStretch = 'normal',
 ): FontId {
   const familyLower = family.toLowerCase();
   const all = [...registry.values()].filter(
@@ -180,6 +182,13 @@ export function selectVariant(
   if (pool.length === 0)
     pool = all.filter((d) => (d.style ?? 'normal') === 'normal');
   if (pool.length === 0) pool = all;
+
+  // Prefer exact stretch; fall back broadening the candidate set
+  let stretchPool = pool.filter((d) => (d.stretch ?? 'normal') === stretch);
+  if (stretchPool.length === 0)
+    stretchPool = pool.filter((d) => (d.stretch ?? 'normal') === 'normal');
+  if (stretchPool.length === 0) stretchPool = pool;
+  pool = stretchPool;
 
   const best = nearestWeight(pool, weight);
 

@@ -102,9 +102,8 @@ export interface FontDescriptor {
   style?: FontStyle;
   /**
    * Font stretch (condensed / normal / expanded etc.).
-   * Stored in the registry and accepted by the API, but not yet consulted
-   * during variant selection (`selectVariant` in @paragraf/compile). Reserved
-   * for future CSS Fonts Level 4 stretch-matching support.
+   * Consulted by `selectVariant` in @paragraf/compile when selecting a variant.
+   * Defaults to 'normal' when absent.
    */
   stretch?: FontStretch;
 }
@@ -263,7 +262,10 @@ export interface Paragraph {
    */
   runtPenalty?: number;
   /**
-   * Demerit added when the first line of a paragraph contains a single word.
+   * Demerit added when the entire paragraph is set on a single line (all
+   * content fits before the final forced break with no intermediate line
+   * breaks). Use to discourage paragraphs that would otherwise collapse to
+   * one line.
    * @since v0.6
    */
   singleLinePenalty?: number;
@@ -278,6 +280,32 @@ export interface Paragraph {
    * @since v0.6
    */
   adjDemerits?: number;
+  /**
+   * Fixed left margin reserved on every line in points (TeX \leftskip equivalent).
+   * The effective line width is reduced by leftSkip + rightSkip.
+   * @since v0.6.1
+   */
+  leftSkip?: number;
+  /**
+   * Fixed right margin reserved on every line in points (TeX \rightskip equivalent).
+   * The effective line width is reduced by leftSkip + rightSkip.
+   * @since v0.6.1
+   */
+  rightSkip?: number;
+  /**
+   * When true and the paragraph direction is RTL with justified alignment,
+   * justification fill is distributed via kashida (ـ) spacing rather than
+   * word spacing.
+   * @since v0.6.1
+   */
+  kashida?: boolean;
+  /**
+   * Maximum glyph expansion factor (HZ/pdfTeX style). Each line’s glyphs may
+   * be scaled by at most ±maxGlyphExpansion to improve fit. Typical value: 0.005.
+   * Set 0 or omit to disable.
+   * @since v0.6.1
+   */
+  maxGlyphExpansion?: number;
 }
 
 export interface ComposedLine {
@@ -296,6 +324,10 @@ export interface ComposedLine {
   direction?: 'ltr' | 'rtl'; // paragraph text direction; undefined treated as 'ltr'
   xOffset?: number; // left shift in points for Optical Margin Alignment; negative = hang into left margin
   rightProtrusion?: number; // right overhang in points for OMA; last word protrudes this many points into right margin
+  leftSkip?: number; // fixed left margin in points (from Paragraph.leftSkip); 0 when not set
+  rightSkip?: number; // fixed right margin in points (from Paragraph.rightSkip); 0 when not set
+  kashidaSpacing?: number; // per-word kashida fill in points for RTL justified lines; 0 when not applicable
+  glyphExpansion?: number; // per-line glyph scale delta (range: -maxGlyphExpansion..+maxGlyphExpansion); 0 when disabled
 }
 
 export type ComposedParagraph = ComposedLine[];

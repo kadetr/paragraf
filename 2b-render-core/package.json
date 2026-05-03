@@ -46,7 +46,6 @@
     "@paragraf/font-engine": "^0.6.0"
   },
   "devDependencies": {
-    "@paragraf/typography": "^0.6.0",
     "@types/node": "^22.19.15",
     "tsx": "^4.21.0",
     "typescript": "^5.4.0",

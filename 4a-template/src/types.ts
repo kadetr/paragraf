@@ -33,12 +33,65 @@ export interface TemplateLayout {
    * Single value → equal on all sides. Per-side object for independent control.
    */
   margins: Dimension | DimensionMargins;
-  /** Number of text columns per page. Defaults to 1. */
+  /**
+   * Number of text columns per page. Defaults to 1.
+   * @deprecated Use `pages` with `TemplatePageSpec` for per-page region layouts.
+   */
   columns?: number;
-  /** Space between columns — number (points) or Dimension string. */
+  /**
+   * Space between columns — number (points) or Dimension string.
+   * @deprecated Use `pages` with `TemplatePageSpec` for per-page region layouts.
+   */
   gutter?: Dimension;
   /** Bleed on all four sides — number (points) or Dimension string. */
   bleed?: Dimension;
+  /**
+   * Per-page region layouts. When set, each entry defines the region geometry
+   * for a set of pages identified by `range`. `columns` and `gutter` on this
+   * TemplateLayout are deprecated when `pages` is used.
+   */
+  pages?: TemplatePageSpec[];
+}
+
+// ─── Region Layout ───────────────────────────────────────────────────────────
+
+/**
+ * A rectangular area on a page, sub-divided into one or more columns.
+ * Mirrors `RegionSpec` from `@paragraf/layout` but uses `Dimension` strings.
+ * `@paragraf/compile` resolves all Dimension values to points at compile time.
+ */
+export interface TemplateRegionSpec {
+  /** Height of the region. Required. */
+  height: Dimension;
+  /** Number of columns within this region. Defaults to 1. */
+  columns?: number;
+  /** Space between columns. Defaults to 0. */
+  gutter?: Dimension;
+  /** Horizontal offset from the left edge of the text area. Defaults to 0. */
+  x?: Dimension;
+  /**
+   * Vertical offset from the top of the text area.
+   * When omitted, the region is auto-stacked below the previous one.
+   */
+  y?: Dimension;
+  /** Width of the region. Defaults to the full text-area width. */
+  width?: Dimension;
+}
+
+/**
+ * Region layout for a set of pages identified by `range`.
+ *
+ * `range` accepts:
+ * - `number`  — exact 1-based page number (e.g. `1` = first page only)
+ * - `'N+'`    — page N and all subsequent pages (e.g. `'2+'`)
+ * - `'N-M'`   — pages N through M inclusive (e.g. `'2-5'`)
+ * - `'default'` — fallback for any page not matched by other entries
+ *
+ * Resolution order and conflict handling is delegated to `@paragraf/compile`.
+ */
+export interface TemplatePageSpec {
+  range: number | string;
+  regions: TemplateRegionSpec[];
 }
 
 // ─── Fonts ───────────────────────────────────────────────────────────────────

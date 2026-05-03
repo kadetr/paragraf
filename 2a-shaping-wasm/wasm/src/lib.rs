@@ -718,7 +718,22 @@ pub fn traceback_wasm_binary(
     };
 
     let final_arena_idx = select_optimal_arena_idx(&arena, &active, looseness);
-    let breaks = traceback_arena(&arena, final_arena_idx);
+    let mut breaks = traceback_arena(&arena, final_arena_idx);
+
+    // Zero the ratio of the terminal forced-break line in the binary path.
+    // For non-Infinity termination glue (e.g. test mocks with stretch=1e6),
+    // compute_ratio returns target/1e6 ≈ small non-zero positive instead of
+    // exactly 0. The binary path must emit 0 for this case. The real-data path
+    // already returns 0 via the PROHIBITED guard when stretch=1e30.
+    if let Some(last) = breaks.last_mut() {
+        let is_terminal_forced = matches!(
+            para.nodes.get(last.position),
+            Some(Node::Penalty(p)) if p.penalty <= FORCED_BREAK
+        );
+        if is_terminal_forced && last.ratio > 0.0 {
+            last.ratio = 0.0;
+        }
+    }
 
     serde_json::to_string(
         &serde_json::json!({ "ok": { "breaks": breaks, "usedEmergency": used_emergency } }),

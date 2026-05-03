@@ -107,11 +107,5 @@ export function tracebackWasmBinary(
       consecutiveHyphenLimit,
     ),
   );
-  // The termination glue has stretch=1e30 (Infinity serialized for WASM).
-  // Rust's compute_ratio returns target/1e30 ≈ 1e-28 instead of exactly 0.
-  // Clamp the last break's ratio to 0 — the last line is always a forced break.
-  if (!('error' in result) && result.ok.breaks.length > 0) {
-    result.ok.breaks[result.ok.breaks.length - 1].ratio = 0;
-  }
   return result;
 }

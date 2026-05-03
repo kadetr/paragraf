@@ -26,6 +26,10 @@ export function resolveText(
   for (const tok of tokens) {
     if (tok.type === 'literal') {
       parts.push(tok.value);
+    } else if (tok.type === 'conditional') {
+      // Null-guard: missing binding resolves to '' rather than nulling the slot.
+      const value = traversePath(tok.path, data);
+      parts.push(value === null || value === undefined ? '' : String(value));
     } else {
       const value = traversePath(tok.path, data);
       if (value === null || value === undefined) return null;

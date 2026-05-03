@@ -82,9 +82,22 @@ export function emitInvisibleSegment(
 
 /**
  * Set optional metadata on the PDF Info dictionary.
+ * When pdfxConformance is set, also writes GTS_PDFXVersion and Trapped.
  * Must be called before doc.end().
  */
-export function applyMetadata(doc: any, title?: string, lang?: string): void {
+export function applyMetadata(
+  doc: any,
+  title?: string,
+  lang?: string,
+  pdfxConformance?: 'PDF/X-3:2002' | 'PDF/X-3:2003',
+): void {
   if (title) (doc as any).info['Title'] = title;
   if (lang) (doc as any).info['Lang'] = lang;
+  if (pdfxConformance) {
+    (doc as any).info['GTS_PDFXVersion'] = pdfxConformance;
+    // Trapped is a PDF Name in the spec (/False). pdfkit serializes info values as
+    // strings; most validators accept this. A future improvement could use a raw
+    // PDFKit reference to emit a true Name object.
+    (doc as any).info['Trapped'] = 'False';
+  }
 }

@@ -48,7 +48,7 @@ export const layoutParagraph = (
       for (let wi = line.wordRuns.length - 1; wi >= 0; wi--) {
         const wordStart = rightEdge - wordWidths[wi];
         let segX = wordStart;
-        for (const seg of line.wordRuns[wi]) {
+        for (const seg of [...line.wordRuns[wi]].reverse()) {
           segments.push({
             text: seg.text,
             font: seg.font,

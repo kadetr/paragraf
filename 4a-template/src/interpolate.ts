@@ -4,10 +4,14 @@
  * A parsed token from a content slot's text field.
  * - literal: static text, rendered as-is.
  * - binding: a data reference resolved at compile time from the data record.
+ *   Returns `null` for the whole slot if the binding is missing.
+ * - conditional: a null-guard data reference (`{{?path}}`). Resolves to empty
+ *   string when the binding is missing — does not null out the whole slot.
  */
 export type Token =
   | { type: 'literal'; value: string }
-  | { type: 'binding'; path: string };
+  | { type: 'binding'; path: string }
+  | { type: 'conditional'; path: string };
 
 // Binding path: one or more dot-separated segments.
 // Each segment must be a valid identifier or numeric index.
@@ -57,9 +61,18 @@ export function parseTokens(text: string): Token[] {
       throw new Error(`Unclosed '{{' in template text: "${text}"`);
     }
 
-    const path = text.slice(open + 2, close).trim();
+    const rawPath = text.slice(open + 2, close).trim();
+
+    // Null-guard conditional: {{?path}} resolves to '' when binding is missing.
+    const isConditional = rawPath.startsWith('?');
+    const path = isConditional ? rawPath.slice(1).trim() : rawPath;
 
     if (path.length === 0) {
+      if (isConditional) {
+        throw new Error(
+          `Empty conditional '{{?}}' in template text: "${text}" — provide a dot-path like '{{?product.name}}'`,
+        );
+      }
       throw new Error(
         `Empty binding '{{}}' in template text: "${text}" — provide a dot-path like '{{product.name}}'`,
       );
@@ -71,7 +84,9 @@ export function parseTokens(text: string): Token[] {
       );
     }
 
-    tokens.push({ type: 'binding', path });
+    tokens.push(
+      isConditional ? { type: 'conditional', path } : { type: 'binding', path },
+    );
     pos = close + 2;
   }
 

@@ -69,6 +69,14 @@ export interface CompileOptions<T = unknown> {
    */
   outputIntent?: OutputIntent;
   /**
+   * Opt in to PDF/X-3 conformance markers. When set, the generated PDF Info dict
+   * will include `GTS_PDFXVersion` and `Trapped`, and the OutputIntent will use
+   * `S: GTS_PDFX` unconditionally. Requires `outputIntent` to be set; emits a
+   * console.warn and has no effect otherwise.
+   * Has no effect when `output` is not `'pdf'`.
+   */
+  pdfxConformance?: 'PDF/X-3:2002' | 'PDF/X-3:2003';
+  /**
    * Maximum number of pages to generate. Must be >= 1. Content that exceeds
    * this limit is silently truncated (or throws if `onOverflow: 'throw'`).
    * Throws a RangeError if set to 0 or a negative value.
