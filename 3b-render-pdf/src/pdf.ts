@@ -2,6 +2,7 @@
 
 import { createRequire } from 'module';
 import type { OutputIntent, ColorTransform } from '@paragraf/color';
+import { type PageSize, resolvePageSize } from '@paragraf/layout';
 import {
   RenderedParagraph,
   RenderedDocument,
@@ -43,6 +44,7 @@ const getUnitsPerEm = (
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 export interface PdfOptions {
+  pageSize?: PageSize; // named or [width, height] tuple; overridden by explicit width/height
   width?: number; // page width in points, default 595.28 (A4)
   height?: number; // page height in points, default 841.89 (A4)
   fill?: string; // glyph fill color, default 'black'
@@ -60,6 +62,7 @@ export interface PdfOptions {
 export type { OutputIntent };
 
 export interface DocumentPdfOptions {
+  pageSize?: PageSize; // named or [width, height] tuple; overridden by explicit pageWidth/pageHeight
   pageWidth?: number; // default 595.28 (A4)
   pageHeight?: number; // default 841.89 (A4)
   fill?: string; // glyph fill color, default 'black'
@@ -318,9 +321,12 @@ export const renderToPdf = (
   fontEngine: FontEngine,
   options: PdfOptions = {},
 ): Promise<Buffer> => {
+  const [defaultW, defaultH] = options.pageSize
+    ? resolvePageSize(options.pageSize)
+    : [595.28, 841.89];
   const {
-    width = 595.28,
-    height = 841.89,
+    width = defaultW,
+    height = defaultH,
     fill = 'black',
     selectable = false,
     fontRegistry,
@@ -390,9 +396,12 @@ export const renderDocumentToPdf = (
   fontEngine: FontEngine,
   options: DocumentPdfOptions = {},
 ): Promise<Buffer> => {
+  const [defaultW, defaultH] = options.pageSize
+    ? resolvePageSize(options.pageSize)
+    : [595.28, 841.89];
   const {
-    pageWidth = 595.28,
-    pageHeight = 841.89,
+    pageWidth = defaultW,
+    pageHeight = defaultH,
     fill = 'black',
     selectable = false,
     fontRegistry,

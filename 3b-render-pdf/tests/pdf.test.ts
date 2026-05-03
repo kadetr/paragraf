@@ -198,3 +198,34 @@ describe('clearPdfCaches', () => {
     );
   });
 });
+
+// ─── RT-3: pageSize convenience option (F035) ─────────────────────────────────
+
+describe('PdfOptions.pageSize (F035)', () => {
+  it('RT-3: renderToPdf with pageSize: "JIS-B4" produces a valid PDF buffer', async () => {
+    const buf = await renderToPdf(rendered, fontEngine, { pageSize: 'JIS-B4' });
+    expect(isPdfHeader(buf)).toBe(true);
+    expect(hasEof(buf)).toBe(true);
+    expect(buf.length).toBeGreaterThan(0);
+  });
+
+  it('explicit width/height override pageSize when both are supplied', async () => {
+    // pageSize: 'A4' (595×842) but width/height override to Letter (612×792).
+    // We cannot read the PDF size back from the buffer cheaply; verify no error and valid structure.
+    const buf = await renderToPdf(rendered, fontEngine, {
+      pageSize: 'A4',
+      width: 612,
+      height: 792,
+    });
+    expect(isPdfHeader(buf)).toBe(true);
+    expect(hasEof(buf)).toBe(true);
+  });
+
+  it('pageSize accepts a custom tuple', async () => {
+    const buf = await renderToPdf(rendered, fontEngine, {
+      pageSize: [400, 600],
+    });
+    expect(isPdfHeader(buf)).toBe(true);
+    expect(hasEof(buf)).toBe(true);
+  });
+});
