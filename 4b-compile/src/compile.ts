@@ -20,12 +20,14 @@ import type {
   FontStretch,
   FontRegistry,
   Language,
+  TextSpan,
 } from '@paragraf/types';
 import { resolveWeight } from '@paragraf/types';
 import { parseDimension, PageLayout } from '@paragraf/layout';
 import type { Margins } from '@paragraf/layout';
 import { defineStyles } from '@paragraf/style';
-import type { ResolvedParagraphStyle } from '@paragraf/style';
+import type { CharStyleDef, ResolvedParagraphStyle } from '@paragraf/style';
+import { parseInlineMarkup, looksLikeRtl } from './markup.js';
 import type { Template, Dimension, DimensionMargins } from '@paragraf/template';
 
 import {
@@ -140,6 +142,8 @@ export async function compile<T = unknown>(
 
   // ── 4. Resolve styles ──────────────────────────────────────────────────────
   const styleRegistry = defineStyles(template.styles);
+  const charStyles: Record<string, CharStyleDef> | undefined =
+    template.charStyles;
 
   // ── 5. Resolve data ────────────────────────────────────────────────────────
   const record: Record<string, unknown> = normalize
@@ -163,6 +167,7 @@ export async function compile<T = unknown>(
             styleRegistry.resolve(slot.style),
             slot.style,
             registry,
+            charStyles,
             verbose,
           ),
         );
@@ -177,6 +182,7 @@ export async function compile<T = unknown>(
           styleRegistry.resolve(slot.style),
           slot.style,
           registry,
+          charStyles,
           verbose,
         ),
       );
@@ -193,6 +199,7 @@ export async function compile<T = unknown>(
         styleRegistry.resolve(slot.style),
         slot.style,
         registry,
+        charStyles,
         verbose,
       ),
     );
@@ -393,11 +400,31 @@ function buildInput(
   style: ResolvedParagraphStyle,
   styleName: string,
   registry: FontRegistry,
+  charStyles?: Record<string, CharStyleDef>,
   verbose = true,
 ): ParagraphInput {
+  const font = buildFont(style, styleName, registry, verbose);
+
+  // Inline markup: parse <b>, <i>, <bi>, <sup>, <sub>, <span cs="…"> into spans.
+  // Spans are only used for LTR paragraphs — RTL does not support span input.
+  let spanInput: {
+    text?: string;
+    font?: ReturnType<typeof buildFont>;
+    spans?: TextSpan[];
+  } = { text, font };
+  if (text.includes('<')) {
+    const spans = parseInlineMarkup(text, font, charStyles);
+    const sourceText = spans.map((s) => s.text).join('');
+    if (!looksLikeRtl(sourceText)) {
+      spanInput = { spans };
+    } else {
+      // RTL: strip markup tags and use plain text mode
+      spanInput = { text: sourceText, font };
+    }
+  }
+
   return {
-    text,
-    font: buildFont(style, styleName, registry, verbose),
+    ...spanInput,
     // lineWidth is overridden by composeDocument; 0 is a valid placeholder
     lineWidth: 0,
     alignment: style.alignment,

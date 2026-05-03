@@ -33,13 +33,16 @@ export const layoutParagraph = (
   for (const line of composed) {
     const baseline: number = lineY + line.baseline;
     const segments: PositionedSegment[] = [];
+    // Glyph expansion: scale all advance widths by (1 + expansion).
+    // glyphExpansion=0 (default) → no change; ±0.005 → ±0.5% glyph scaling.
+    const glyphScale = 1 + (line.glyphExpansion ?? 0);
 
     if (line.direction === 'rtl') {
       // RTL visual reordering: render words in reverse logical order, right-to-left.
       // Pre-compute word widths to determine start positions.
       const wordWidths = line.wordRuns.map((segs) =>
         segs.reduce(
-          (sum, seg) => sum + measurer.measure(seg.text, seg.font),
+          (sum, seg) => sum + measurer.measure(seg.text, seg.font) * glyphScale,
           0,
         ),
       );
@@ -55,7 +58,7 @@ export const layoutParagraph = (
             x: segX,
             y: baseline - (seg.verticalOffset ?? 0),
           });
-          segX += measurer.measure(seg.text, seg.font);
+          segX += measurer.measure(seg.text, seg.font) * glyphScale;
         }
         rightEdge = wordStart - (wi > 0 ? line.wordSpacing : 0);
       }
@@ -64,7 +67,10 @@ export const layoutParagraph = (
       const totalWordWidth = line.wordRuns.reduce(
         (sum, segs) =>
           sum +
-          segs.reduce((s, seg) => s + measurer.measure(seg.text, seg.font), 0),
+          segs.reduce(
+            (s, seg) => s + measurer.measure(seg.text, seg.font) * glyphScale,
+            0,
+          ),
         0,
       );
       const contentWidth =
@@ -85,7 +91,7 @@ export const layoutParagraph = (
             x: wordX,
             y: baseline - (seg.verticalOffset ?? 0),
           });
-          wordX += measurer.measure(seg.text, seg.font);
+          wordX += measurer.measure(seg.text, seg.font) * glyphScale;
         }
         if (wi < line.wordRuns.length - 1) {
           wordX += line.wordSpacing;

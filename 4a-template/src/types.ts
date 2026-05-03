@@ -1,7 +1,7 @@
 // types.ts — Template schema types for @paragraf/template.
 // Pure data types; no functions, no side effects.
 
-import type { ParagraphStyleDef } from '@paragraf/style';
+import type { ParagraphStyleDef, CharStyleDef } from '@paragraf/style';
 import type { FontStyle, FontStretch } from '@paragraf/types';
 import type { PageSize, Dimension } from '@paragraf/layout';
 
@@ -201,6 +201,12 @@ export interface Template {
    * defineStyles() input. Inheritance chains are fully supported.
    */
   styles: Record<string, ParagraphStyleDef>;
+  /**
+   * Character style definitions. Used by the compile layer to resolve inline
+   * markup tags (`<span cs="NAME">`) to font overrides.
+   * Optional — omit when no inline markup character styles are needed.
+   */
+  charStyles?: Record<string, CharStyleDef>;
   /** Ordered list of content slots. */
   content: ContentSlot[];
 }

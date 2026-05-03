@@ -14,7 +14,7 @@ const require = createRequire(import.meta.url);
 let wasm: any;
 
 function loadWasm() {
-  if (!wasm) wasm = require('../wasm/pkg/knuth_plass_wasm.js');
+  if (!wasm) wasm = require('../wasm/pkg/paragraf_shaping_wasm.js');
   return wasm;
 }
 
@@ -547,7 +547,11 @@ describe('F005 — forced-break last-line ratio is exactly 0 from Rust', () => {
         new Float64Array([]),
         MOCK_PARA_1LINE.lineWidth,
         MOCK_PARA_1LINE.tolerance,
-        0, 0, 0, 0, 0,
+        0,
+        0,
+        0,
+        0,
+        0,
       ),
     );
     expect(result.ok).toBeDefined();
@@ -567,7 +571,11 @@ describe('F005 — forced-break last-line ratio is exactly 0 from Rust', () => {
         new Float64Array([]),
         MOCK_PARA_2LINE.lineWidth,
         MOCK_PARA_2LINE.tolerance,
-        0, 0, 0, 0, 0,
+        0,
+        0,
+        0,
+        0,
+        0,
       ),
     );
     expect(result.ok).toBeDefined();
@@ -730,5 +738,26 @@ describe('Phase 4 — font shaping via rustybuzz', () => {
     expect(rsSup.baselineShift).toBeGreaterThan(0);
     expect(rsSub.baselineShift).toBeLessThan(0);
     expect(rsNorm.baselineShift).toBe(0);
+  });
+});
+
+// ─── RT-5: F025 paragraf_shaping_wasm rename ─────────────────────────────────
+
+describe('RT-5 — loadShapingWasm loads from renamed paragraf_shaping_wasm path', () => {
+  it('wasm module loads successfully from paragraf_shaping_wasm.js', () => {
+    const w = loadWasm();
+    expect(w).toBeTruthy();
+  });
+
+  it('analyze_bidi is callable after loading', () => {
+    const w = loadWasm();
+    expect(typeof w.analyze_bidi).toBe('function');
+  });
+
+  it('hello() returns a greeting string from Rust (smoke test)', () => {
+    const w = loadWasm();
+    const result = w.hello('world');
+    expect(typeof result).toBe('string');
+    expect(result.length).toBeGreaterThan(0);
   });
 });

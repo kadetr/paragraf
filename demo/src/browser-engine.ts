@@ -14,7 +14,7 @@ import {
   shape_text_wasm,
   get_glyph_path,
   font_metrics_wasm,
-} from '../../2a-shaping-wasm/wasm/pkg-bundler/knuth_plass_wasm.js';
+} from '../../2a-shaping-wasm/wasm/pkg-bundler/paragraf_shaping_wasm.js';
 
 export class BrowserWasmFontEngine implements FontEngine {
   async loadFont(_id: string, _path: string): Promise<void> {

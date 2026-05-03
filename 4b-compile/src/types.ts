@@ -140,6 +140,13 @@ export interface CompileBatchOptions<T> extends Omit<
    * @param total     Total number of records.
    */
   onProgress?: (completed: number, total: number) => void;
+  /**
+   * Optional cancellation signal. When the signal is aborted, any records
+   * that have not yet started are not started, and `compileBatch` rejects
+   * with a `DOMException` (`name: 'AbortError'`). Records that are already
+   * in-flight complete normally — abort is pending-only cancellation.
+   */
+  signal?: AbortSignal;
 }
 
 /** One entry in a compileBatch result array. Either `result` or `error` is set. */

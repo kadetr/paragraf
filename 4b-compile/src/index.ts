@@ -5,6 +5,7 @@ export { compile } from './compile.js';
 export { compileBatch } from './batch.js';
 export { createCompilerSession } from './session.js';
 export type { CompilerSession, SessionOptions } from './session.js';
+export { parseInlineMarkup } from './markup.js';
 
 // ─── Option and result types ──────────────────────────────────────────────────
 export type {

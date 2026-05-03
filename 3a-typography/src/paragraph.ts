@@ -219,6 +219,11 @@ export interface ParagraphInput {
    * justification fill via kashida spacing rather than word spacing. @since v0.6.1
    */
   kashida?: boolean;
+  /**
+   * Maximum glyph expansion factor (HZ/pdfTeX style). Each line’s glyphs may
+   * be scaled by ±maxGlyphExpansion to improve fit. Typical: 0.005. @since v0.6.1
+   */
+  maxGlyphExpansion?: number;
 }
 
 export interface ParagraphOutput {
@@ -860,6 +865,7 @@ export const createParagraphComposer = async (
       leftSkip,
       rightSkip,
       input.kashida ?? false,
+      input.maxGlyphExpansion ?? 0,
     );
 
     // Optical Margin Alignment — converging recompose.

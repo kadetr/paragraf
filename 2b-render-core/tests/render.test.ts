@@ -576,3 +576,59 @@ describe('layoutParagraph — RTL multi-segment word, segment ordering', () => {
     expect(rendered[0].segments[0].x).toBeLessThan(rendered[0].segments[1].x);
   });
 });
+
+// ─── RT-4: F029 glyphExpansion shifts segment positions ──────────────────────
+
+describe('layoutParagraph — glyphExpansion scales advance widths (RT-4)', () => {
+  const BASE_LINE: ComposedLine = {
+    wordRuns: [
+      [
+        { text: 'hello', font: FONT_12 },
+        { text: 'world', font: FONT_12 },
+      ],
+    ],
+    wordSpacing: 5,
+    hyphenated: false,
+    ratio: 0,
+    alignment: 'justified',
+    isWidow: false,
+    lineWidth: 200,
+    lineHeight: 12,
+    baseline: 9.6,
+    direction: 'ltr',
+    glyphExpansion: 0,
+  };
+
+  it('glyphExpansion=0.01 shifts the second segment rightward vs glyphExpansion=0', () => {
+    const baseline = layoutParagraph(
+      [{ ...BASE_LINE, glyphExpansion: 0 }],
+      MOCK_MEASURER,
+      ORIGIN,
+    );
+    const expanded = layoutParagraph(
+      [{ ...BASE_LINE, glyphExpansion: 0.01 }],
+      MOCK_MEASURER,
+      ORIGIN,
+    );
+    // The second segment's x must be further right when glyphExpansion > 0
+    expect(expanded[0].segments[1].x).toBeGreaterThan(
+      baseline[0].segments[1].x,
+    );
+  });
+
+  it('glyphExpansion=0.01 increases advance of first segment by ~1%', () => {
+    const noExp = layoutParagraph(
+      [{ ...BASE_LINE, glyphExpansion: 0 }],
+      MOCK_MEASURER,
+      ORIGIN,
+    );
+    const exp = layoutParagraph(
+      [{ ...BASE_LINE, glyphExpansion: 0.01 }],
+      MOCK_MEASURER,
+      ORIGIN,
+    );
+    const advanceWithout = noExp[0].segments[1].x - noExp[0].segments[0].x;
+    const advanceWith = exp[0].segments[1].x - exp[0].segments[0].x;
+    expect(advanceWith).toBeCloseTo(advanceWithout * 1.01, 5);
+  });
+});

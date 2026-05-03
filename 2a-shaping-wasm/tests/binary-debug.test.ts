@@ -21,7 +21,7 @@ import { FontRegistry, Font, Language } from '@paragraf/types';
 import { serializeNodesToBinary } from '../src/wasm-binary.js';
 
 const _require = createRequire(import.meta.url);
-const wasm: any = _require('../wasm/pkg/knuth_plass_wasm.js');
+const wasm: any = _require('../wasm/pkg/paragraf_shaping_wasm.js');
 
 const FONTS_DIR = path.resolve(
   path.dirname(new URL(import.meta.url).pathname),
