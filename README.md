@@ -265,7 +265,7 @@ writeFileSync('document.pdf', pdfBuffer);
 | `firstLineIndent` | `0` | First-line indent in points |
 | `consecutiveHyphenLimit` | `∞` | Maximum consecutive hyphenated lines |
 | `runtPenalty` | `150` | Demerit added when the final line of a paragraph is a single word (runt line). Best-effort — does not guarantee elimination when no feasible alternative layout exists. |
-| `singleLinePenalty` | `150` | Demerit added when the first line of a paragraph composes to a single word. Same caveat as `runtPenalty`. |
+| `singleLinePenalty` | `0` | Demerit added when the entire paragraph fits on a single line (no intermediate breaks), regardless of word count. Same caveat as `runtPenalty`. |
 
 **Language hyphenation** — 22 languages built in via Knuth–Liang pattern tables:
 `en-us` `en-gb` `de` `fr` `tr` `nl` `pl` `it` `es` `sv` `no` `da` `fi`

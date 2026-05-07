@@ -48,7 +48,6 @@ import type { FontEngine } from '@paragraf/font-engine';
 import { createMeasurer } from '@paragraf/font-engine';
 import { renderDocumentToPdf } from '@paragraf/render-pdf';
 import type { OutputIntent } from '@paragraf/render-pdf';
-import { loadBuiltinSrgb, createTransform } from '@paragraf/color';
 import type { ColorTransform } from '@paragraf/color';
 
 import type { CompileOptions, CompileResult } from './types.js';
@@ -288,6 +287,8 @@ export async function compile<T = unknown>(
     // render-pdf cannot encode correctly without additional color-space handling.
     const destColorSpace = outputIntent.profile.colorSpace;
     if (destColorSpace === 'CMYK') {
+      const { loadBuiltinSrgb, createTransform } =
+        await import('@paragraf/color');
       const srgb = await loadBuiltinSrgb();
       // Try the WASM-accelerated path (optional dependency). Fall back to the
       // pure-TS createTransform when @paragraf/color-wasm is not installed.

@@ -140,17 +140,32 @@ function applyOpenTag(
 
 // ─── RTL detection (P2-style first-strong scan) ──────────────────────────────
 
-// Matches common RTL script ranges: Hebrew, Arabic, Syriac, Thaana, NKo, Samaritan,
-// Mandaic, Arabic Supplement, Arabic Extended-A/B, Arabic Presentation Forms-A/B.
-const RTL_RE =
+// Matches a single RTL strong character (Hebrew, Arabic, Syriac, Thaana, NKo,
+// Samaritan, Mandaic, Arabic Supplement, Arabic Extended-A/B,
+// Arabic Presentation Forms-A/B).
+const RTL_STRONG_RE =
   /[\u0590-\u05FF\u0600-\u06FF\u0700-\u074F\u0750-\u077F\u0780-\u07FF\u07C0-\u07FF\uFB1D-\uFB4F\uFB50-\uFDFF\uFE70-\uFEFF]/;
+
+// Matches a single LTR strong character (Latin, Greek, Cyrillic, CJK, etc.).
+// Used to identify the first strong character before any RTL match.
+const LTR_STRONG_RE =
+  /[A-Za-z\u00C0-\u02B8\u0370-\u03FF\u0400-\u04FF\u4E00-\u9FFF]/;
 
 /**
  * Returns `true` if the first strong-directional character in `text` is RTL.
- * Uses a simple first-match scan (equivalent to Unicode P2/P3).
+ * Implements Unicode Bidi Algorithm rules P2/P3: scan from the start of the
+ * string and return the directionality of the first strong character found.
+ * A strong LTR character encountered before any RTL character returns `false`.
  */
 export function looksLikeRtl(text: string): boolean {
-  return RTL_RE.test(text);
+  for (let i = 0; i < text.length; ) {
+    const cp = text.codePointAt(i)!;
+    const ch = String.fromCodePoint(cp);
+    if (RTL_STRONG_RE.test(ch)) return true;
+    if (LTR_STRONG_RE.test(ch)) return false;
+    i += ch.length;
+  }
+  return false;
 }
 
 /**

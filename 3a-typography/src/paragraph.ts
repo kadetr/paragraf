@@ -187,7 +187,10 @@ export interface ParagraphInput {
   consecutiveHyphenLimit?: number;
   /** Demerit added when the final line contains a single word. @since v0.6 */
   runtPenalty?: number;
-  /** Demerit added when the first line contains a single word. @since v0.6 */
+  /**
+   * Demerit added when the entire paragraph fits on a single line (no intermediate
+   * breaks). Applied regardless of word count on that line. @since v0.6
+   */
   singleLinePenalty?: number;
   preserveSoftHyphens?: boolean;
   /** When set, overrides the font-metric-derived line height on every composed
@@ -694,12 +697,30 @@ export const createParagraphComposer = async (
 
     const leftSkip = input.leftSkip ?? 0;
     const rightSkip = input.rightSkip ?? 0;
+    if (leftSkip < 0 || rightSkip < 0) {
+      throw new RangeError(
+        `[paragraf] compose(): leftSkip and rightSkip must be non-negative (got leftSkip=${leftSkip}, rightSkip=${rightSkip}).`,
+      );
+    }
     const skipWidth = leftSkip + rightSkip;
     // Reduce KP line widths to exclude skip margins.
     const kpLineWidth = skipWidth > 0 ? lineWidth - skipWidth : lineWidth;
+    if (kpLineWidth <= 0) {
+      throw new RangeError(
+        `[paragraf] compose(): leftSkip + rightSkip (${skipWidth}pt) must be less than lineWidth (${lineWidth}pt).`,
+      );
+    }
     const kpLineWidths =
       skipWidth > 0 && lineWidths.length > 0
-        ? lineWidths.map((w) => w - skipWidth)
+        ? lineWidths.map((w, i) => {
+            const effective = w - skipWidth;
+            if (effective <= 0) {
+              throw new RangeError(
+                `[paragraf] compose(): leftSkip + rightSkip (${skipWidth}pt) must be less than lineWidths[${i}] (${w}pt).`,
+              );
+            }
+            return effective;
+          })
         : lineWidths;
 
     // Detect paragraph direction.
