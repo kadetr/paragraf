@@ -428,13 +428,13 @@ describe('ParagraphInput — step 3a parameters', () => {
     ).not.toThrow();
   });
 
-  it('widowPenalty is passed through without throwing', () => {
+  it('runtPenalty is passed through without throwing', () => {
     expect(() =>
       composer.compose({
         text: TEXT,
         font: FONT_REGULAR,
         lineWidth: 250,
-        widowPenalty: 5000,
+        runtPenalty: 5000,
       }),
     ).not.toThrow();
   });
@@ -450,13 +450,13 @@ describe('ParagraphInput — step 3a parameters', () => {
     ).not.toThrow();
   });
 
-  it('orphanPenalty is passed through without throwing', () => {
+  it('singleLinePenalty is passed through without throwing', () => {
     expect(() =>
       composer.compose({
         text: TEXT,
         font: FONT_REGULAR,
         lineWidth: 250,
-        orphanPenalty: 5000,
+        singleLinePenalty: 5000,
       }),
     ).not.toThrow();
   });
@@ -487,7 +487,7 @@ describe('ParagraphInput — step 3a parameters', () => {
     expect(default_.lineCount).toBe(explicit.lineCount);
   });
 
-  it('widowPenalty demonstrably affects demerits', () => {
+  it('runtPenalty demonstrably affects demerits', () => {
     const without = composer.compose({
       text: TEXT,
       font: FONT_REGULAR,
@@ -497,7 +497,7 @@ describe('ParagraphInput — step 3a parameters', () => {
       text: TEXT,
       font: FONT_REGULAR,
       lineWidth: 250,
-      widowPenalty: 1000000,
+      runtPenalty: 1000000,
     });
     // either different line count or different internal demerits
     // both are valid outcomes of widow penalty
@@ -532,7 +532,7 @@ describe('ParagraphInput — step 3a parameters', () => {
     expect(with_.lineCount).toBeGreaterThan(0);
     expect(without.lineCount).toBeGreaterThan(0);
   });
-  it('widowPenalty demonstrably changes totalDemerits', () => {
+  it('runtPenalty demonstrably changes totalDemerits', () => {
     const text = 'In olden times when wishing still helped one';
     const without = composer.compose({
       text,
@@ -543,7 +543,7 @@ describe('ParagraphInput — step 3a parameters', () => {
       text,
       font: FONT_REGULAR,
       lineWidth: 250,
-      widowPenalty: 1000000,
+      runtPenalty: 1000000,
     });
 
     // one of: different line count OR different spacing on last line
@@ -558,7 +558,7 @@ describe('ParagraphInput — step 3a parameters', () => {
     expect(without.lineCount).toBeGreaterThan(0);
     expect(with_.lineCount).toBeGreaterThan(0);
     // not asserting changed=true because widow may not exist in this paragraph
-    // the real proof is in linebreak.test.ts — widowPenalty demonstrably changes selection
+    // the real proof is in linebreak.test.ts — runtPenalty demonstrably changes selection
   });
 
   it('looseness through facade matches linebreak behaviour', () => {
@@ -1172,100 +1172,6 @@ describe('clearShapingState (F003)', () => {
       expect(countAfterSecondNoReset).toBe(0);
       expect(countAfterReset).toBe(0);
     }
-  });
-});
-
-// ─── F010 — deprecated widowPenalty/orphanPenalty aliases ─────────────────────
-
-describe('F010 — deprecated widowPenalty/orphanPenalty backward compat (T1–T4)', () => {
-  // T1: deprecated widowPenalty still affects layout
-  it('T1: widowPenalty: 5000 produces the same result as runtPenalty: 5000', () => {
-    const text =
-      'In olden times when wishing still helped one there lived a king';
-    const viaDeprecated = composer.compose({
-      text,
-      font: FONT_REGULAR,
-      lineWidth: 200,
-      widowPenalty: 5000,
-    });
-    const viaCanonical = composer.compose({
-      text,
-      font: FONT_REGULAR,
-      lineWidth: 200,
-      runtPenalty: 5000,
-    });
-    expect(viaDeprecated.lineCount).toBe(viaCanonical.lineCount);
-    viaDeprecated.lines.forEach((l, i) => {
-      expect(l.words.join(' ')).toBe(viaCanonical.lines[i].words.join(' '));
-    });
-  });
-
-  // T2: deprecated orphanPenalty still affects layout
-  it('T2: orphanPenalty: 5000 produces the same result as singleLinePenalty: 5000', () => {
-    const text =
-      'In olden times when wishing still helped one there lived a king';
-    const viaDeprecated = composer.compose({
-      text,
-      font: FONT_REGULAR,
-      lineWidth: 200,
-      orphanPenalty: 5000,
-    });
-    const viaCanonical = composer.compose({
-      text,
-      font: FONT_REGULAR,
-      lineWidth: 200,
-      singleLinePenalty: 5000,
-    });
-    expect(viaDeprecated.lineCount).toBe(viaCanonical.lineCount);
-    viaDeprecated.lines.forEach((l, i) => {
-      expect(l.words.join(' ')).toBe(viaCanonical.lines[i].words.join(' '));
-    });
-  });
-
-  // T3: canonical runtPenalty takes precedence over widowPenalty when both provided
-  it('T3: canonical runtPenalty takes precedence over deprecated widowPenalty', () => {
-    const text =
-      'In olden times when wishing still helped one there lived a king';
-    const canonical = composer.compose({
-      text,
-      font: FONT_REGULAR,
-      lineWidth: 200,
-      runtPenalty: 5000,
-    });
-    const both = composer.compose({
-      text,
-      font: FONT_REGULAR,
-      lineWidth: 200,
-      runtPenalty: 5000,
-      widowPenalty: 0, // ignored — canonical wins
-    });
-    expect(both.lineCount).toBe(canonical.lineCount);
-    both.lines.forEach((l, i) => {
-      expect(l.words.join(' ')).toBe(canonical.lines[i].words.join(' '));
-    });
-  });
-
-  // T4: canonical singleLinePenalty takes precedence over orphanPenalty when both provided
-  it('T4: canonical singleLinePenalty takes precedence over deprecated orphanPenalty', () => {
-    const text =
-      'In olden times when wishing still helped one there lived a king';
-    const canonical = composer.compose({
-      text,
-      font: FONT_REGULAR,
-      lineWidth: 200,
-      singleLinePenalty: 5000,
-    });
-    const both = composer.compose({
-      text,
-      font: FONT_REGULAR,
-      lineWidth: 200,
-      singleLinePenalty: 5000,
-      orphanPenalty: 0, // ignored — canonical wins
-    });
-    expect(both.lineCount).toBe(canonical.lineCount);
-    both.lines.forEach((l, i) => {
-      expect(l.words.join(' ')).toBe(canonical.lines[i].words.join(' '));
-    });
   });
 });
 

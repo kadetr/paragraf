@@ -22,9 +22,9 @@ compileDocument(doc, fonts, {
 });
 ```
 
-#### `widowPenalty` / `orphanPenalty` semantics clarified
+#### `widowPenalty` / `orphanPenalty` renamed to `runtPenalty` / `singleLinePenalty`
 
-These parameters apply a per-paragraph *runt-line* demerit (a single-word first or last line within the paragraph), not frame-level widow/orphan control. The parameter names are unchanged, but the JSDoc and Known Limitations section now accurately describe their scope.
+These parameters apply a per-paragraph *runt-line* demerit (a single-word first or last line within the paragraph), not frame-level widow/orphan control. The names `widowPenalty` and `orphanPenalty` have been removed; use `runtPenalty` and `singleLinePenalty` respectively.
 
 ---
 

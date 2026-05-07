@@ -423,6 +423,29 @@ function buildInput(
     }
   }
 
+  // Warn about fields that are accepted by StyleRegistry but have no runtime
+  // effect in the current compile pipeline (not yet implemented).
+  if (verbose) {
+    if (style.features && Object.keys(style.features).length > 0) {
+      console.warn(
+        `[paragraf/compile] Style "${styleName}": features is set but not yet implemented. ` +
+          'OpenType feature tags will have no effect on the rendered output.',
+      );
+    }
+    if (style.nestedStyles && style.nestedStyles.length > 0) {
+      console.warn(
+        `[paragraf/compile] Style "${styleName}": nestedStyles is set but not yet implemented ` +
+          '(requires F027 inline-markup pipeline). Rules will have no effect.',
+      );
+    }
+    if (style.grepStyles && style.grepStyles.length > 0) {
+      console.warn(
+        `[paragraf/compile] Style "${styleName}": grepStyles is set but not yet implemented ` +
+          '(requires F027 inline-markup pipeline). Rules will have no effect.',
+      );
+    }
+  }
+
   return {
     ...spanInput,
     // lineWidth is overridden by composeDocument; 0 is a valid placeholder

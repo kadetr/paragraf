@@ -696,6 +696,48 @@ describe('layoutDocument — spaceBefore', () => {
     expect(col1Item!.origin.y).toBeCloseTo(10, 4); // spaceBefore applied on first batch
     expect(col2Item!.origin.y).toBeCloseTo(0, 4); // NOT applied on continuation
   });
+
+  it('R5: spaceBefore larger than remaining column height forces overflow to next column', () => {
+    // frame: y=0, height=30, 2 columns, gutter=0
+    // para1: 2 lines (2×12=24pt) → col1 cursor at 24, remaining = 6pt
+    // para2 with spaceBefore=20: effectiveAvailable = 6-20 = -14 ≤ 0 → advance to col2
+    // col2: origin.y = frame.y + spaceBefore = 0+20 = 20
+    const frame: Frame = {
+      page: 0,
+      x: 0,
+      y: 0,
+      width: 400,
+      height: 30,
+      columnCount: 2,
+      gutter: 0,
+    };
+    const para1Output: ParagraphOutput = {
+      lines: Array.from({ length: 2 }, () => makeLine()),
+      lineCount: 2,
+      usedEmergency: false,
+    };
+    const para2Output: ParagraphOutput = {
+      lines: [makeLine()],
+      lineCount: 1,
+      usedEmergency: false,
+    };
+    let callCount = 0;
+    const twoParaComposer: ParagraphComposer = {
+      compose: () => (callCount++ === 0 ? para1Output : para2Output),
+      ensureLanguage: async () => {},
+    };
+    const para2: ParagraphInput = { ...makeInput(), spaceBefore: 20 };
+    const composed = composeDocument(
+      { paragraphs: [makeInput(), para2], frames: [frame] },
+      twoParaComposer,
+    );
+    const result = layoutDocument(composed, [frame], mockMeasurer);
+    const allItems = result.pages.flatMap((p) => p.items);
+    // para2 must have been pushed to col2 (origin.x = 200)
+    const para2Item = allItems.find((item) => item.origin.x === 200);
+    expect(para2Item).toBeDefined();
+    expect(para2Item!.origin.y).toBeCloseTo(20, 4);
+  });
 });
 
 describe('layoutDocument — spaceAfter', () => {

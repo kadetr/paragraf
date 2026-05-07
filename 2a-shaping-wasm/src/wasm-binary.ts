@@ -80,18 +80,11 @@ export function tracebackWasmBinary(
   tolerance: number,
   emergencyStretch: number = 0,
   looseness: number = 0,
-  /** @deprecated — use runtPenalty */
-  widowPenalty: number = 0,
-  /** @deprecated — use singleLinePenalty */
-  orphanPenalty: number = 0,
   consecutiveHyphenLimit: number = 0,
   lineWidths: number[] = [],
-  runtPenalty?: number,
-  singleLinePenalty?: number,
+  runtPenalty: number = 0,
+  singleLinePenalty: number = 0,
 ): any {
-  // Canonical names take precedence over deprecated aliases.
-  const effectiveWidowPenalty = runtPenalty ?? widowPenalty;
-  const effectiveOrphanPenalty = singleLinePenalty ?? orphanPenalty;
   const [f64s, u8s] = serializeNodesToBinary(nodes);
   const result = JSON.parse(
     wasm.traceback_wasm_binary(
@@ -102,8 +95,8 @@ export function tracebackWasmBinary(
       tolerance,
       emergencyStretch,
       looseness,
-      effectiveWidowPenalty,
-      effectiveOrphanPenalty,
+      runtPenalty,
+      singleLinePenalty,
       consecutiveHyphenLimit,
     ),
   );

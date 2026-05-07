@@ -189,10 +189,6 @@ export interface ParagraphInput {
   runtPenalty?: number;
   /** Demerit added when the first line contains a single word. @since v0.6 */
   singleLinePenalty?: number;
-  /** @deprecated Use `runtPenalty` instead. */
-  widowPenalty?: number;
-  /** @deprecated Use `singleLinePenalty` instead. */
-  orphanPenalty?: number;
   preserveSoftHyphens?: boolean;
   /** When set, overrides the font-metric-derived line height on every composed
    *  line. Use this to enforce exact leading (e.g. 16pt) independent of the
@@ -691,10 +687,8 @@ export const createParagraphComposer = async (
       looseness = 0,
       justifyLastLine = false,
       consecutiveHyphenLimit = 0,
-      runtPenalty,
-      singleLinePenalty,
-      widowPenalty: widowPenaltyDeprecated = 0,
-      orphanPenalty: orphanPenaltyDeprecated = 0,
+      runtPenalty = 0,
+      singleLinePenalty = 0,
       preserveSoftHyphens = true,
     } = input;
 
@@ -707,10 +701,6 @@ export const createParagraphComposer = async (
       skipWidth > 0 && lineWidths.length > 0
         ? lineWidths.map((w) => w - skipWidth)
         : lineWidths;
-
-    // Accept both canonical (runtPenalty / singleLinePenalty) and deprecated names.
-    const widowPenalty = runtPenalty ?? widowPenaltyDeprecated;
-    const orphanPenalty = singleLinePenalty ?? orphanPenaltyDeprecated;
 
     // Detect paragraph direction.
     // RTL paragraphs bypass language loading and hyphenation for v0.8.
@@ -785,7 +775,7 @@ export const createParagraphComposer = async (
         fragments: [word],
         hyphenable: false,
         hasSoftHyphen: false,
-        font,
+        font: font!,
       }));
     } else if (spans && spans.length > 0) {
       // span-based LTR input
@@ -801,13 +791,13 @@ export const createParagraphComposer = async (
         fragments: [word],
         hyphenable: false,
         hasSoftHyphen: false,
-        font: fontPerWord ? fontPerWord(i, word) : font,
+        font: fontPerWord ? fontPerWord(i, word) : font!,
       }));
     } else {
       const hyphenated = hyphenateParagraph(text, opts);
       withFonts = hyphenated.map((w, i) => ({
         ...w,
-        font: fontPerWord ? fontPerWord(i, w.original) : font,
+        font: fontPerWord ? fontPerWord(i, w.original) : font!,
       }));
     }
 
@@ -827,12 +817,10 @@ export const createParagraphComposer = async (
         tolerance,
         emergencyStretch,
         looseInt,
-        0, // widowPenalty (deprecated pos 7) — pass 0; use canonical below
-        0, // orphanPenalty (deprecated pos 8) — pass 0; use canonical below
         consecutiveHyphenLimit,
         kpLineWidths,
-        widowPenalty, // runtPenalty (canonical pos 11)
-        orphanPenalty, // singleLinePenalty (canonical pos 12)
+        runtPenalty,
+        singleLinePenalty,
       );
       if ('error' in tbResult) throw new Error(tbResult.error);
       breaks = tbResult.ok.breaks as LineBreak[];
@@ -845,8 +833,8 @@ export const createParagraphComposer = async (
         tolerance,
         emergencyStretch,
         consecutiveHyphenLimit,
-        runtPenalty: widowPenalty,
-        singleLinePenalty: orphanPenalty,
+        runtPenalty,
+        singleLinePenalty,
         looseness,
       });
       breaks = traceback(result.node);

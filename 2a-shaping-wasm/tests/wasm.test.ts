@@ -271,8 +271,8 @@ describe('Phase 1 — ParagraphInput round-trip', () => {
       emergencyStretch: 10,
       looseness: -1,
       consecutiveHyphenLimit: 2,
-      widowPenalty: 150,
-      orphanPenalty: 150,
+      runtPenalty: 150,
+      singleLinePenalty: 150,
       justifyLastLine: false,
       alignment: 'justified',
     };
@@ -759,5 +759,93 @@ describe('RT-5 — loadShapingWasm loads from renamed paragraf_shaping_wasm path
     const result = w.hello('world');
     expect(typeof result).toBe('string');
     expect(result.length).toBeGreaterThan(0);
+  });
+});
+
+// ─── F037 — analyze_bidi integration tests ───────────────────────────────────
+
+describe('F037 — analyze_bidi BiDi run analysis', () => {
+  beforeAll(() => loadWasm());
+
+  // RT-1: pure LTR string → all runs have level 0
+  it('RT-1: pure-LTR string returns all runs with level 0', () => {
+    const result = JSON.parse(wasm.analyze_bidi('Hello world'));
+    expect(result.ok).toBeDefined();
+    const runs: Array<{ text: string; level: number; isRtl: boolean }> =
+      result.ok;
+    expect(runs.length).toBeGreaterThan(0);
+    for (const run of runs) {
+      expect(run.level).toBe(0);
+      expect(run.isRtl).toBe(false);
+    }
+  });
+
+  // RT-2: pure RTL string → at least one run has an odd level (RTL)
+  it('RT-2: pure-RTL string (Arabic) returns at least one run with odd level', () => {
+    // "مرحبا" = "Hello" in Arabic (pure RTL)
+    const result = JSON.parse(
+      wasm.analyze_bidi('\u0645\u0631\u062D\u0628\u0627'),
+    );
+    expect(result.ok).toBeDefined();
+    const runs: Array<{ text: string; level: number; isRtl: boolean }> =
+      result.ok;
+    expect(runs.length).toBeGreaterThan(0);
+    const hasRtl = runs.some((r) => r.level % 2 === 1);
+    expect(hasRtl).toBe(true);
+  });
+
+  // RT-3: mixed-direction string → multiple runs with at least one RTL and one LTR
+  it('RT-3: mixed-direction string returns multiple runs with both LTR and RTL', () => {
+    // "Hello مرحبا world" — LTR + RTL + LTR
+    const mixed = 'Hello \u0645\u0631\u062D\u0628\u0627 world';
+    const result = JSON.parse(wasm.analyze_bidi(mixed));
+    expect(result.ok).toBeDefined();
+    const runs: Array<{ text: string; level: number; isRtl: boolean }> =
+      result.ok;
+    expect(runs.length).toBeGreaterThan(1);
+    const hasLtr = runs.some((r) => r.level % 2 === 0);
+    const hasRtl = runs.some((r) => r.level % 2 === 1);
+    expect(hasLtr).toBe(true);
+    expect(hasRtl).toBe(true);
+  });
+});
+
+// ─── F037 — get_glyph_path integration test ──────────────────────────────────
+
+describe('F037 — get_glyph_path outline extraction', () => {
+  beforeAll(() => {
+    loadWasm();
+    // register_font may already be called in Phase 4 beforeAll — re-register is safe
+    wasm.register_font(P4_FONT_ID, readFileSync(P4_FONT_PATH));
+  });
+
+  // RT-4: get_glyph_path for a known glyph ID returns path commands with moveTo + lineTo
+  it('RT-4: glyph path for LiberationSerif "A" (glyph 36) contains moveTo and lineTo', () => {
+    // Shape "A" to find its glyph ID, then request its path
+    const shaped = JSON.parse(
+      wasm.shape_text_wasm('A', JSON.stringify(P4_FONT_12)),
+    );
+    expect(shaped.ok).toBeDefined();
+    expect(shaped.ok.glyphs.length).toBeGreaterThan(0);
+    const glyphId: number = shaped.ok.glyphs[0].glyphId;
+
+    const result = JSON.parse(
+      wasm.get_glyph_path(P4_FONT_ID, glyphId, 0, 12, 12),
+    );
+    expect(result.ok).toBeDefined();
+    expect(result.error).toBeUndefined();
+
+    const commands: Array<{ command: string; args: number[] }> =
+      result.ok.commands;
+    expect(commands.length).toBeGreaterThan(0);
+
+    const commandNames = commands.map((c) => c.command);
+    expect(commandNames).toContain('moveTo');
+    // LiberationSerif "A" has straight strokes → must contain lineTo
+    expect(commandNames).toContain('lineTo');
+
+    // svgPath string must be non-empty and start with "M"
+    expect(typeof result.ok.d).toBe('string');
+    expect(result.ok.d.startsWith('M')).toBe(true);
   });
 });

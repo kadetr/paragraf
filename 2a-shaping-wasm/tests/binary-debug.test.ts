@@ -256,14 +256,12 @@ describe('Binary serialization path debug', () => {
   });
 });
 
-// ─── F010: canonical runtPenalty/singleLinePenalty precedence (T5) ────────────
+// ─── runtPenalty / singleLinePenalty ────────────────────────────────────────
 
 import { tracebackWasmBinary } from '../src/wasm-binary.js';
 
-describe('F010 — tracebackWasmBinary canonical name precedence (T5)', () => {
-  // T5: tracebackWasmBinary with runtPenalty at canonical position 11
-  // matches result of same value at deprecated position 7.
-  it('T5a: canonical runtPenalty produces same result as deprecated widowPenalty with same value', () => {
+describe('tracebackWasmBinary — runtPenalty / singleLinePenalty', () => {
+  it('runtPenalty affects break selection', () => {
     const TEXT2 =
       'In olden times when wishing still helped one there lived a king.';
     const opts = {
@@ -278,97 +276,20 @@ describe('F010 — tracebackWasmBinary canonical name precedence (T5)', () => {
     }));
     const nodes = buildNodeSequence(withFonts, measurer, 0);
 
-    const PENALTY = 5000;
-
-    // deprecated path: widowPenalty at pos 7
-    const viaDeprecated = tracebackWasmBinary(
+    const withoutPenalty = tracebackWasmBinary(wasm, nodes, 250, 2);
+    const withPenalty = tracebackWasmBinary(
       wasm,
       nodes,
       250,
       2,
       0, // emergencyStretch
       0, // looseness
-      PENALTY, // widowPenalty (deprecated pos 7)
-      0, // orphanPenalty (deprecated pos 8)
       0, // consecutiveHyphenLimit
       [], // lineWidths
-      undefined, // runtPenalty (canonical) — not set
+      5000, // runtPenalty
     );
 
-    // canonical path: runtPenalty at pos 11
-    const viaCanonical = tracebackWasmBinary(
-      wasm,
-      nodes,
-      250,
-      2,
-      0, // emergencyStretch
-      0, // looseness
-      0, // widowPenalty (deprecated) — zero
-      0, // orphanPenalty (deprecated) — zero
-      0, // consecutiveHyphenLimit
-      [], // lineWidths
-      PENALTY, // runtPenalty (canonical pos 11) — takes precedence
-    );
-
-    expect(viaDeprecated.ok).toBeDefined();
-    expect(viaCanonical.ok).toBeDefined();
-    expect(viaDeprecated.ok.breaks.length).toBe(viaCanonical.ok.breaks.length);
-    for (let i = 0; i < viaDeprecated.ok.breaks.length; i++) {
-      expect(viaDeprecated.ok.breaks[i].position).toBe(
-        viaCanonical.ok.breaks[i].position,
-      );
-    }
-  });
-
-  it('T5b: canonical runtPenalty takes precedence when both deprecated and canonical set', () => {
-    const TEXT2 =
-      'In olden times when wishing still helped one there lived a king.';
-    const opts = {
-      ...DEFAULT_HYPHENATE_OPTIONS,
-      language: 'en-us' as Language,
-      fontSize: 12,
-    };
-    const hyphenated = hyphenateParagraph(TEXT2, opts);
-    const withFonts = hyphenated.map((w) => ({
-      ...w,
-      font: font('lib-reg', 12),
-    }));
-    const nodes = buildNodeSequence(withFonts, measurer, 0);
-
-    // canonical=5000, deprecated=0 → same as canonical=5000
-    const resultCanonicalWins = tracebackWasmBinary(
-      wasm,
-      nodes,
-      250,
-      2,
-      0,
-      0,
-      0, // deprecated widowPenalty = 0
-      0,
-      0,
-      [],
-      5000, // canonical runtPenalty = 5000 (should win)
-    );
-
-    // only canonical=5000
-    const resultCanonicalOnly = tracebackWasmBinary(
-      wasm,
-      nodes,
-      250,
-      2,
-      0,
-      0,
-      0,
-      0,
-      0,
-      [],
-      5000,
-    );
-
-    expect(resultCanonicalWins.ok).toBeDefined();
-    expect(resultCanonicalOnly.ok).toBeDefined();
-    expect(resultCanonicalWins.ok.breaks.length).toBe(
-      resultCanonicalOnly.ok.breaks.length,
-    );
+    expect(withoutPenalty.ok).toBeDefined();
+    expect(withPenalty.ok).toBeDefined();
   });
 });

@@ -264,8 +264,8 @@ writeFileSync('document.pdf', pdfBuffer);
 | `emergencyStretch` | `0` | Extra stretch budget when no solution found at tolerance |
 | `firstLineIndent` | `0` | First-line indent in points |
 | `consecutiveHyphenLimit` | `∞` | Maximum consecutive hyphenated lines |
-| `widowPenalty` | `150` | Demerit added when the final line of a paragraph is a single word (runt line). Best-effort — does not guarantee elimination when no feasible alternative layout exists. |
-| `orphanPenalty` | `150` | Demerit added when the first line of a paragraph composes to a single word. Same caveat as `widowPenalty`. |
+| `runtPenalty` | `150` | Demerit added when the final line of a paragraph is a single word (runt line). Best-effort — does not guarantee elimination when no feasible alternative layout exists. |
+| `singleLinePenalty` | `150` | Demerit added when the first line of a paragraph composes to a single word. Same caveat as `runtPenalty`. |
 
 **Language hyphenation** — 22 languages built in via Knuth–Liang pattern tables:
 `en-us` `en-gb` `de` `fr` `tr` `nl` `pl` `it` `es` `sv` `no` `da` `fi`
@@ -291,7 +291,7 @@ per-character protrusion table
 These are intentional gaps for the current release, not bugs:
 
 - **PDF output is vector-path, not PDF/X-conformant.** Text is rendered as filled glyph outlines. PDF/X and PDF/A require embedded fonts with `TJ` operators and ToUnicode CMaps. This is planned but not yet implemented.
-- **`widowPenalty` / `orphanPenalty` are single-line runt penalties**, not frame-level widow/orphan control. True widow/orphan handling (preventing the first or last line of a paragraph from being isolated on a different page) requires frame-level composition, which is not yet implemented. The penalty is best-effort and may not change the layout when no feasible alternative exists.
+- **`runtPenalty` / `singleLinePenalty` are single-line runt penalties**, not frame-level widow/orphan control. True widow/orphan handling (preventing the first or last line of a paragraph from being isolated on a different page) requires frame-level composition, which is not yet implemented. The penalty is best-effort and may not change the layout when no feasible alternative exists.
 - **`adjDemerits`** is available via the paragraph input parameter; the default is `0`, which preserves backwards-compatible Knuth-Plass behaviour. Set to `10000` for TeX-equivalent quality (penalises jarring transitions between very tight and very loose consecutive lines).
 - **`spaceBefore` / `spaceAfter`** are defined in the style types but are not applied during composition. They are silently ignored.
 - **`hyphenation: false`** is defined in the style types but not wired through the composition pipeline. Hyphenation is always enabled.

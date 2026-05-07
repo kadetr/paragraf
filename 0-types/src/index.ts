@@ -269,10 +269,6 @@ export interface Paragraph {
    * @since v0.6
    */
   singleLinePenalty?: number;
-  /** @deprecated Use `runtPenalty` instead. Will be removed in v1.0. */
-  widowPenalty?: number;
-  /** @deprecated Use `singleLinePenalty` instead. Will be removed in v1.0. */
-  orphanPenalty?: number;
   /**
    * Extra demerits added when adjacent lines are in fitness classes more than 1
    * apart (e.g. tight followed by loose). Prevents visually jarring density

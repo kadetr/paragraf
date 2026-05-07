@@ -244,9 +244,15 @@ export function layoutDocument(
 
       const frame = frames[frameIdx];
       const available = frame.height - (cursorY - frame.y);
+      // Reserve spaceBefore in the available height on the first batch so that
+      // lines are not fitted into space that will be consumed by the paragraph
+      // gap above them.
+      const spaceBeforeReserve = isFirstBatch && spaceBefore ? spaceBefore : 0;
+      const effectiveAvailable = available - spaceBeforeReserve;
 
-      // If the current column is exhausted, advance before placing anything.
-      if (available <= 0) {
+      // If the current column is exhausted (accounting for spaceBefore on first
+      // batch), advance before placing anything.
+      if (effectiveAvailable <= 0) {
         const cols = frame.columnCount ?? 1;
         if (colIdx < cols - 1) {
           colIdx++;
@@ -274,14 +280,21 @@ export function layoutDocument(
         const lh = frame.grid
           ? gridAdvance(line.lineHeight, frame.grid.interval)
           : line.lineHeight;
-        if (fitLines.length === 0 || totalHeight + lh <= available) {
-          if (fitLines.length === 0 && lh > available) isForcePlaced = true;
+        if (fitLines.length === 0 || totalHeight + lh <= effectiveAvailable) {
+          if (fitLines.length === 0 && lh > effectiveAvailable)
+            isForcePlaced = true;
           fitLines.push(line);
           totalHeight += lh;
           lineIdx++;
         } else {
           break;
         }
+      }
+
+      // Apply spaceBefore on the first batch of this paragraph only — before
+      // grid-snapping so the first baseline lands on the correct grid line.
+      if (isFirstBatch && spaceBefore) {
+        cursorY += spaceBefore;
       }
 
       // If the frame has a grid, snap the cursor before placing.
@@ -315,11 +328,6 @@ export function layoutDocument(
           continue;
         }
         cursorY = snappedY;
-      }
-
-      // Apply spaceBefore on the first batch of this paragraph only.
-      if (isFirstBatch && spaceBefore) {
-        cursorY += spaceBefore;
       }
 
       // Place this batch as one item.
