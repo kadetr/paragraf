@@ -47,7 +47,8 @@ export const layoutParagraph = (
         ),
       );
 
-      let rightEdge = origin.x + line.lineWidth + (line.xOffset ?? 0);
+      let rightEdge =
+        origin.x + (line.leftSkip ?? 0) + line.lineWidth + (line.xOffset ?? 0);
       for (let wi = line.wordRuns.length - 1; wi >= 0; wi--) {
         const wordStart = rightEdge - wordWidths[wi];
         let segX = wordStart;
@@ -82,7 +83,8 @@ export const layoutParagraph = (
       } else if (line.alignment === 'center') {
         alignOffset = (line.lineWidth - contentWidth) / 2;
       }
-      let wordX = origin.x + (line.xOffset ?? 0) + alignOffset;
+      let wordX =
+        origin.x + (line.leftSkip ?? 0) + (line.xOffset ?? 0) + alignOffset;
       for (let wi = 0; wi < line.wordRuns.length; wi++) {
         for (const seg of line.wordRuns[wi]) {
           segments.push({

@@ -141,10 +141,10 @@ function applyOpenTag(
 // ─── RTL detection (P2-style first-strong scan) ──────────────────────────────
 
 // Matches a single RTL strong character (Hebrew, Arabic, Syriac, Thaana, NKo,
-// Samaritan, Mandaic, Arabic Supplement, Arabic Extended-A/B,
+// Samaritan, Mandaic, Syriac Supplement, Arabic Extended-A/B,
 // Arabic Presentation Forms-A/B).
 const RTL_STRONG_RE =
-  /[\u0590-\u05FF\u0600-\u06FF\u0700-\u074F\u0750-\u077F\u0780-\u07FF\u07C0-\u07FF\uFB1D-\uFB4F\uFB50-\uFDFF\uFE70-\uFEFF]/;
+  /[\u0590-\u05FF\u0600-\u06FF\u0700-\u074F\u0750-\u077F\u0780-\u07FF\u07C0-\u07FF\u0800-\u08FF\uFB1D-\uFB4F\uFB50-\uFDFF\uFE70-\uFEFF]/;
 
 // Matches a single LTR strong character (Latin, Greek, Cyrillic, CJK, etc.).
 // Used to identify the first strong character before any RTL match.

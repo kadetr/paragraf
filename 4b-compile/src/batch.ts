@@ -61,6 +61,12 @@ export async function compileBatch<T = unknown>(
   }
   const concurrency = rawConcurrency;
 
+  // Early abort check: if the signal is already fired, bail before creating
+  // the session (which does font loading + WASM init).
+  if (signal?.aborted) {
+    throw new DOMException('Aborted', 'AbortError');
+  }
+
   // Build one shared session so fonts + WASM initialise once for the whole batch.
   // If the caller already provided a session, reuse it as-is.
   const session =

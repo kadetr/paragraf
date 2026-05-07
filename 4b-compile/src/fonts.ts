@@ -138,9 +138,14 @@ export function buildFontRegistry(
 // Module-level set to deduplicate non-exact-weight warnings across compileBatch runs.
 const _warnedWeightMismatch = new Set<string>();
 
+// Module-level set to deduplicate style-field warnings (features/nestedStyles/grepStyles).
+// Key format: "<styleName>:<fieldName>" e.g. "body:features".
+export const _warnedStyleFields = new Set<string>();
+
 /** Clears all compile-time warning deduplication caches. Intended for test isolation. */
 export function clearCompileWarnings(): void {
   _warnedWeightMismatch.clear();
+  _warnedStyleFields.clear();
 }
 
 /**

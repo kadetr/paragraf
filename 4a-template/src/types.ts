@@ -87,7 +87,9 @@ export interface TemplateRegionSpec {
  * - `'N-M'`   — pages N through M inclusive (e.g. `'2-5'`)
  * - `'default'` — fallback for any page not matched by other entries
  *
- * Resolution order and conflict handling is delegated to `@paragraf/compile`.
+ * Resolution order and conflict handling is the caller's responsibility;
+ * `@paragraf/compile` does not currently process this field (planned, not yet
+ * implemented). The field is accepted and forwarded for future use.
  */
 export interface TemplatePageSpec {
   range: number | string;

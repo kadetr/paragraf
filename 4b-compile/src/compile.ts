@@ -51,7 +51,11 @@ import type { OutputIntent } from '@paragraf/render-pdf';
 import type { ColorTransform } from '@paragraf/color';
 
 import type { CompileOptions, CompileResult } from './types.js';
-import { buildFontRegistry, selectVariant } from './fonts.js';
+import {
+  buildFontRegistry,
+  selectVariant,
+  _warnedStyleFields,
+} from './fonts.js';
 import { resolveText } from './interpolate.js';
 import { resolveComposerOptions, detectActualShaping } from './shaping.js';
 import type { CompilerSession } from './session.js';
@@ -426,24 +430,37 @@ function buildInput(
 
   // Warn about fields that are accepted by StyleRegistry but have no runtime
   // effect in the current compile pipeline (not yet implemented).
+  // Deduplicated per style name to avoid log spam in compileBatch workloads.
   if (verbose) {
     if (style.features && Object.keys(style.features).length > 0) {
-      console.warn(
-        `[paragraf/compile] Style "${styleName}": features is set but not yet implemented. ` +
-          'OpenType feature tags will have no effect on the rendered output.',
-      );
+      const key = `${styleName}:features`;
+      if (!_warnedStyleFields.has(key)) {
+        _warnedStyleFields.add(key);
+        console.warn(
+          `[paragraf/compile] Style "${styleName}": features is set but not yet implemented. ` +
+            'OpenType feature tags will have no effect on the rendered output.',
+        );
+      }
     }
     if (style.nestedStyles && style.nestedStyles.length > 0) {
-      console.warn(
-        `[paragraf/compile] Style "${styleName}": nestedStyles is set but not yet implemented ` +
-          '(requires F027 inline-markup pipeline). Rules will have no effect.',
-      );
+      const key = `${styleName}:nestedStyles`;
+      if (!_warnedStyleFields.has(key)) {
+        _warnedStyleFields.add(key);
+        console.warn(
+          `[paragraf/compile] Style "${styleName}": nestedStyles is set but not yet implemented ` +
+            '(requires F027 inline-markup pipeline). Rules will have no effect.',
+        );
+      }
     }
     if (style.grepStyles && style.grepStyles.length > 0) {
-      console.warn(
-        `[paragraf/compile] Style "${styleName}": grepStyles is set but not yet implemented ` +
-          '(requires F027 inline-markup pipeline). Rules will have no effect.',
-      );
+      const key = `${styleName}:grepStyles`;
+      if (!_warnedStyleFields.has(key)) {
+        _warnedStyleFields.add(key);
+        console.warn(
+          `[paragraf/compile] Style "${styleName}": grepStyles is set but not yet implemented ` +
+            '(requires F027 inline-markup pipeline). Rules will have no effect.',
+        );
+      }
     }
   }
 
