@@ -225,9 +225,11 @@ contains a single word (runt line). Higher values discourage runt lines;
 they produce longer paragraphs or slightly worse spacing to avoid the runt.
 Default `0` (disabled). Typical values: `1000`–`10000`.
 
-**`singleLinePenalty`** — Extra demerits added when only the first line of a paragraph
-would appear alone (single-line paragraph). Higher values discourage single-line
-paragraphs. Default `0` (disabled). Typical values: `1000`–`10000`.
+**`singleLinePenalty`** — Extra demerits added when the entire paragraph fits on a
+single line (i.e. the KP solver produces no intermediate line breaks). This is a
+per-paragraph demerit applied at composition time, independent of paging or frame
+layout. Higher values encourage the solver to break the paragraph across multiple
+lines instead. Default `0` (disabled). Typical values: `1000`–`10000`.
 
 **`preserveSoftHyphens`** — When `true`, soft hyphen characters (`U+00AD`) in the
 input text are preserved as explicit hyphenation points. When `false` (default),

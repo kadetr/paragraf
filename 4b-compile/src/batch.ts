@@ -128,11 +128,11 @@ export async function compileBatch<T = unknown>(
       } catch (err) {
         // Re-throw AbortError so compileBatch rejects rather than resolving with
         // an error entry — matches documented "rejects with AbortError" behavior.
+        // Do NOT call release() here; finally always runs and handles it.
         if (
           signal?.aborted ||
           (err instanceof Error && err.name === 'AbortError')
         ) {
-          release();
           throw err;
         }
         results[index] = {

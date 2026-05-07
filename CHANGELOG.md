@@ -24,7 +24,7 @@ compileDocument(doc, fonts, {
 
 #### `widowPenalty` / `orphanPenalty` renamed to `runtPenalty` / `singleLinePenalty`
 
-These parameters apply a per-paragraph *runt-line* demerit (a single-word first or last line within the paragraph), not frame-level widow/orphan control. The names `widowPenalty` and `orphanPenalty` have been removed; use `runtPenalty` and `singleLinePenalty` respectively.
+These parameters apply per-paragraph demerits at composition time, not frame-level widow/orphan control. `runtPenalty` is added when the last line of a paragraph contains a single word (runt line). `singleLinePenalty` is added when the entire paragraph fits on a single line (no intermediate breaks), regardless of word count. The names `widowPenalty` and `orphanPenalty` have been removed; use `runtPenalty` and `singleLinePenalty` respectively.
 
 ---
 
