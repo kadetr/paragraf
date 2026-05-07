@@ -61,7 +61,11 @@ export const layoutParagraph = (
           });
           segX += measurer.measure(seg.text, seg.font) * glyphScale;
         }
-        rightEdge = wordStart - (wi > 0 ? line.wordSpacing : 0);
+        // When kashida justification is active kashidaSpacing holds the
+        // inter-word fill; wordSpacing is 0. Sum them so RTL words are spaced
+        // correctly even when the renderer does not yet draw kashida glyphs.
+        const effectiveGap = (line.kashidaSpacing ?? 0) + line.wordSpacing;
+        rightEdge = wordStart - (wi > 0 ? effectiveGap : 0);
       }
     } else {
       // LTR layout; xOffset shifts the line for OMA; alignOffset for right/center
@@ -76,7 +80,8 @@ export const layoutParagraph = (
       );
       const contentWidth =
         totalWordWidth +
-        Math.max(0, line.wordRuns.length - 1) * line.wordSpacing;
+        Math.max(0, line.wordRuns.length - 1) *
+          ((line.kashidaSpacing ?? 0) + line.wordSpacing);
       let alignOffset = 0;
       if (line.alignment === 'right') {
         alignOffset = line.lineWidth - contentWidth;
@@ -96,7 +101,7 @@ export const layoutParagraph = (
           wordX += measurer.measure(seg.text, seg.font) * glyphScale;
         }
         if (wi < line.wordRuns.length - 1) {
-          wordX += line.wordSpacing;
+          wordX += (line.kashidaSpacing ?? 0) + line.wordSpacing;
         }
       }
     }

@@ -96,10 +96,16 @@ export function applyMetadata(
   if (lang) (doc as any).info['Lang'] = lang;
   if (pdfxConformance) {
     (doc as any).info['GTS_PDFXVersion'] = pdfxConformance;
-    // Trapped is a PDF Name in the spec (/False). pdfkit serializes info values as
-    // strings; most validators accept this. A future improvement could use a raw
-    // PDFKit reference to emit a true Name object.
-    (doc as any).info['Trapped'] = 'False';
+    // Trapped must be a PDF Name (/False) per the PDF/X-3 spec, not a string.
+    // pdfkit serializes plain strings as (string) — wrong type for validators.
+    // We bypass pdfkit's string serialization by using a custom object whose
+    // Symbol.toStringTag causes pdfkit's PDFObject.convert() to fall through
+    // to its `${object}` branch (line 155 in pdfkit 0.18), which calls toString()
+    // and produces /False verbatim.
+    (doc as any).info['Trapped'] = Object.assign(Object.create(null), {
+      [Symbol.toStringTag]: 'PDFName',
+      toString: () => '/False',
+    });
   }
 }
 

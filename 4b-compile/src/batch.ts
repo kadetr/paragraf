@@ -126,6 +126,15 @@ export async function compileBatch<T = unknown>(
         const result = await compile(singleOptions);
         results[index] = { record, index, result };
       } catch (err) {
+        // Re-throw AbortError so compileBatch rejects rather than resolving with
+        // an error entry — matches documented "rejects with AbortError" behavior.
+        if (
+          signal?.aborted ||
+          (err instanceof Error && err.name === 'AbortError')
+        ) {
+          release();
+          throw err;
+        }
         results[index] = {
           record,
           index,

@@ -109,8 +109,15 @@ const detectParagraphDirection = (text: string): 'ltr' | 'rtl' => {
     ) {
       return 'rtl';
     }
-    // Strong LTR: basic Latin letters — stop scanning early
-    if ((cp >= 0x41 && cp <= 0x5a) || (cp >= 0x61 && cp <= 0x7a)) {
+    // Strong LTR: ASCII Latin, extended Latin, Greek, Cyrillic, CJK
+    if (
+      (cp >= 0x41 && cp <= 0x5a) ||
+      (cp >= 0x61 && cp <= 0x7a) ||
+      (cp >= 0xc0 && cp <= 0x2b8) ||
+      (cp >= 0x370 && cp <= 0x3ff) ||
+      (cp >= 0x400 && cp <= 0x4ff) ||
+      (cp >= 0x4e00 && cp <= 0x9fff)
+    ) {
       return 'ltr';
     }
   }

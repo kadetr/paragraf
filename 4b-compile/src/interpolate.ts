@@ -11,10 +11,16 @@ import { parseTokens } from '@paragraf/template';
  * Tokens are parsed from `text` by `parseTokens`. Literal tokens are kept
  * as-is; binding tokens are looked up via dot-path traversal in `data`.
  *
- * @returns The fully-resolved string, or `null` if **any** binding path
- *   resolves to `null` or `undefined`. The resolution is all-or-nothing:
- *   if a slot such as `'{{a}} {{b}}'` has `b` missing, the entire result
- *   is `null` even though `a` resolved successfully.
+ * Two resolution modes:
+ * - **Normal** `{{path}}` — if the path is missing the entire result is `null`
+ *   (all-or-nothing: a slot like `'{{a}} {{b}}'` returns `null` when `b` is
+ *   absent even if `a` resolved successfully).
+ * - **Conditional** `{{?path}}` — a missing path resolves to `''` (empty
+ *   string) rather than nulling the slot. Use for optional inline tokens that
+ *   should silently disappear when the binding is absent.
+ *
+ * @returns The fully-resolved string, or `null` if any **normal** binding path
+ *   resolves to `null` or `undefined`.
  */
 export function resolveText(
   text: string,
