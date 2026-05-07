@@ -732,13 +732,15 @@ export const createParagraphComposer = async (
     }
 
     // F012: font is required in text mode; optional in spans mode.
-    if (!spans && !font) {
+    // An empty spans array is treated as text mode — hasSpans requires length > 0.
+    const hasSpans = (spans?.length ?? 0) > 0;
+    if (!hasSpans && !font) {
       throw new Error(
         '[paragraf] compose(): font is required when using text mode',
       );
     }
 
-    const sourceText = spans ? spans.map((s) => s.text).join('') : text;
+    const sourceText = hasSpans ? spans!.map((s) => s.text).join('') : text;
     const direction: 'ltr' | 'rtl' = useWasm
       ? getDirectionViaWasm(sourceText)
       : detectParagraphDirection(sourceText);
@@ -780,7 +782,7 @@ export const createParagraphComposer = async (
 
     if (direction === 'rtl') {
       // Spans not supported in RTL for v0.8 — only one-direction paragraphs with a single font.
-      if (spans && spans.length > 0) {
+      if (hasSpans) {
         throw new Error(
           '[paragraf] RTL paragraphs do not support span input yet. ' +
             'Use plain `text` input for RTL content.',
@@ -798,9 +800,9 @@ export const createParagraphComposer = async (
         hasSoftHyphen: false,
         font: font!,
       }));
-    } else if (spans && spans.length > 0) {
+    } else if (hasSpans) {
       // span-based LTR input
-      withFonts = spansToWords(spans, opts, measurer);
+      withFonts = spansToWords(spans!, opts, measurer);
     } else if (input.hyphenation === false) {
       // hyphenation disabled — split by whitespace, no hyphen breaks
       const words = (text || '')

@@ -37,6 +37,9 @@ type Token =
 
 const TAG_RE = /<(\/?)(\w+)(?:\s+cs="([^"]*)")?>/g;
 
+// Known close-tag names — only these produce a close token; others are literal text.
+const KNOWN_TAG_NAMES = new Set(['b', 'i', 'bi', 'sup', 'sub', 'span']);
+
 function tokenise(text: string): Token[] {
   const tokens: Token[] = [];
   let lastIndex = 0;
@@ -52,7 +55,12 @@ function tokenise(text: string): Token[] {
     }
 
     if (slash === '/') {
-      tokens.push({ type: 'close', name });
+      if (KNOWN_TAG_NAMES.has(name)) {
+        tokens.push({ type: 'close', name });
+      } else {
+        // Unknown close tag — treat as literal text to avoid silently dropping content
+        tokens.push({ type: 'text', value: fullMatch });
+      }
     } else {
       const openTag = resolveOpenTag(name, csAttr);
       if (openTag !== null) {

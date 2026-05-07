@@ -48,7 +48,10 @@ import type { FontEngine } from '@paragraf/font-engine';
 import { createMeasurer } from '@paragraf/font-engine';
 import { renderDocumentToPdf } from '@paragraf/render-pdf';
 import type { OutputIntent } from '@paragraf/render-pdf';
-import type { ColorTransform } from '@paragraf/color';
+// Minimal structural type for an ICC color transform — avoids a type-level
+// import from @paragraf/color which is an optionalDependency and would cause
+// tsc to fail for consumers installing with --no-optional.
+type ColorTransform = { apply(input: number[]): number[] };
 
 import type { CompileOptions, CompileResult } from './types.js';
 import {
