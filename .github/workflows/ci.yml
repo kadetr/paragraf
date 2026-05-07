@@ -18,6 +18,14 @@ jobs:
           node-version: '22'
           cache: 'npm'
 
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: wasm32-unknown-unknown
+
+      - name: Install wasm-pack
+        run: curl https://rustwasm.github.io/wasm-pack/installer/init.sh -sSf | sh
+
       - name: Install dependencies
         run: npm ci
 
@@ -26,6 +34,14 @@ jobs:
       # SHA-256 hashes, catching any accidental corruption or truncation.
       - name: Verify fonts
         run: npm run verify-fonts
+
+      - name: Build WASM (nodejs target — used by unit tests)
+        run: wasm-pack build --target nodejs --out-dir pkg
+        working-directory: 2a-shaping-wasm/wasm
+
+      - name: Build WASM (bundler target — used by demo)
+        run: wasm-pack build --target bundler --out-dir pkg-bundler
+        working-directory: 2a-shaping-wasm/wasm
 
       - name: Build packages
         run: npm run build
