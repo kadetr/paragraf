@@ -145,8 +145,8 @@ interface ParagraphInput {
   looseness?: number;
   justifyLastLine?: boolean;
   consecutiveHyphenLimit?: number;
-  widowPenalty?: number;
-  orphanPenalty?: number;
+  runtPenalty?: number;
+  singleLinePenalty?: number;
   preserveSoftHyphens?: boolean;
   opticalMarginAlignment?: boolean;
 }
@@ -220,14 +220,16 @@ allowed. After this many consecutive hyphens, a `PROHIBITED` penalty is inserted
 to forbid another hyphen on the next line. `0` or `undefined` = no limit. Value
 `1` means at most one hyphenated line before a non-hyphenated line is required.
 
-**`widowPenalty`** — Extra demerits added when the last line of a paragraph
-would appear alone at the top of the next frame or column. Higher values make
-widows less likely; they produce longer paragraphs or slightly worse spacing to
-avoid the widow. Default `0` (disabled). Typical values: `1000`–`10000`.
+**`runtPenalty`** — Extra demerits added when the last line of a paragraph
+contains a single word (runt line). Higher values discourage runt lines;
+they produce longer paragraphs or slightly worse spacing to avoid the runt.
+Default `0` (disabled). Typical values: `1000`–`10000`.
 
-**`orphanPenalty`** — Extra demerits added when only the first line of a paragraph
-fits in the current frame or column with the rest continuing on the next. Higher
-values make orphans less likely. Default `0` (disabled). Typical values: `1000`–`10000`.
+**`singleLinePenalty`** — Extra demerits added when the entire paragraph fits on a
+single line (i.e. the KP solver produces no intermediate line breaks). This is a
+per-paragraph demerit applied at composition time, independent of paging or frame
+layout. Higher values encourage the solver to break the paragraph across multiple
+lines instead. Default `0` (disabled). Typical values: `1000`–`10000`.
 
 **`preserveSoftHyphens`** — When `true`, soft hyphen characters (`U+00AD`) in the
 input text are preserved as explicit hyphenation points. When `false` (default),

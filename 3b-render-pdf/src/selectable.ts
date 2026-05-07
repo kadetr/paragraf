@@ -10,6 +10,7 @@
 // copy-paste works for ASCII, ligatures, and non-ASCII characters alike.
 
 import type { FontRegistry } from '@paragraf/types';
+import type { RenderedParagraph } from '@paragraf/render-core';
 
 // ─── Invisible segment emitter ────────────────────────────────────────────────
 
@@ -82,9 +83,81 @@ export function emitInvisibleSegment(
 
 /**
  * Set optional metadata on the PDF Info dictionary.
+ * When pdfxConformance is set, also writes GTS_PDFXVersion and Trapped.
  * Must be called before doc.end().
  */
-export function applyMetadata(doc: any, title?: string, lang?: string): void {
+export function applyMetadata(
+  doc: any,
+  title?: string,
+  lang?: string,
+  pdfxConformance?: 'PDF/X-3:2002' | 'PDF/X-3:2003',
+): void {
   if (title) (doc as any).info['Title'] = title;
   if (lang) (doc as any).info['Lang'] = lang;
+  if (pdfxConformance) {
+    (doc as any).info['GTS_PDFXVersion'] = pdfxConformance;
+    // Trapped must be a PDF Name (/False) per the PDF/X-3 spec, not a string.
+    // pdfkit serializes plain strings as (string) — wrong type for validators.
+    // We bypass pdfkit's string serialization by using a custom object whose
+    // Symbol.toStringTag causes pdfkit's PDFObject.convert() to fall through
+    // to its `${object}` branch (line 155 in pdfkit 0.18), which calls toString()
+    // and produces /False verbatim.
+    (doc as any).info['Trapped'] = Object.assign(Object.create(null), {
+      [Symbol.toStringTag]: 'PDFName',
+      toString: () => '/False',
+    });
+  }
+}
+
+// ─── Hit-testing ─────────────────────────────────────────────────────────────
+
+/** Identifies the segment at a given page-coordinate point. */
+export interface HitResult {
+  /** Zero-based index of the line within the `RenderedParagraph`. */
+  lineIndex: number;
+  /** Zero-based index of the segment within `RenderedLine.segments`. */
+  segmentIndex: number;
+}
+
+/**
+ * Find which segment of a `RenderedParagraph` contains a given page-coordinate
+ * point `{ x, y }`.
+ *
+ * The vertical hit band for a line is `[baseline − lineHeight, baseline]`.
+ * Within a matched line the chosen segment is the last one whose `x` origin
+ * is ≤ `px` (i.e. the segment immediately to the left of the click). If the
+ * point is to the left of all segments the first segment is returned.
+ *
+ * Returns `null` when the point does not fall inside any line's vertical band.
+ *
+ * Note: charOffset (caret position within a segment) is not returned here —
+ * it requires per-glyph advance data not present in `PositionedSegment`.
+ */
+export function hitTestRendered(
+  rendered: RenderedParagraph,
+  point: { x: number; y: number },
+): HitResult | null {
+  const { x: px, y: py } = point;
+
+  for (let li = 0; li < rendered.length; li++) {
+    const line = rendered[li];
+    const top = line.baseline - line.lineHeight;
+    const bottom = line.baseline;
+
+    if (py < top || py > bottom) continue;
+
+    // Point is within this line's vertical band. Find the best segment.
+    const segs = line.segments;
+    if (segs.length === 0) return { lineIndex: li, segmentIndex: 0 };
+
+    // Last segment whose x-start is ≤ px; fall back to segment 0.
+    let best = 0;
+    for (let si = 0; si < segs.length; si++) {
+      if (segs[si].x <= px) best = si;
+    }
+
+    return { lineIndex: li, segmentIndex: best };
+  }
+
+  return null;
 }

@@ -21,7 +21,7 @@ import { FontRegistry, Font, Language } from '@paragraf/types';
 import { serializeNodesToBinary } from '../src/wasm-binary.js';
 
 const _require = createRequire(import.meta.url);
-const wasm: any = _require('../wasm/pkg/knuth_plass_wasm.js');
+const wasm: any = _require('../wasm/pkg/paragraf_shaping_wasm.js');
 
 const FONTS_DIR = path.resolve(
   path.dirname(new URL(import.meta.url).pathname),
@@ -253,5 +253,43 @@ describe('Binary serialization path debug', () => {
         binResult.ok.breaks[i].position,
       );
     }
+  });
+});
+
+// ─── runtPenalty / singleLinePenalty ────────────────────────────────────────
+
+import { tracebackWasmBinary } from '../src/wasm-binary.js';
+
+describe('tracebackWasmBinary — runtPenalty / singleLinePenalty', () => {
+  it('runtPenalty affects break selection', () => {
+    const TEXT2 =
+      'In olden times when wishing still helped one there lived a king.';
+    const opts = {
+      ...DEFAULT_HYPHENATE_OPTIONS,
+      language: 'en-us' as Language,
+      fontSize: 12,
+    };
+    const hyphenated = hyphenateParagraph(TEXT2, opts);
+    const withFonts = hyphenated.map((w) => ({
+      ...w,
+      font: font('lib-reg', 12),
+    }));
+    const nodes = buildNodeSequence(withFonts, measurer, 0);
+
+    const withoutPenalty = tracebackWasmBinary(wasm, nodes, 250, 2);
+    const withPenalty = tracebackWasmBinary(
+      wasm,
+      nodes,
+      250,
+      2,
+      0, // emergencyStretch
+      0, // looseness
+      0, // consecutiveHyphenLimit
+      [], // lineWidths
+      5000, // runtPenalty
+    );
+
+    expect(withoutPenalty.ok).toBeDefined();
+    expect(withPenalty.ok).toBeDefined();
   });
 });

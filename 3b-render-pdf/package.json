@@ -45,6 +45,7 @@
     "@paragraf/color": "^0.6.0",
     "@paragraf/color-wasm": "^0.6.0",
     "@paragraf/font-engine": "^0.6.0",
+    "@paragraf/layout": "^0.6.0",
     "@paragraf/render-core": "^0.6.0",
     "pdfkit": "^0.18.0"
   },

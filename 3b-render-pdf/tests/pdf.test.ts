@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeAll } from 'vitest';
 import * as path from 'path';
-import { renderToPdf, PdfOptions } from '@paragraf/render-pdf';
+import { renderToPdf, PdfOptions, clearPdfCaches } from '@paragraf/render-pdf';
 import { layoutParagraph, RenderedParagraph } from '@paragraf/render-core';
 import { createMeasurer, FontkitEngine } from '@paragraf/font-engine';
 import { createParagraphComposer } from '@paragraf/typography';
@@ -22,7 +22,11 @@ const SERIF_FONT: Font = {
 const SERIF_REGISTRY: FontRegistry = new Map([
   [
     'liberation-serif',
-    { id: 'liberation-serif', family: 'Liberation Serif', filePath: SERIF_PATH },
+    {
+      id: 'liberation-serif',
+      family: 'Liberation Serif',
+      filePath: SERIF_PATH,
+    },
   ],
 ]);
 
@@ -142,7 +146,7 @@ describe('renderToPdf — GSUB variant fonts', () => {
       ratio: 0,
       alignment: 'left',
       isWidow: false,
-    isRunt: false,
+      isRunt: false,
       lineWidth: 200,
       lineHeight: 20,
       baseline: 14,
@@ -154,5 +158,74 @@ describe('renderToPdf — GSUB variant fonts', () => {
     expect(hasEof(buf)).toBe(true);
     // variant rendering produces more content than empty PDF
     expect(buf.length).toBeGreaterThan(emptyPdf.length);
+  });
+});
+
+// ─── clearPdfCaches ───────────────────────────────────────────────────────────
+
+describe('clearPdfCaches', () => {
+  it('returns undefined', () => {
+    expect(clearPdfCaches()).toBeUndefined();
+  });
+
+  it('can be called multiple times without throwing', () => {
+    expect(() => {
+      clearPdfCaches();
+      clearPdfCaches();
+      clearPdfCaches();
+    }).not.toThrow();
+  });
+
+  it('renderToPdf works normally after cache is cleared', async () => {
+    clearPdfCaches();
+    const buf = await renderToPdf(rendered, fontEngine);
+    expect(isPdfHeader(buf)).toBe(true);
+    expect(hasEof(buf)).toBe(true);
+  });
+
+  it('renderToPdf result is cache-transparent — post-clear render has same structure', async () => {
+    const before = await renderToPdf(rendered, fontEngine);
+    clearPdfCaches();
+    const after = await renderToPdf(rendered, fontEngine);
+    // pdfkit embeds a creation timestamp so byte-exact equality is not expected;
+    // verify structural equivalence: both are valid PDFs of similar size
+    expect(isPdfHeader(after)).toBe(true);
+    expect(hasEof(after)).toBe(true);
+    expect(after.length).toBeGreaterThan(0);
+    // length within 5% — same content, only timestamp differs
+    expect(Math.abs(after.length - before.length)).toBeLessThan(
+      before.length * 0.05,
+    );
+  });
+});
+
+// ─── RT-3: pageSize convenience option (F035) ─────────────────────────────────
+
+describe('PdfOptions.pageSize (F035)', () => {
+  it('RT-3: renderToPdf with pageSize: "JIS-B4" produces a valid PDF buffer', async () => {
+    const buf = await renderToPdf(rendered, fontEngine, { pageSize: 'JIS-B4' });
+    expect(isPdfHeader(buf)).toBe(true);
+    expect(hasEof(buf)).toBe(true);
+    expect(buf.length).toBeGreaterThan(0);
+  });
+
+  it('explicit width/height override pageSize when both are supplied', async () => {
+    // pageSize: 'A4' (595×842) but width/height override to Letter (612×792).
+    // We cannot read the PDF size back from the buffer cheaply; verify no error and valid structure.
+    const buf = await renderToPdf(rendered, fontEngine, {
+      pageSize: 'A4',
+      width: 612,
+      height: 792,
+    });
+    expect(isPdfHeader(buf)).toBe(true);
+    expect(hasEof(buf)).toBe(true);
+  });
+
+  it('pageSize accepts a custom tuple', async () => {
+    const buf = await renderToPdf(rendered, fontEngine, {
+      pageSize: [400, 600],
+    });
+    expect(isPdfHeader(buf)).toBe(true);
+    expect(hasEof(buf)).toBe(true);
   });
 });

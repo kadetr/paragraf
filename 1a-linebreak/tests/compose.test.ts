@@ -455,3 +455,165 @@ describe('composeParagraph — lineWidth on ComposedLine', () => {
     lines.forEach((l) => expect(l.lineWidth).toBe(200));
   });
 });
+
+// ─── RT-1: F028 leftSkip / rightSkip ─────────────────────────────────────────
+
+describe('composeParagraph — leftSkip / rightSkip (F028)', () => {
+  it('leftSkip and rightSkip are propagated to each ComposedLine', () => {
+    const measurer = createMeasurer(REGISTRY);
+    const text = 'In olden times when wishing still helped one';
+    const hyphenated = hyphenateParagraph(text);
+    const withFonts = hyphenated.map((w) => ({ ...w, font: FONT_REGULAR }));
+    const nodes = buildNodeSequence(withFonts, measurer);
+    const leftSkip = 10;
+    const rightSkip = 5;
+    const fullLineWidth = 200;
+    const kpLineWidth = fullLineWidth - leftSkip - rightSkip;
+    const result = computeBreakpoints({
+      nodes,
+      lineWidth: kpLineWidth,
+      tolerance: 4,
+      alignment: 'justified',
+    });
+    const breaks = traceback(result.node);
+    const lines = composeParagraph(
+      nodes,
+      breaks,
+      'justified',
+      false,
+      kpLineWidth,
+      [],
+      undefined,
+      'ltr',
+      leftSkip,
+      rightSkip,
+    );
+    lines.forEach((l) => {
+      expect(l.leftSkip).toBe(leftSkip);
+      expect(l.rightSkip).toBe(rightSkip);
+      expect(l.lineWidth).toBe(kpLineWidth);
+    });
+  });
+});
+
+// ─── RT-2: F026 kashida distribution ─────────────────────────────────────────
+
+describe('composeParagraph — kashida distribution (F026)', () => {
+  it('kashida=true RTL justified non-last lines get kashidaSpacing, not wordSpacing', () => {
+    const measurer = createMeasurer(REGISTRY);
+    const text = 'In olden times when wishing still helped one';
+    const hyphenated = hyphenateParagraph(text);
+    const withFonts = hyphenated.map((w) => ({ ...w, font: FONT_REGULAR }));
+    const nodes = buildNodeSequence(withFonts, measurer);
+    const result = computeBreakpoints({
+      nodes,
+      lineWidth: 200,
+      tolerance: 2,
+      alignment: 'justified',
+    });
+    const breaks = traceback(result.node);
+    const lines = composeParagraph(
+      nodes,
+      breaks,
+      'justified',
+      false,
+      200,
+      [],
+      undefined,
+      'rtl',
+      0,
+      0,
+      true,
+      0,
+    );
+    const nonLast = lines.slice(0, -1).filter((l) => l.wordRuns.length > 1);
+    if (nonLast.length > 0) {
+      nonLast.forEach((l) => {
+        expect(l.kashidaSpacing).toBeGreaterThan(0);
+        expect(l.wordSpacing).toBe(0);
+      });
+    }
+  });
+
+  it('kashida=false leaves wordSpacing on RTL lines and kashidaSpacing=0', () => {
+    const measurer = createMeasurer(REGISTRY);
+    const text = 'In olden times when wishing still helped one';
+    const hyphenated = hyphenateParagraph(text);
+    const withFonts = hyphenated.map((w) => ({ ...w, font: FONT_REGULAR }));
+    const nodes = buildNodeSequence(withFonts, measurer);
+    const result = computeBreakpoints({
+      nodes,
+      lineWidth: 200,
+      tolerance: 2,
+      alignment: 'justified',
+    });
+    const breaks = traceback(result.node);
+    const lines = composeParagraph(
+      nodes,
+      breaks,
+      'justified',
+      false,
+      200,
+      [],
+      undefined,
+      'rtl',
+      0,
+      0,
+      false,
+      0,
+    );
+    lines.forEach((l) => {
+      expect(l.kashidaSpacing).toBe(0);
+    });
+  });
+});
+
+// ─── RT-3: F029 glyphExpansion annotation ────────────────────────────────────
+
+describe('composeParagraph — glyphExpansion annotation (F029)', () => {
+  it('maxGlyphExpansion=0 produces glyphExpansion=0 on all lines', () => {
+    const { lines } = composeParagraphFromText(
+      'In olden times when wishing still helped one',
+      200,
+      2,
+    );
+    lines.forEach((l) => expect(l.glyphExpansion).toBe(0));
+  });
+
+  it('maxGlyphExpansion>0 produces |glyphExpansion| <= max on each line', () => {
+    const measurer = createMeasurer(REGISTRY);
+    const text = 'In olden times when wishing still helped one';
+    const hyphenated = hyphenateParagraph(text);
+    const withFonts = hyphenated.map((w) => ({ ...w, font: FONT_REGULAR }));
+    const nodes = buildNodeSequence(withFonts, measurer);
+    const maxExpansion = 0.005;
+    const result = computeBreakpoints({
+      nodes,
+      lineWidth: 200,
+      tolerance: 2,
+      alignment: 'justified',
+    });
+    const breaks = traceback(result.node);
+    const lines = composeParagraph(
+      nodes,
+      breaks,
+      'justified',
+      false,
+      200,
+      [],
+      undefined,
+      'ltr',
+      0,
+      0,
+      false,
+      maxExpansion,
+    );
+    lines.forEach((l) => {
+      expect(Math.abs(l.glyphExpansion ?? 0)).toBeLessThanOrEqual(
+        maxExpansion + 1e-10,
+      );
+    });
+    const nonZero = lines.filter((l) => (l.glyphExpansion ?? 0) !== 0);
+    expect(nonZero.length).toBeGreaterThan(0);
+  });
+});

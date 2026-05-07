@@ -177,3 +177,33 @@ describe('renderToPdf — OutputIntent with zero-length profile bytes', () => {
     ).resolves.not.toThrow();
   });
 });
+
+// ─── 10–11. Lab profile in emitOutputIntent (F016) ───────────────────────────
+
+describe('renderToPdf — Lab profile OutputIntent', () => {
+  it('T7 — Lab profile: /OutputIntents present and N=3 in ICC stream', async () => {
+    const labProfile = { ...loadBuiltinSrgb(), colorSpace: 'Lab' as const };
+    const labIntent: OutputIntent = {
+      profile: labProfile,
+      condition: 'ISOcoated_v2_Lab',
+    };
+    const buf = await renderToPdf([], makeMockFontEngine(), {
+      outputIntent: labIntent,
+    });
+    expect(containsStr(buf, '/OutputIntents')).toBe(true);
+    expect(containsStr(buf, '/N 3')).toBe(true);
+  });
+
+  it('T8 — Lab profile: uses GTS_PDFA1 S value (not CMYK branch)', async () => {
+    const labProfile = { ...loadBuiltinSrgb(), colorSpace: 'Lab' as const };
+    const labIntent: OutputIntent = {
+      profile: labProfile,
+      condition: 'ISOcoated_v2_Lab',
+    };
+    const buf = await renderToPdf([], makeMockFontEngine(), {
+      outputIntent: labIntent,
+    });
+    expect(containsStr(buf, 'GTS_PDFA1')).toBe(true);
+    expect(containsStr(buf, 'GTS_PDFX')).toBe(false);
+  });
+});

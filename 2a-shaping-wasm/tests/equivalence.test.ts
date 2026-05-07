@@ -33,7 +33,7 @@ import { FontRegistry, Font, Language, Node } from '@paragraf/types';
 // ─── WASM ────────────────────────────────────────────────────────────────────
 
 const _require = createRequire(import.meta.url);
-const wasm: any = _require('../wasm/pkg/knuth_plass_wasm.js');
+const wasm: any = _require('../wasm/pkg/paragraf_shaping_wasm.js');
 
 const toWasmJson = (obj: unknown): string =>
   JSON.stringify(obj, (_, v) => {

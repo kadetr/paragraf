@@ -230,6 +230,10 @@ export const composeParagraph = (
   lineWidths: number[] = [],
   getMetrics?: GetFontMetrics,
   direction: 'ltr' | 'rtl' = 'ltr',
+  leftSkip: number = 0,
+  rightSkip: number = 0,
+  kashida: boolean = false,
+  maxGlyphExpansion: number = 0,
 ): ComposedParagraph => {
   if (justifyLastLine && lineWidth === 0) {
     throw new Error(
@@ -259,7 +263,33 @@ export const composeParagraph = (
       getMetrics,
     );
 
-    if (line.words.length > 0) lines.push({ ...line, direction });
+    if (line.words.length > 0) {
+      // Kashida justification: for RTL justified non-last lines, distribute
+      // fill via kashidaSpacing (per-gap points) instead of wordSpacing.
+      const useKashida =
+        kashida &&
+        direction === 'rtl' &&
+        line.alignment === 'justified' &&
+        !isLastLine;
+      // Glyph expansion: per-line scale factor proportional to KP ratio,
+      // clamped to ±maxGlyphExpansion. Zero when expansion is disabled.
+      const glyphExpansion =
+        maxGlyphExpansion > 0
+          ? Math.max(
+              -maxGlyphExpansion,
+              Math.min(maxGlyphExpansion, lineBreak.ratio * maxGlyphExpansion),
+            )
+          : 0;
+      lines.push({
+        ...line,
+        direction,
+        leftSkip,
+        rightSkip,
+        kashidaSpacing: useKashida ? line.wordSpacing : 0,
+        wordSpacing: useKashida ? 0 : line.wordSpacing,
+        glyphExpansion,
+      });
+    }
     previousPosition = lineBreak.position;
   }
 

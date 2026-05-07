@@ -69,15 +69,17 @@ export interface FontEngine {
    * Apply GSUB ligature substitution (liga, rlig features).
    * @deprecated GSUB is now applied inside glyphsForString. This method is a
    *   no-op on all built-in engines and will be removed in a future release.
+   * Optional — custom engines need not implement this.
    */
-  applyLigatures(fontId: string, glyphs: Glyph[]): Glyph[];
+  applyLigatures?(fontId: string, glyphs: Glyph[]): Glyph[];
 
   /**
    * Apply GSUB single substitution (sups, subs features).
    * @deprecated GSUB is now applied inside glyphsForString. This method is a
    *   no-op on all built-in engines and will be removed in a future release.
+   * Optional — custom engines need not implement this.
    */
-  applySingleSubstitution(
+  applySingleSubstitution?(
     fontId: string,
     glyphs: Glyph[],
     featureTag: 'sups' | 'subs',

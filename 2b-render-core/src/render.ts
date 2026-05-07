@@ -33,50 +33,63 @@ export const layoutParagraph = (
   for (const line of composed) {
     const baseline: number = lineY + line.baseline;
     const segments: PositionedSegment[] = [];
+    // Glyph expansion: scale all advance widths by (1 + expansion).
+    // glyphExpansion=0 (default) → no change; ±0.005 → ±0.5% glyph scaling.
+    const glyphScale = 1 + (line.glyphExpansion ?? 0);
 
     if (line.direction === 'rtl') {
       // RTL visual reordering: render words in reverse logical order, right-to-left.
       // Pre-compute word widths to determine start positions.
       const wordWidths = line.wordRuns.map((segs) =>
         segs.reduce(
-          (sum, seg) => sum + measurer.measure(seg.text, seg.font),
+          (sum, seg) => sum + measurer.measure(seg.text, seg.font) * glyphScale,
           0,
         ),
       );
 
-      let rightEdge = origin.x + line.lineWidth + (line.xOffset ?? 0);
+      let rightEdge =
+        origin.x + (line.leftSkip ?? 0) + line.lineWidth + (line.xOffset ?? 0);
       for (let wi = line.wordRuns.length - 1; wi >= 0; wi--) {
         const wordStart = rightEdge - wordWidths[wi];
         let segX = wordStart;
-        for (const seg of line.wordRuns[wi]) {
+        for (const seg of [...line.wordRuns[wi]].reverse()) {
           segments.push({
             text: seg.text,
             font: seg.font,
             x: segX,
             y: baseline - (seg.verticalOffset ?? 0),
           });
-          segX += measurer.measure(seg.text, seg.font);
+          segX += measurer.measure(seg.text, seg.font) * glyphScale;
         }
-        rightEdge = wordStart - (wi > 0 ? line.wordSpacing : 0);
+        // When kashida justification is active kashidaSpacing holds the
+        // inter-word fill; wordSpacing is 0. Sum them so RTL words are spaced
+        // correctly even when the renderer does not yet draw kashida glyphs.
+        const effectiveGap = (line.kashidaSpacing ?? 0) + line.wordSpacing;
+        rightEdge = wordStart - (wi > 0 ? effectiveGap : 0);
       }
     } else {
       // LTR layout; xOffset shifts the line for OMA; alignOffset for right/center
       const totalWordWidth = line.wordRuns.reduce(
         (sum, segs) =>
           sum +
-          segs.reduce((s, seg) => s + measurer.measure(seg.text, seg.font), 0),
+          segs.reduce(
+            (s, seg) => s + measurer.measure(seg.text, seg.font) * glyphScale,
+            0,
+          ),
         0,
       );
       const contentWidth =
         totalWordWidth +
-        Math.max(0, line.wordRuns.length - 1) * line.wordSpacing;
+        Math.max(0, line.wordRuns.length - 1) *
+          ((line.kashidaSpacing ?? 0) + line.wordSpacing);
       let alignOffset = 0;
       if (line.alignment === 'right') {
         alignOffset = line.lineWidth - contentWidth;
       } else if (line.alignment === 'center') {
         alignOffset = (line.lineWidth - contentWidth) / 2;
       }
-      let wordX = origin.x + (line.xOffset ?? 0) + alignOffset;
+      let wordX =
+        origin.x + (line.leftSkip ?? 0) + (line.xOffset ?? 0) + alignOffset;
       for (let wi = 0; wi < line.wordRuns.length; wi++) {
         for (const seg of line.wordRuns[wi]) {
           segments.push({
@@ -85,10 +98,10 @@ export const layoutParagraph = (
             x: wordX,
             y: baseline - (seg.verticalOffset ?? 0),
           });
-          wordX += measurer.measure(seg.text, seg.font);
+          wordX += measurer.measure(seg.text, seg.font) * glyphScale;
         }
         if (wi < line.wordRuns.length - 1) {
-          wordX += line.wordSpacing;
+          wordX += (line.kashidaSpacing ?? 0) + line.wordSpacing;
         }
       }
     }

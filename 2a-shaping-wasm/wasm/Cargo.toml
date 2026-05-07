@@ -1,5 +1,5 @@
 [package]
-name = "knuth-plass-wasm"
+name = "paragraf-shaping-wasm"
 version = "0.1.0"
 edition = "2021"
 

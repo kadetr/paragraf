@@ -94,18 +94,30 @@ let _rtlFallbackWarnIssued = false;
 const detectParagraphDirection = (text: string): 'ltr' | 'rtl' => {
   for (const char of text) {
     const cp = char.codePointAt(0)!;
-    // Strong RTL: Hebrew (0590-05FF), Arabic and supplements
+    // Strong RTL: Hebrew (0590–05FF)
+    // Syriac (0700–074F), Thaana (0780–07BF), N'Ko (07C0–07FF)
+    // Samaritan (0800–082F), Mandaic (0840–085F)
+    // Arabic Extended-A (08A0–08FF)
+    // Arabic (0600–06FF), Arabic Supplement (0750–077F)
+    // Arabic Presentation Forms-A (FB50–FDFF), Arabic Presentation Forms-B (FE70–FEFF)
     if (
       (cp >= 0x0590 && cp <= 0x05ff) ||
       (cp >= 0x0600 && cp <= 0x06ff) ||
-      (cp >= 0x0750 && cp <= 0x077f) ||
+      (cp >= 0x0700 && cp <= 0x08ff) ||
       (cp >= 0xfb50 && cp <= 0xfdff) ||
       (cp >= 0xfe70 && cp <= 0xfeff)
     ) {
       return 'rtl';
     }
-    // Strong LTR: basic Latin letters — stop scanning early
-    if ((cp >= 0x41 && cp <= 0x5a) || (cp >= 0x61 && cp <= 0x7a)) {
+    // Strong LTR: ASCII Latin, extended Latin, Greek, Cyrillic, CJK
+    if (
+      (cp >= 0x41 && cp <= 0x5a) ||
+      (cp >= 0x61 && cp <= 0x7a) ||
+      (cp >= 0xc0 && cp <= 0x2b8) ||
+      (cp >= 0x370 && cp <= 0x3ff) ||
+      (cp >= 0x400 && cp <= 0x4ff) ||
+      (cp >= 0x4e00 && cp <= 0x9fff)
+    ) {
       return 'ltr';
     }
   }
@@ -163,7 +175,8 @@ const createWasmMeasurer = (registry: FontRegistry): Measurer => {
 export interface ParagraphInput {
   // plain input — single font for entire paragraph
   text?: string;
-  font: Font;
+  /** Required when using `text` mode. Optional when using `spans` mode (spans carry their own fonts). */
+  font?: Font;
   fontPerWord?: (index: number, word: string) => Font; // ignored when spans provided
 
   // rich input — per-run font, mutually exclusive with text
@@ -181,12 +194,11 @@ export interface ParagraphInput {
   consecutiveHyphenLimit?: number;
   /** Demerit added when the final line contains a single word. @since v0.6 */
   runtPenalty?: number;
-  /** Demerit added when the first line contains a single word. @since v0.6 */
+  /**
+   * Demerit added when the entire paragraph fits on a single line (no intermediate
+   * breaks). Applied regardless of word count on that line. @since v0.6
+   */
   singleLinePenalty?: number;
-  /** @deprecated Use `runtPenalty` instead. */
-  widowPenalty?: number;
-  /** @deprecated Use `singleLinePenalty` instead. */
-  orphanPenalty?: number;
   preserveSoftHyphens?: boolean;
   /** When set, overrides the font-metric-derived line height on every composed
    *  line. Use this to enforce exact leading (e.g. 16pt) independent of the
@@ -195,6 +207,29 @@ export interface ParagraphInput {
   /** When true, run a second Knuth-Plass pass with OMA-adjusted lineWidths.
    *  Each output line's xOffset is set proportional to left-margin protrusion. */
   opticalMarginAlignment?: boolean;
+  /** Space above the first line of this paragraph (points). Applied by layoutDocument. */
+  spaceBefore?: number;
+  /** Space below the last line of this paragraph (points). Applied by layoutDocument. */
+  spaceAfter?: number;
+  /**
+   * When false, disables hyphenation for this paragraph (text-mode LTR only).
+   * spans-mode and RTL paragraphs are unaffected — they do not hyphenate.
+   */
+  hyphenation?: boolean;
+  /** Fixed left margin reserved on every line in points (TeX \leftskip equivalent). @since v0.6.1 */
+  leftSkip?: number;
+  /** Fixed right margin reserved on every line in points (TeX \rightskip equivalent). @since v0.6.1 */
+  rightSkip?: number;
+  /**
+   * When true and direction is RTL with justified alignment, distribute
+   * justification fill via kashida spacing rather than word spacing. @since v0.6.1
+   */
+  kashida?: boolean;
+  /**
+   * Maximum glyph expansion factor (HZ/pdfTeX style). Each line’s glyphs may
+   * be scaled by ±maxGlyphExpansion to improve fit. Typical: 0.005. @since v0.6.1
+   */
+  maxGlyphExpansion?: number;
 }
 
 export interface ParagraphOutput {
@@ -227,11 +262,43 @@ export interface ComposerOptions {
   measureCache?: MeasureCacheOptions;
 }
 
+/**
+ * A record of GSUB feature flags keyed by OpenType feature tag (e.g. 'liga', 'calt').
+ * Use `featureSetIdFromConfig` to derive a deterministic cache-key string from a
+ * `FeatureConfig` object so that two callers with identical feature configurations
+ * always produce the same cache key — without any registration step.
+ */
+export type FeatureConfig = Record<string, boolean>;
+
+/**
+ * Derive a deterministic, stable string identifier from a `FeatureConfig`.
+ * Keys are sorted before serialization so that `{ liga: true, calt: false }` and
+ * `{ calt: false, liga: true }` produce the same ID.
+ *
+ * Pass the result as `MeasureCacheOptions.featureSetId` to guarantee cache-key
+ * consistency across composer instances and process restarts.
+ */
+export const featureSetIdFromConfig = (config: FeatureConfig): string => {
+  const sorted = Object.keys(config)
+    .sort()
+    .map((k) => [k, config[k]] as const);
+  return JSON.stringify(sorted);
+};
+
 export interface MeasureCacheOptions {
   enabled?: boolean;
   maxCacheEntries?: number;
   featureSetId?: string;
   featureSetIdResolver?: (word: string, font: Font) => string;
+  /**
+   * A `FeatureConfig` object to derive a deterministic feature-set ID from.
+   * When supplied, `featureSetIdFromConfig(featureConfig)` is used as the cache
+   * key segment — guaranteeing consistency across callers with the same feature
+   * configuration without any registration step.
+   * Takes precedence over `featureSetId` (string); both are overridden by
+   * `featureSetIdResolver`.
+   */
+  featureConfig?: FeatureConfig;
   /**
    * Unique identifier for the font registry used by this composer.
    * Include this when multiple ParagraphComposer instances may share the
@@ -301,6 +368,9 @@ const resolveFeatureSetId = (
   if (options?.featureSetIdResolver) {
     const resolved = options.featureSetIdResolver(word, font);
     if (resolved && resolved.trim().length > 0) return resolved;
+  }
+  if (options?.featureConfig != null) {
+    return featureSetIdFromConfig(options.featureConfig);
   }
   if (options?.featureSetId && options.featureSetId.trim().length > 0) {
     return options.featureSetId;
@@ -399,6 +469,19 @@ export const clearMeasureCache = (): void => {
   _measureCacheStats.misses = 0;
   _measureCacheStats.evictions = 0;
   _nonLtrCacheWarnIssued = false;
+};
+
+/**
+ * Reset module-level shaping state flags.
+ *
+ * Clears `_rtlFallbackWarnIssued` so that the BiDi fallback warning will fire
+ * again on the next RTL paragraph. Intended for test isolation — call in
+ * `afterEach` / `afterAll` when tests compose RTL paragraphs.
+ *
+ * Does NOT reset `_wasm` or `_wasmError` — those are process-lifetime singletons.
+ */
+export const clearShapingState = (): void => {
+  _rtlFallbackWarnIssued = false;
 };
 
 export const getMeasureCacheStats = (): MeasureCacheStats => ({
@@ -614,16 +697,38 @@ export const createParagraphComposer = async (
       looseness = 0,
       justifyLastLine = false,
       consecutiveHyphenLimit = 0,
-      runtPenalty,
-      singleLinePenalty,
-      widowPenalty: widowPenaltyDeprecated = 0,
-      orphanPenalty: orphanPenaltyDeprecated = 0,
+      runtPenalty = 0,
+      singleLinePenalty = 0,
       preserveSoftHyphens = true,
     } = input;
 
-    // Accept both canonical (runtPenalty / singleLinePenalty) and deprecated names.
-    const widowPenalty = runtPenalty ?? widowPenaltyDeprecated;
-    const orphanPenalty = singleLinePenalty ?? orphanPenaltyDeprecated;
+    const leftSkip = input.leftSkip ?? 0;
+    const rightSkip = input.rightSkip ?? 0;
+    if (leftSkip < 0 || rightSkip < 0) {
+      throw new RangeError(
+        `[paragraf] compose(): leftSkip and rightSkip must be non-negative (got leftSkip=${leftSkip}, rightSkip=${rightSkip}).`,
+      );
+    }
+    const skipWidth = leftSkip + rightSkip;
+    // Reduce KP line widths to exclude skip margins.
+    const kpLineWidth = skipWidth > 0 ? lineWidth - skipWidth : lineWidth;
+    if (kpLineWidth <= 0) {
+      throw new RangeError(
+        `[paragraf] compose(): leftSkip + rightSkip (${skipWidth}pt) must be less than lineWidth (${lineWidth}pt).`,
+      );
+    }
+    const kpLineWidths =
+      skipWidth > 0 && lineWidths.length > 0
+        ? lineWidths.map((w, i) => {
+            const effective = w - skipWidth;
+            if (effective <= 0) {
+              throw new RangeError(
+                `[paragraf] compose(): leftSkip + rightSkip (${skipWidth}pt) must be less than lineWidths[${i}] (${w}pt).`,
+              );
+            }
+            return effective;
+          })
+        : lineWidths;
 
     // Detect paragraph direction.
     // RTL paragraphs bypass language loading and hyphenation for v0.8.
@@ -632,7 +737,17 @@ export const createParagraphComposer = async (
         '[paragraf] compose(): both `text` and `spans` provided — `spans` takes precedence and `text` is ignored.',
       );
     }
-    const sourceText = spans ? spans.map((s) => s.text).join('') : text;
+
+    // F012: font is required in text mode; optional in spans mode.
+    // An empty spans array is treated as text mode — hasSpans requires length > 0.
+    const hasSpans = (spans?.length ?? 0) > 0;
+    if (!hasSpans && !font) {
+      throw new Error(
+        '[paragraf] compose(): font is required when using text mode',
+      );
+    }
+
+    const sourceText = hasSpans ? spans!.map((s) => s.text).join('') : text;
     const direction: 'ltr' | 'rtl' = useWasm
       ? getDirectionViaWasm(sourceText)
       : detectParagraphDirection(sourceText);
@@ -666,7 +781,7 @@ export const createParagraphComposer = async (
     const opts: HyphenateOptions = {
       ...DEFAULT_HYPHENATE_OPTIONS,
       language,
-      fontSize: font.size,
+      fontSize: font?.size ?? spans?.[0]?.font?.size ?? 12,
       preserveSoftHyphens,
     };
 
@@ -674,7 +789,7 @@ export const createParagraphComposer = async (
 
     if (direction === 'rtl') {
       // Spans not supported in RTL for v0.8 — only one-direction paragraphs with a single font.
-      if (spans && spans.length > 0) {
+      if (hasSpans) {
         throw new Error(
           '[paragraf] RTL paragraphs do not support span input yet. ' +
             'Use plain `text` input for RTL content.',
@@ -690,16 +805,29 @@ export const createParagraphComposer = async (
         fragments: [word],
         hyphenable: false,
         hasSoftHyphen: false,
-        font,
+        font: font!,
       }));
-    } else if (spans && spans.length > 0) {
+    } else if (hasSpans) {
       // span-based LTR input
-      withFonts = spansToWords(spans, opts, measurer);
+      withFonts = spansToWords(spans!, opts, measurer);
+    } else if (input.hyphenation === false) {
+      // hyphenation disabled — split by whitespace, no hyphen breaks
+      const words = (text || '')
+        .trim()
+        .split(/\s+/)
+        .filter((w) => w.length > 0);
+      withFonts = words.map((word, i) => ({
+        original: word,
+        fragments: [word],
+        hyphenable: false,
+        hasSoftHyphen: false,
+        font: fontPerWord ? fontPerWord(i, word) : font!,
+      }));
     } else {
       const hyphenated = hyphenateParagraph(text, opts);
       withFonts = hyphenated.map((w, i) => ({
         ...w,
-        font: fontPerWord ? fontPerWord(i, w.original) : font,
+        font: fontPerWord ? fontPerWord(i, w.original) : font!,
       }));
     }
 
@@ -715,14 +843,14 @@ export const createParagraphComposer = async (
       const tbResult = tracebackWasmBinary(
         _wasm,
         nodes,
-        lineWidth,
+        kpLineWidth,
         tolerance,
         emergencyStretch,
         looseInt,
-        widowPenalty,
-        orphanPenalty,
         consecutiveHyphenLimit,
-        lineWidths,
+        kpLineWidths,
+        runtPenalty,
+        singleLinePenalty,
       );
       if ('error' in tbResult) throw new Error(tbResult.error);
       breaks = tbResult.ok.breaks as LineBreak[];
@@ -730,13 +858,13 @@ export const createParagraphComposer = async (
     } else {
       const result = computeBreakpoints({
         nodes,
-        lineWidth,
-        lineWidths,
+        lineWidth: kpLineWidth,
+        lineWidths: kpLineWidths,
         tolerance,
         emergencyStretch,
         consecutiveHyphenLimit,
-        runtPenalty: widowPenalty,
-        singleLinePenalty: orphanPenalty,
+        runtPenalty,
+        singleLinePenalty,
         looseness,
       });
       breaks = traceback(result.node);
@@ -748,10 +876,14 @@ export const createParagraphComposer = async (
       breaks,
       alignment,
       justifyLastLine,
-      lineWidth,
-      lineWidths,
+      kpLineWidth,
+      kpLineWidths,
       measurer.metrics,
       direction,
+      leftSkip,
+      rightSkip,
+      input.kashida ?? false,
+      input.maxGlyphExpansion ?? 0,
     );
 
     // Optical Margin Alignment — converging recompose.

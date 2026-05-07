@@ -292,6 +292,15 @@ describe('defineTemplate — validation errors', () => {
     ).toThrow(/Empty binding/);
   });
 
+  it('throws on invalid binding path in text — error includes content[i].text prefix', () => {
+    expect(() =>
+      defineTemplate({
+        ...MINIMAL,
+        content: [{ style: 'body', text: '{{2bad}}' }],
+      }),
+    ).toThrow(/content\[0\]\.text:/);
+  });
+
   it('throws on circular style inheritance', () => {
     expect(() =>
       defineTemplate({

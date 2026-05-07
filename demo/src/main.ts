@@ -1,7 +1,7 @@
 // demo/src/main.ts
 // Entry point — initialises WASM, loads hyphenation patterns, then starts router.
 
-import '../../2a-shaping-wasm/wasm/pkg-bundler/knuth_plass_wasm.js';
+import '../../2a-shaping-wasm/wasm/pkg-bundler/paragraf_shaping_wasm.js';
 
 import { BrowserWasmFontEngine } from './browser-engine.js';
 import { loadHyphenator } from '@paragraf/compile';

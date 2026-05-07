@@ -9,4 +9,5 @@ coverage/
 tests/manual/outputs/
 output/
 internal/
-docs/
+methodology/
+methodology-old/

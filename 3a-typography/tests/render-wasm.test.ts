@@ -8,7 +8,10 @@ import { readFileSync } from 'fs';
 import * as path from 'path';
 import { describe, it, expect, beforeAll } from 'vitest';
 
-import { createParagraphComposer } from '@paragraf/typography';
+import {
+  createParagraphComposer,
+  createDefaultFontEngine,
+} from '@paragraf/typography';
 import { createMeasurer, FontkitEngine } from '@paragraf/font-engine';
 import { layoutParagraph, renderToSvg } from '@paragraf/render-core';
 import { WasmFontEngine, loadShapingWasm } from '@paragraf/shaping-wasm';
@@ -122,5 +125,54 @@ describe('WasmFontEngine rendering', () => {
     expect(metrics.ascender).toBeGreaterThan(0);
     expect(isNaN(metrics.ascender)).toBe(false);
     expect(isNaN(metrics.descender)).toBe(false);
+  });
+});
+
+// ─── F014: createDefaultFontEngine — loads all registry fonts ────────────────
+//
+// Characterization: createDefaultFontEngine loads ALL fonts in the registry at
+// call time, regardless of which fonts are actually referenced by the paragraph
+// being composed. This is the documented behavior (P4 performance finding).
+// These tests create a regression boundary before any future lazy-loading refactor.
+
+describe('createDefaultFontEngine (F014)', () => {
+  it('returns a FontEngine that can shape glyphs for the registry font', async () => {
+    const engine = await createDefaultFontEngine(REGISTRY);
+    const glyphs = engine.glyphsForString('lib-reg', 'Hi', F12);
+    expect(glyphs.length).toBe(2);
+    for (const g of glyphs) {
+      expect(g.advanceWidth).toBeGreaterThan(0);
+    }
+  });
+
+  it('loads all fonts in a multi-entry registry — every entry is usable', async () => {
+    // Two entries using the same file but different ids — both must be registered.
+    const multiRegistry: FontRegistry = new Map([
+      [
+        'font-a',
+        { id: 'font-a', family: 'Liberation Serif', filePath: SERIF_PATH },
+      ],
+      [
+        'font-b',
+        { id: 'font-b', family: 'Liberation Serif', filePath: SERIF_PATH },
+      ],
+    ]);
+    const F12a = { ...F12, id: 'font-a' };
+    const F12b = { ...F12, id: 'font-b' };
+
+    const engine = await createDefaultFontEngine(multiRegistry);
+
+    // Both ids must be loaded — not just the first one
+    const glyphsA = engine.glyphsForString('font-a', 'A', F12a);
+    const glyphsB = engine.glyphsForString('font-b', 'A', F12b);
+    expect(glyphsA.length).toBeGreaterThan(0);
+    expect(glyphsB.length).toBeGreaterThan(0);
+  });
+
+  it('returns a FontEngine with valid metrics for the registered font', async () => {
+    const engine = await createDefaultFontEngine(REGISTRY);
+    const metrics = engine.getFontMetrics('lib-reg', 12);
+    expect(metrics.unitsPerEm).toBeGreaterThan(0);
+    expect(isNaN(metrics.ascender)).toBe(false);
   });
 });

@@ -226,7 +226,7 @@ describe('e2e — step 3a features', () => {
     expect(indented.lineCount).toBeGreaterThanOrEqual(noIndent.lineCount);
   });
 
-  it('widowPenalty — compare without and with', () => {
+  it('runtPenalty — compare without and with', () => {
     const without = composer.compose({
       text: TEXT,
       font: FONT,
@@ -236,10 +236,10 @@ describe('e2e — step 3a features', () => {
       text: TEXT,
       font: FONT,
       lineWidth: 250,
-      widowPenalty: 100000,
+      runtPenalty: 100000,
     });
-    print('No widow penalty', without.lines);
-    print('widowPenalty=100000', with_.lines);
+    print('No runt penalty', without.lines);
+    print('runtPenalty=100000', with_.lines);
     expect(without.lineCount).toBeGreaterThan(0);
     expect(with_.lineCount).toBeGreaterThan(0);
   });

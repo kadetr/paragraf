@@ -86,3 +86,33 @@ describe('resolveText', () => {
     expect(resolveText('{{items.0}}', { items: { 0: 'first' } })).toBe('first');
   });
 });
+
+// ─── F032: conditional null-guard — {{?path}} ────────────────────────────────
+
+describe('resolveText — F032: conditional null-guard tokens', () => {
+  it('{{?key}} resolves to value when key is present', () => {
+    expect(resolveText('{{?subtitle}}', { subtitle: 'A Fine Subtitle' })).toBe(
+      'A Fine Subtitle',
+    );
+  });
+
+  it('{{?key}} resolves to empty string when key is missing', () => {
+    expect(resolveText('{{?subtitle}}', {})).toBe('');
+  });
+
+  it('{{?key}} missing does NOT null out the whole slot', () => {
+    const result = resolveText('{{?subtitle}}', {});
+    expect(result).not.toBeNull();
+    expect(result).toBe('');
+  });
+
+  it('missing conditional does not null slot; missing binding does', () => {
+    // The binding {{title}} is missing → whole slot returns null.
+    expect(
+      resolveText('{{title}} {{?subtitle}}', { subtitle: 'ok' }),
+    ).toBeNull();
+
+    // The conditional {{?subtitle}} is missing but binding {{title}} is present.
+    expect(resolveText('{{title}} {{?subtitle}}', { title: 'T' })).toBe('T ');
+  });
+});

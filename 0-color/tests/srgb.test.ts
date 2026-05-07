@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { buildSrgbProfileBytes } from '../src/srgb';
+import { parseIccProfile } from '../src/profile';
 
 const TOTAL_SIZE = 420;
 
@@ -77,5 +78,32 @@ describe('buildSrgbProfileBytes', () => {
     const view = new DataView(bytes.buffer, bytes.byteOffset);
     // ICC v4.0 = 0x04000000
     expect(view.getUint32(8)).toBe(0x04000000);
+  });
+});
+
+// ─── buildSrgbProfileBytes — round-trip ───────────────────────────────────────
+
+describe('buildSrgbProfileBytes — round-trip', () => {
+  it('parseIccProfile preserves all bytes unchanged — byte-exact round-trip', () => {
+    const original = buildSrgbProfileBytes();
+    const profile = parseIccProfile(original);
+    // profile.bytes must be the exact same Uint8Array (reference equality)
+    // because parseIccProfile stores the input directly — no copy
+    expect(profile.bytes).toBe(original);
+  });
+
+  it('round-tripped bytes are suitable for PDF embedding — all 420 bytes present', () => {
+    const original = buildSrgbProfileBytes();
+    const profile = parseIccProfile(original);
+    expect(profile.bytes.byteLength).toBe(original.byteLength);
+  });
+
+  it('round-tripped profile retains ICC signature at byte 36', () => {
+    const profile = parseIccProfile(buildSrgbProfileBytes());
+    // 'a','c','s','p' = 0x61, 0x63, 0x73, 0x70
+    expect(profile.bytes[36]).toBe(0x61);
+    expect(profile.bytes[37]).toBe(0x63);
+    expect(profile.bytes[38]).toBe(0x73);
+    expect(profile.bytes[39]).toBe(0x70);
   });
 });

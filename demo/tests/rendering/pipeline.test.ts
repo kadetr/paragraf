@@ -6,7 +6,7 @@ import { loadHyphenator } from '@paragraf/linebreak';
 
 // Mock WASM: length-proportional widths so words wrap to multiple lines.
 vi.mock(
-  '../../../2a-shaping-wasm/wasm/pkg-bundler/knuth_plass_wasm.js',
+  '../../../2a-shaping-wasm/wasm/pkg-bundler/paragraf_shaping_wasm.js',
   () => ({
     measure_text_wasm: (text: string, fontJson: string) => {
       const { size } = JSON.parse(fontJson) as { size: number };

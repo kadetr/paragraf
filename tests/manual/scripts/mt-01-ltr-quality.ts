@@ -45,8 +45,8 @@ const outKP = composer.compose({
   font: F12,
   lineWidth: CONTENT_W,
   tolerance: 3,
-  widowPenalty: 150,
-  orphanPenalty: 150,
+  runtPenalty: 150,
+  singleLinePenalty: 150,
 });
 const msKP = performance.now() - t0;
 

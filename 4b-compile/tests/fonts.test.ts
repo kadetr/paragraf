@@ -7,7 +7,7 @@ import {
   resolveVariantEntry,
   buildFontRegistry,
   selectVariant,
-  _clearWeightMismatchWarnings,
+  clearCompileWarnings,
 } from '../src/fonts.js';
 
 // Stub existsSync so unit tests don't require real font files on disk.
@@ -288,12 +288,113 @@ describe('selectVariant', () => {
   });
 
   it('warns on inexact weight match', () => {
-    _clearWeightMismatchWarnings(); // reset dedup cache so this test always sees the warning
+    clearCompileWarnings(); // reset dedup cache so this test always sees the warning
     const spy = vi.spyOn(console, 'warn').mockImplementation(() => {});
     selectVariant('Serif', 600, 'normal', makeRegistry());
     expect(spy).toHaveBeenCalledWith(
       expect.stringContaining('No exact weight'),
     );
+    spy.mockRestore();
+  });
+
+  it('F008: exact stretch match — selects condensed when condensed requested', () => {
+    const reg: FontRegistry = new Map([
+      [
+        'Serif/regular',
+        {
+          id: 'Serif/regular',
+          family: 'Serif',
+          filePath: '/R.ttf',
+          weight: 400,
+          style: 'normal' as const,
+          stretch: 'normal' as const,
+        },
+      ],
+      [
+        'Serif/condensed',
+        {
+          id: 'Serif/condensed',
+          family: 'Serif',
+          filePath: '/C.ttf',
+          weight: 400,
+          style: 'normal' as const,
+          stretch: 'condensed' as const,
+        },
+      ],
+    ]);
+    expect(selectVariant('Serif', 400, 'normal', reg, false, 'condensed')).toBe(
+      'Serif/condensed',
+    );
+  });
+
+  it('F008: stretch fallback — no condensed variant falls back to normal stretch', () => {
+    const reg: FontRegistry = new Map([
+      [
+        'Serif/regular',
+        {
+          id: 'Serif/regular',
+          family: 'Serif',
+          filePath: '/R.ttf',
+          weight: 400,
+          style: 'normal' as const,
+          stretch: 'normal' as const,
+        },
+      ],
+    ]);
+    expect(selectVariant('Serif', 400, 'normal', reg, false, 'condensed')).toBe(
+      'Serif/regular',
+    );
+  });
+});
+
+// ─── F003: clearCompileWarnings ───────────────────────────────────────────────
+
+describe('clearCompileWarnings (F003)', () => {
+  it('RT6: clearCompileWarnings is exported from @paragraf/compile', async () => {
+    const mod = await import('@paragraf/compile');
+    expect(typeof mod.clearCompileWarnings).toBe('function');
+  });
+
+  it('RT7: clearCompileWarnings resets weight-mismatch dedup so the warn fires again', async () => {
+    const { clearCompileWarnings } = await import('@paragraf/compile');
+    const reg: FontRegistry = new Map([
+      [
+        'Serif/regular',
+        {
+          id: 'Serif/regular',
+          family: 'Serif',
+          filePath: '/R.ttf',
+          weight: 400,
+          style: 'normal' as const,
+        },
+      ],
+    ]);
+    const spy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+
+    // Compose inexact variant once — warn fires
+    selectVariant('Serif', 600, 'normal', reg);
+    const countAfterFirst = spy.mock.calls.filter((c) =>
+      String(c[0]).includes('No exact weight'),
+    ).length;
+    expect(countAfterFirst).toBe(1);
+
+    // Same call again — dedup prevents second warn
+    spy.mockClear();
+    selectVariant('Serif', 600, 'normal', reg);
+    expect(
+      spy.mock.calls.filter((c) => String(c[0]).includes('No exact weight'))
+        .length,
+    ).toBe(0);
+
+    // After clearCompileWarnings, warn fires again
+    spy.mockClear();
+    clearCompileWarnings();
+    selectVariant('Serif', 600, 'normal', reg);
+    expect(
+      spy.mock.calls.filter((c) => String(c[0]).includes('No exact weight'))
+        .length,
+    ).toBe(1);
+
     spy.mockRestore();
   });
 });
