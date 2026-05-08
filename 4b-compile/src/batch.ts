@@ -9,6 +9,17 @@
 
 import { compile } from './compile.js';
 import { createCompilerSession } from './session.js';
+
+/**
+ * Create an abort error that is safe in all Node.js / browser runtimes.
+ * `DOMException` is only guaranteed from Node 18+; a plain Error with
+ * `name = 'AbortError'` is universally safe and passes `err.name` checks.
+ */
+function makeAbortError(): Error {
+  const err = new Error('Aborted');
+  err.name = 'AbortError';
+  return err;
+}
 import type {
   CompileOptions,
   CompileBatchOptions,
@@ -37,7 +48,7 @@ const DEFAULT_CONCURRENCY = 4;
  *
  * **Abort**: If `options.signal` is provided and the signal fires, any records
  * that have not yet started are not started, and `compileBatch` rejects with a
- * `DOMException` (`name: 'AbortError'`). Records already in-flight complete
+ * an `Error` with `name: 'AbortError'`. Records already in-flight complete
  * normally (pending-only cancellation).
  *
  * @returns Array of {@link CompileBatchResult} in the same order as
@@ -64,7 +75,7 @@ export async function compileBatch<T = unknown>(
   // Early abort check: if the signal is already fired, bail before creating
   // the session (which does font loading + WASM init).
   if (signal?.aborted) {
-    throw new DOMException('Aborted', 'AbortError');
+    throw makeAbortError();
   }
 
   // Build one shared session so fonts + WASM initialise once for the whole batch.
@@ -108,14 +119,14 @@ export async function compileBatch<T = unknown>(
     (async () => {
       // Abort check: if the signal already fired, skip this record immediately.
       if (signal?.aborted) {
-        throw new DOMException('Aborted', 'AbortError');
+        throw makeAbortError();
       }
       await acquire();
       // Second abort check after acquiring the slot: if the signal fired while
       // this record was waiting in the semaphore queue, cancel before starting.
       if (signal?.aborted) {
         release();
-        throw new DOMException('Aborted', 'AbortError');
+        throw makeAbortError();
       }
       try {
         const singleOptions: CompileOptions<T> = {

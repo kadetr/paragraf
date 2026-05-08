@@ -150,10 +150,18 @@ export function hitTestRendered(
     const segs = line.segments;
     if (segs.length === 0) return { lineIndex: li, segmentIndex: 0 };
 
-    // Last segment whose x-start is ≤ px; fall back to segment 0.
+    // Find the segment with the largest x-start that is still ≤ px.
+    // We compare by value (not array order) so the result is correct for
+    // both LTR lines (segments ascending by x) and RTL lines (segments in
+    // word-draw order, not necessarily x-sorted).
     let best = 0;
+    let bestX = -Infinity;
     for (let si = 0; si < segs.length; si++) {
-      if (segs[si].x <= px) best = si;
+      const sx = segs[si].x;
+      if (sx <= px && sx > bestX) {
+        bestX = sx;
+        best = si;
+      }
     }
 
     return { lineIndex: li, segmentIndex: best };
