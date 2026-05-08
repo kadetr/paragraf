@@ -134,6 +134,8 @@ function resolveStyle(
       features: def.features ?? result.features,
       nestedStyles: def.nestedStyles ?? result.nestedStyles,
       grepStyles: def.grepStyles ?? result.grepStyles,
+      opticalMarginAlignment:
+        def.opticalMarginAlignment ?? result.opticalMarginAlignment,
     };
   }
 

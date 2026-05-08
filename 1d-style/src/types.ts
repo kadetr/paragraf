@@ -76,6 +76,12 @@ export interface ParagraphStyleDef {
    * effect on RTL paragraphs or span-based paragraphs.
    */
   hyphenation?: boolean;
+  /**
+   * Enable optical margin alignment (hanging punctuation) for this paragraph.
+   * When `true`, the compile pipeline runs a second Knuth-Plass pass with
+   * OMA-adjusted line widths. Absent or `false` disables OMA.
+   */
+  opticalMarginAlignment?: boolean;
 
   // Spacing
   /**
@@ -146,6 +152,9 @@ export interface ResolvedParagraphStyle {
   // Character range styling (optional — only present if declared in the chain)
   nestedStyles?: NestedStyleRule[];
   grepStyles?: GrepStyleRule[];
+
+  // Optical margin alignment (optional — absent means OMA is off)
+  opticalMarginAlignment?: boolean;
 }
 
 // ─── ResolvedCharStyle — flat, fully-merged character override ────────────────
