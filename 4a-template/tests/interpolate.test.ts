@@ -131,3 +131,38 @@ describe('parseTokens — error cases', () => {
     expect(() => parseTokens('{{a..b}}')).toThrow(/Invalid binding path/);
   });
 });
+
+// ─── F032: conditional tokens — {{?path}} ────────────────────────────────────
+
+describe('parseTokens — F032: conditional null-guard tokens', () => {
+  it('{{?key}} parses to a conditional token', () => {
+    expect(parseTokens('{{?name}}')).toEqual([
+      { type: 'conditional', path: 'name' },
+    ]);
+  });
+
+  it('{{?a.b.c}} parses conditional with dot-path', () => {
+    expect(parseTokens('{{?product.subtitle}}')).toEqual([
+      { type: 'conditional', path: 'product.subtitle' },
+    ]);
+  });
+
+  it('mixed literal + conditional produces both tokens', () => {
+    expect(parseTokens('— {{?subtitle}}')).toEqual([
+      { type: 'literal', value: '— ' },
+      { type: 'conditional', path: 'subtitle' },
+    ]);
+  });
+
+  it('{{?}} throws — empty conditional path', () => {
+    expect(() => parseTokens('{{?}}')).toThrow(/Empty conditional/);
+  });
+
+  it('conditional and regular binding can coexist in one string', () => {
+    expect(parseTokens('{{title}} {{?subtitle}}')).toEqual([
+      { type: 'binding', path: 'title' },
+      { type: 'literal', value: ' ' },
+      { type: 'conditional', path: 'subtitle' },
+    ]);
+  });
+});

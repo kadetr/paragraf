@@ -52,7 +52,11 @@ export interface Document {
 
 /** Intermediate result after composition but before layout. */
 export interface ComposedDocument {
-  paragraphs: Array<{ output: ParagraphOutput }>;
+  paragraphs: Array<{
+    output: ParagraphOutput;
+    spaceBefore?: number;
+    spaceAfter?: number;
+  }>;
 }
 
 // ─── Baseline-grid helpers (exported for unit tests) ─────────────────────────
@@ -177,10 +181,17 @@ export function composeDocument(
       lineWidth:
         Number.isFinite(input.lineWidth) && input.lineWidth > 0
           ? input.lineWidth
-          : textWidth,
+          : Number.isFinite(doc.styleDefaults?.lineWidth) &&
+              (doc.styleDefaults?.lineWidth ?? 0) > 0
+            ? doc.styleDefaults!.lineWidth!
+            : textWidth,
     };
     const output = composer.compose(merged);
-    return { output };
+    return {
+      output,
+      spaceBefore: merged.spaceBefore,
+      spaceAfter: merged.spaceAfter,
+    };
   });
 
   return { paragraphs };
@@ -219,9 +230,10 @@ export function layoutDocument(
   let cursorY = frames.length > 0 ? frames[0].y : 0;
   let oversetLineCount = 0;
 
-  for (const { output } of composed.paragraphs) {
+  for (const { output, spaceBefore, spaceAfter } of composed.paragraphs) {
     const lines = output.lines;
     let lineIdx = 0;
+    let isFirstBatch = true;
 
     while (lineIdx < lines.length) {
       if (frameIdx >= frames.length) {
@@ -232,9 +244,15 @@ export function layoutDocument(
 
       const frame = frames[frameIdx];
       const available = frame.height - (cursorY - frame.y);
+      // Reserve spaceBefore in the available height on the first batch so that
+      // lines are not fitted into space that will be consumed by the paragraph
+      // gap above them.
+      const spaceBeforeReserve = isFirstBatch && spaceBefore ? spaceBefore : 0;
+      const effectiveAvailable = available - spaceBeforeReserve;
 
-      // If the current column is exhausted, advance before placing anything.
-      if (available <= 0) {
+      // If the current column is exhausted (accounting for spaceBefore on first
+      // batch), advance before placing anything.
+      if (effectiveAvailable <= 0) {
         const cols = frame.columnCount ?? 1;
         if (colIdx < cols - 1) {
           colIdx++;
@@ -262,14 +280,21 @@ export function layoutDocument(
         const lh = frame.grid
           ? gridAdvance(line.lineHeight, frame.grid.interval)
           : line.lineHeight;
-        if (fitLines.length === 0 || totalHeight + lh <= available) {
-          if (fitLines.length === 0 && lh > available) isForcePlaced = true;
+        if (fitLines.length === 0 || totalHeight + lh <= effectiveAvailable) {
+          if (fitLines.length === 0 && lh > effectiveAvailable)
+            isForcePlaced = true;
           fitLines.push(line);
           totalHeight += lh;
           lineIdx++;
         } else {
           break;
         }
+      }
+
+      // Apply spaceBefore on the first batch of this paragraph only — before
+      // grid-snapping so the first baseline lands on the correct grid line.
+      if (isFirstBatch && spaceBefore) {
+        cursorY += spaceBefore;
       }
 
       // If the frame has a grid, snap the cursor before placing.
@@ -314,11 +339,13 @@ export function layoutDocument(
         ...(isForcePlaced ? { forcePlaced: true } : {}),
       });
       cursorY += totalHeight;
+      isFirstBatch = false;
       // Paragraph spacing: only applied after the *last* batch of a paragraph
       // (not mid-split when the paragraph continues into the next column/frame).
       const paragraphContinues = lineIdx < lines.length;
       if (!paragraphContinues && frameIdx < frames.length) {
         cursorY += frames[frameIdx].paragraphSpacing ?? 0;
+        if (spaceAfter) cursorY += spaceAfter;
       }
       // (TODO v0.12: per-paragraph override via ParagraphInput.paragraphSpacing)
 

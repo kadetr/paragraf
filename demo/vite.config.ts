@@ -30,6 +30,6 @@ export default defineConfig(({ command }) => ({
   },
   optimizeDeps: {
     // prevent Vite from pre-bundling the WASM module — vite-plugin-wasm handles it
-    exclude: ['knuth_plass_wasm'],
+    exclude: ['paragraf_shaping_wasm'],
   },
 }));

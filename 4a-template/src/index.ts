@@ -5,6 +5,8 @@ export type {
   Template,
   TemplateLayout,
   DimensionMargins,
+  TemplateRegionSpec,
+  TemplatePageSpec,
   TemplateFonts,
   TemplateFontVariants,
   FontVariantEntry,

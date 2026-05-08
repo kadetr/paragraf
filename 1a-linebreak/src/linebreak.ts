@@ -138,8 +138,8 @@ const forwardPass = (
   sums: PrefixSums,
   emergencyStretch: number = 0,
   consecutiveHyphenLimit: number = 0,
-  widowPenalty: number = 0,
-  orphanPenalty: number = 0,
+  runtPenalty: number = 0,
+  singleLinePenalty: number = 0,
   lineWidths: number[] = [],
   adjDemerits: number = 0,
 ): BreakpointNode[] => {
@@ -213,13 +213,13 @@ const forwardPass = (
           if (Math.abs(fc - a.fitnessClass) > 1) demerits += adjDemerits;
         }
 
-        if (isForcedBreak && widowPenalty > 0) {
+        if (isForcedBreak && runtPenalty > 0) {
           const lastLineBoxes = countContentBoxes(nodes, a.position, i);
-          if (lastLineBoxes === 1) demerits += widowPenalty;
+          if (lastLineBoxes === 1) demerits += runtPenalty;
         }
 
-        if (isForcedBreak && orphanPenalty > 0 && a.previous === null) {
-          demerits += orphanPenalty;
+        if (isForcedBreak && singleLinePenalty > 0 && a.previous === null) {
+          demerits += singleLinePenalty;
         }
 
         const candidate: BreakpointNode = {
@@ -270,11 +270,8 @@ export const computeBreakpoints = (paragraph: Paragraph): BreakpointResult => {
     looseness = 0,
   } = paragraph;
 
-  // Accept both canonical (runtPenalty / singleLinePenalty) and deprecated
-  // (widowPenalty / orphanPenalty) names. Canonical names take precedence.
-  const widowPenalty = paragraph.runtPenalty ?? paragraph.widowPenalty ?? 0;
-  const orphanPenalty =
-    paragraph.singleLinePenalty ?? paragraph.orphanPenalty ?? 0;
+  const runtPenalty = paragraph.runtPenalty ?? 0;
+  const singleLinePenalty = paragraph.singleLinePenalty ?? 0;
   const adjDemerits = paragraph.adjDemerits ?? 0;
 
   const sums = buildPrefixSums(nodes);
@@ -286,8 +283,8 @@ export const computeBreakpoints = (paragraph: Paragraph): BreakpointResult => {
     sums,
     0,
     consecutiveHyphenLimit,
-    widowPenalty,
-    orphanPenalty,
+    runtPenalty,
+    singleLinePenalty,
     lineWidths,
     adjDemerits,
   );
@@ -303,8 +300,8 @@ export const computeBreakpoints = (paragraph: Paragraph): BreakpointResult => {
         sums,
         emergencyStretch,
         consecutiveHyphenLimit,
-        widowPenalty,
-        orphanPenalty,
+        runtPenalty,
+        singleLinePenalty,
         lineWidths,
         adjDemerits,
       );

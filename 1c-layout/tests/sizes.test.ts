@@ -123,3 +123,38 @@ describe('landscape / portrait', () => {
     expect(portrait([842, 595])).toEqual([595, 842]);
   });
 });
+
+// ─── RT-1: JIS B-series and envelope sizes present ────────────────────────────
+
+describe('PAGE_SIZES — JIS B-series and envelope sizes (F035)', () => {
+  it('RT-1: has JIS-B4, JIS-B5, DL, C5, C6 keys', () => {
+    const expected = ['JIS-B4', 'JIS-B5', 'DL', 'C5', 'C6'];
+    for (const name of expected) {
+      expect(PAGE_SIZES, `expected key ${name}`).toHaveProperty(name);
+    }
+  });
+
+  it('RT-1 ext: has full JIS-B0 through JIS-B6 keys', () => {
+    for (let i = 0; i <= 6; i++) {
+      expect(PAGE_SIZES, `expected key JIS-B${i}`).toHaveProperty(`JIS-B${i}`);
+    }
+  });
+
+  // RT-2: JIS-B4 dimensions — 257 × 364 mm in JIS P 0138
+  // 257 mm × (72/25.4) = 728.50 pt  ;  364 mm × (72/25.4) = 1031.81 pt
+  it('RT-2: resolvePageSize("JIS-B4") ≈ [728.50, 1031.81] pt', () => {
+    const [w, h] = resolvePageSize('JIS-B4');
+    expect(w).toBeCloseTo(728.5, 1);
+    expect(h).toBeCloseTo(1031.81, 1);
+  });
+
+  it('JIS-B series sizes decrease monotonically', () => {
+    const areas = [0, 1, 2, 3, 4, 5, 6].map((i) => {
+      const [w, h] = PAGE_SIZES[`JIS-B${i}` as keyof typeof PAGE_SIZES];
+      return w * h;
+    });
+    for (let i = 0; i < areas.length - 1; i++) {
+      expect(areas[i]).toBeGreaterThan(areas[i + 1]);
+    }
+  });
+});

@@ -21,6 +21,18 @@ export const PAGE_SIZES = {
   Letter: [612.0, 792.0] as [number, number],
   Legal: [612.0, 1008.0] as [number, number],
   Tabloid: [792.0, 1224.0] as [number, number],
+  // JIS B-series (JIS P 0138 — Japanese Industrial Standard, not ISO B)
+  'JIS-B0': [2919.69, 4127.24] as [number, number],
+  'JIS-B1': [2063.62, 2919.69] as [number, number],
+  'JIS-B2': [1459.84, 2063.62] as [number, number],
+  'JIS-B3': [1031.81, 1459.84] as [number, number],
+  'JIS-B4': [728.5, 1031.81] as [number, number],
+  'JIS-B5': [515.91, 728.5] as [number, number],
+  'JIS-B6': [362.83, 515.91] as [number, number],
+  // ISO envelope sizes (C-series and DL)
+  C5: [459.21, 649.13] as [number, number],
+  C6: [323.15, 459.21] as [number, number],
+  DL: [311.81, 623.62] as [number, number],
 } as const;
 
 export type PageSizeName = keyof typeof PAGE_SIZES;

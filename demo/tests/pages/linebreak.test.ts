@@ -10,7 +10,7 @@ import {
 // The linebreak page transitively imports the WASM module. Mock it so tests
 // can import the module without a real WASM binary.
 vi.mock(
-  '../../../2a-shaping-wasm/wasm/pkg-bundler/knuth_plass_wasm.js',
+  '../../../2a-shaping-wasm/wasm/pkg-bundler/paragraf_shaping_wasm.js',
   () => ({
     measure_text_wasm: vi.fn(() => JSON.stringify({ ok: { width: 6 } })),
     space_metrics_wasm: vi.fn(() =>

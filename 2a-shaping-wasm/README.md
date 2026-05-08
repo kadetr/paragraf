@@ -43,8 +43,7 @@ import { serializeNodesToBinary, tracebackWasmBinary } from '@paragraf/shaping-w
 const [f64s, u8s] = serializeNodesToBinary(nodes);
 
 const result = tracebackWasmBinary(wasm, nodes, lineWidth, tolerance,
-  emergencyStretch, looseness, widowPenalty, orphanPenalty,
-  consecutiveHyphenLimit, lineWidths);
+  emergencyStretch, looseness, consecutiveHyphenLimit, lineWidths, runtPenalty, singleLinePenalty);
 if ('error' in result) throw new Error(result.error);
 const { breaks, usedEmergency } = result.ok;
 ```

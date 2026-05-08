@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeAll } from 'vitest';
 import * as path from 'path';
-import { renderToPdf } from '@paragraf/render-pdf';
+import { renderToPdf, hitTestRendered } from '@paragraf/render-pdf';
 import { layoutParagraph, RenderedParagraph } from '@paragraf/render-core';
 import { createMeasurer, FontkitEngine } from '@paragraf/font-engine';
 import { createParagraphComposer } from '@paragraf/typography';
@@ -22,7 +22,11 @@ const SERIF_FONT: Font = {
 const SERIF_REGISTRY: FontRegistry = new Map([
   [
     'liberation-serif',
-    { id: 'liberation-serif', family: 'Liberation Serif', filePath: SERIF_PATH },
+    {
+      id: 'liberation-serif',
+      family: 'Liberation Serif',
+      filePath: SERIF_PATH,
+    },
   ],
 ]);
 
@@ -119,5 +123,55 @@ describe('metadata options', () => {
     const s = buf.toString('latin1');
     expect(s).toContain('3 Tr');
     expect(s).toContain('Combined Test');
+  });
+});
+
+// ─── hitTestRendered (F034) ───────────────────────────────────────────────────
+
+describe('hitTestRendered (F034)', () => {
+  // RT-4: point squarely inside the first segment of the first line
+  it('RT-4: point inside first segment → { lineIndex: 0, segmentIndex: 0 }', () => {
+    const line = rendered[0];
+    const seg = line.segments[0];
+    // x: seg.x + 5 (inside segment), y: midpoint of line's vertical band
+    const hit = hitTestRendered(rendered, {
+      x: seg.x + 5,
+      y: line.baseline - line.lineHeight / 2,
+    });
+    expect(hit).not.toBeNull();
+    expect(hit!.lineIndex).toBe(0);
+    expect(hit!.segmentIndex).toBe(0);
+  });
+
+  // RT-5: point far below all lines → null
+  it('RT-5: point far below all lines → null', () => {
+    const lastLine = rendered[rendered.length - 1];
+    const hit = hitTestRendered(rendered, {
+      x: 100,
+      y: lastLine.baseline + 1000,
+    });
+    expect(hit).toBeNull();
+  });
+
+  // RT-5 ext: point far above all lines → null
+  it('point far above all lines → null', () => {
+    const firstLine = rendered[0];
+    const hit = hitTestRendered(rendered, {
+      x: 100,
+      y: firstLine.baseline - firstLine.lineHeight - 1000,
+    });
+    expect(hit).toBeNull();
+  });
+
+  // RT-6: if paragraph has more than one line, a point in the second line → lineIndex: 1
+  it('RT-6: point in second line → lineIndex: 1 (when paragraph has ≥2 lines)', () => {
+    if (rendered.length < 2) return; // guard: skip for single-line renders
+    const line1 = rendered[1];
+    const hit = hitTestRendered(rendered, {
+      x: line1.segments[0].x + 5,
+      y: line1.baseline - line1.lineHeight / 2,
+    });
+    expect(hit).not.toBeNull();
+    expect(hit!.lineIndex).toBe(1);
   });
 });

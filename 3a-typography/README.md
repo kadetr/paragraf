@@ -55,8 +55,8 @@ interface ParagraphInput {
   looseness?: number;           // 0 = optimum, -1 = tighter, +1 = looser
   justifyLastLine?: boolean;
   consecutiveHyphenLimit?: number;
-  widowPenalty?: number;
-  orphanPenalty?: number;
+  runtPenalty?: number;
+  singleLinePenalty?: number;
   opticalMarginAlignment?: boolean; // hang punctuation into margins
 }
 ```

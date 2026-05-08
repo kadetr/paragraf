@@ -17,14 +17,17 @@ import type {
   Font,
   FontId,
   FontStyle,
+  FontStretch,
   FontRegistry,
   Language,
+  TextSpan,
 } from '@paragraf/types';
 import { resolveWeight } from '@paragraf/types';
 import { parseDimension, PageLayout } from '@paragraf/layout';
 import type { Margins } from '@paragraf/layout';
 import { defineStyles } from '@paragraf/style';
-import type { ResolvedParagraphStyle } from '@paragraf/style';
+import type { CharStyleDef, ResolvedParagraphStyle } from '@paragraf/style';
+import { parseInlineMarkup, looksLikeRtl } from './markup.js';
 import type { Template, Dimension, DimensionMargins } from '@paragraf/template';
 
 import {
@@ -32,6 +35,7 @@ import {
   createDefaultFontEngine,
   composeDocument,
   layoutDocument,
+  deriveLineWidths,
 } from '@paragraf/typography';
 import type {
   ParagraphInput,
@@ -44,21 +48,23 @@ import type { FontEngine } from '@paragraf/font-engine';
 import { createMeasurer } from '@paragraf/font-engine';
 import { renderDocumentToPdf } from '@paragraf/render-pdf';
 import type { OutputIntent } from '@paragraf/render-pdf';
-import { loadBuiltinSrgb, createTransform } from '@paragraf/color';
-import type { ColorTransform } from '@paragraf/color';
+// Minimal structural type for an ICC color transform — avoids a type-level
+// import from @paragraf/color which is an optionalDependency and would cause
+// tsc to fail for consumers installing with --no-optional.
+type ColorTransform = { apply(input: number[]): number[] };
 
 import type { CompileOptions, CompileResult } from './types.js';
-import { buildFontRegistry, selectVariant } from './fonts.js';
+import {
+  buildFontRegistry,
+  selectVariant,
+  _warnedStyleFields,
+} from './fonts.js';
 import { resolveText } from './interpolate.js';
 import { resolveComposerOptions, detectActualShaping } from './shaping.js';
 import type { CompilerSession } from './session.js';
 
 const DEFAULT_MAX_PAGES = 100;
 
-// Module-level sets to deduplicate development-time warnings (one warn per style
-// name per process, avoiding spam in high-volume compileBatch runs).
-const _warnedSpacing = new Set<string>();
-const _warnedHyphenation = new Set<string>();
 // ─── Main entry point ─────────────────────────────────────────────────────────
 
 /**
@@ -82,6 +88,7 @@ export async function compile<T = unknown>(
     selectable = false,
     maxPages = DEFAULT_MAX_PAGES,
     outputIntent,
+    pdfxConformance,
     session,
     verbose = true,
   } = options;
@@ -95,6 +102,12 @@ export async function compile<T = unknown>(
   if (verbose && outputIntent && output !== 'pdf') {
     console.warn(
       '[paragraf/compile] outputIntent has no effect when output is not "pdf".',
+    );
+  }
+
+  if (verbose && pdfxConformance && output !== 'pdf') {
+    console.warn(
+      '[paragraf/compile] pdfxConformance has no effect when output is not "pdf".',
     );
   }
 
@@ -135,32 +148,8 @@ export async function compile<T = unknown>(
 
   // ── 4. Resolve styles ──────────────────────────────────────────────────────
   const styleRegistry = defineStyles(template.styles);
-
-  // Warn when properties are declared but not yet implemented.
-  // Uses module-level sets so warnings fire at most once per style name across
-  // the lifetime of the process (avoids flooding in compileBatch workloads).
-  if (verbose) {
-    for (const name of styleRegistry.names()) {
-      const s = styleRegistry.resolve(name);
-      if (
-        (s.spaceBefore > 0 || s.spaceAfter > 0) &&
-        !_warnedSpacing.has(name)
-      ) {
-        _warnedSpacing.add(name);
-        console.warn(
-          `[paragraf/compile] Style "${name}": spaceBefore/spaceAfter are not yet ` +
-            `implemented and will be ignored. (planned v0.6)`,
-        );
-      }
-      if (s.hyphenation === false && !_warnedHyphenation.has(name)) {
-        _warnedHyphenation.add(name);
-        console.warn(
-          `[paragraf/compile] Style "${name}": hyphenation: false is not yet supported; ` +
-            `paragraphs will still be hyphenated according to their language setting. (planned v0.6)`,
-        );
-      }
-    }
-  }
+  const charStyles: Record<string, CharStyleDef> | undefined =
+    template.charStyles;
 
   // ── 5. Resolve data ────────────────────────────────────────────────────────
   const record: Record<string, unknown> = normalize
@@ -184,6 +173,7 @@ export async function compile<T = unknown>(
             styleRegistry.resolve(slot.style),
             slot.style,
             registry,
+            charStyles,
             verbose,
           ),
         );
@@ -198,6 +188,7 @@ export async function compile<T = unknown>(
           styleRegistry.resolve(slot.style),
           slot.style,
           registry,
+          charStyles,
           verbose,
         ),
       );
@@ -214,6 +205,7 @@ export async function compile<T = unknown>(
         styleRegistry.resolve(slot.style),
         slot.style,
         registry,
+        charStyles,
         verbose,
       ),
     );
@@ -242,7 +234,10 @@ export async function compile<T = unknown>(
   }
 
   // ── 9. Compose document ───────────────────────────────────────────────────
-  const doc: Document = { paragraphs, frames };
+  const doc: Document = {
+    paragraphs: deriveLineWidths(paragraphs, frames),
+    frames,
+  };
   const composedDoc = composeDocument(doc, composer);
 
   // ── 10. Layout document ──────────────────────────────────────────────────
@@ -253,15 +248,7 @@ export async function compile<T = unknown>(
   const measurer = composer.measurer ?? createMeasurer(registry);
   const renderedDoc = layoutDocument(composedDoc, frames, measurer);
 
-  // Count overflow lines (lines composed but not placed due to page limit)
-  const totalComposedLines = composedDoc.paragraphs.reduce(
-    (sum, p) => sum + p.output.lineCount,
-    0,
-  );
-  const totalRenderedLines = renderedDoc.pages
-    .flatMap((p) => p.items)
-    .reduce((sum, item) => sum + item.rendered.length, 0);
-  const overflowLines = Math.max(0, totalComposedLines - totalRenderedLines);
+  const overflowLines = renderedDoc.oversetLineCount ?? 0;
 
   if (onOverflow === 'throw' && overflowLines > 0) {
     throw new Error(
@@ -307,6 +294,8 @@ export async function compile<T = unknown>(
     // render-pdf cannot encode correctly without additional color-space handling.
     const destColorSpace = outputIntent.profile.colorSpace;
     if (destColorSpace === 'CMYK') {
+      const { loadBuiltinSrgb, createTransform } =
+        await import('@paragraf/color');
       const srgb = await loadBuiltinSrgb();
       // Try the WASM-accelerated path (optional dependency). Fall back to the
       // pure-TS createTransform when @paragraf/color-wasm is not installed.
@@ -331,6 +320,7 @@ export async function compile<T = unknown>(
     compress: true,
     outputIntent,
     colorTransform,
+    pdfxConformance,
   });
 
   return {
@@ -398,6 +388,7 @@ function buildFont(
     fontStyle as FontStyle,
     registry,
     verbose,
+    stretch as FontStretch,
   );
 
   return {
@@ -417,11 +408,67 @@ function buildInput(
   style: ResolvedParagraphStyle,
   styleName: string,
   registry: FontRegistry,
+  charStyles?: Record<string, CharStyleDef>,
   verbose = true,
 ): ParagraphInput {
+  const font = buildFont(style, styleName, registry, verbose);
+
+  // Inline markup: parse <b>, <i>, <bi>, <sup>, <sub>, <span cs="…"> into spans.
+  // Spans are only used for LTR paragraphs — RTL does not support span input.
+  let spanInput: {
+    text?: string;
+    font?: ReturnType<typeof buildFont>;
+    spans?: TextSpan[];
+  } = { text, font };
+  if (text.includes('<')) {
+    const spans = parseInlineMarkup(text, font, charStyles);
+    const sourceText = spans.map((s) => s.text).join('');
+    if (!looksLikeRtl(sourceText)) {
+      spanInput = { spans };
+    } else {
+      // RTL: strip markup tags and use plain text mode
+      spanInput = { text: sourceText, font };
+    }
+  }
+
+  // Warn about fields that are accepted by StyleRegistry but have no runtime
+  // effect in the current compile pipeline (not yet implemented).
+  // Deduplicated per style name to avoid log spam in compileBatch workloads.
+  if (verbose) {
+    if (style.features && Object.keys(style.features).length > 0) {
+      const key = `${styleName}:features`;
+      if (!_warnedStyleFields.has(key)) {
+        _warnedStyleFields.add(key);
+        console.warn(
+          `[paragraf/compile] Style "${styleName}": features is set but not yet implemented. ` +
+            'OpenType feature tags will have no effect on the rendered output.',
+        );
+      }
+    }
+    if (style.nestedStyles && style.nestedStyles.length > 0) {
+      const key = `${styleName}:nestedStyles`;
+      if (!_warnedStyleFields.has(key)) {
+        _warnedStyleFields.add(key);
+        console.warn(
+          `[paragraf/compile] Style "${styleName}": nestedStyles is set but not yet implemented ` +
+            '(requires F027 inline-markup pipeline). Rules will have no effect.',
+        );
+      }
+    }
+    if (style.grepStyles && style.grepStyles.length > 0) {
+      const key = `${styleName}:grepStyles`;
+      if (!_warnedStyleFields.has(key)) {
+        _warnedStyleFields.add(key);
+        console.warn(
+          `[paragraf/compile] Style "${styleName}": grepStyles is set but not yet implemented ` +
+            '(requires F027 inline-markup pipeline). Rules will have no effect.',
+        );
+      }
+    }
+  }
+
   return {
-    text,
-    font: buildFont(style, styleName, registry, verbose),
+    ...spanInput,
     // lineWidth is overridden by composeDocument; 0 is a valid placeholder
     lineWidth: 0,
     alignment: style.alignment,
@@ -435,8 +482,9 @@ function buildInput(
     ...(Number.isFinite(style.lineHeight) && style.lineHeight > 0
       ? { lineHeight: style.lineHeight }
       : {}),
-    // NOTE v0.6: style.hyphenation === false is not yet supported by ParagraphInput;
-    // all paragraphs are hyphenated according to their language setting.
+    ...(style.spaceBefore > 0 ? { spaceBefore: style.spaceBefore } : {}),
+    ...(style.spaceAfter > 0 ? { spaceAfter: style.spaceAfter } : {}),
+    ...(style.hyphenation === false ? { hyphenation: false } : {}),
   };
 }
 

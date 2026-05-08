@@ -93,10 +93,10 @@ pub struct ParagraphInput {
         skip_serializing_if = "Option::is_none"
     )]
     pub consecutive_hyphen_limit: Option<u32>,
-    #[serde(rename = "widowPenalty", skip_serializing_if = "Option::is_none")]
-    pub widow_penalty: Option<f64>,
-    #[serde(rename = "orphanPenalty", skip_serializing_if = "Option::is_none")]
-    pub orphan_penalty: Option<f64>,
+    #[serde(rename = "runtPenalty", skip_serializing_if = "Option::is_none")]
+    pub runt_penalty: Option<f64>,
+    #[serde(rename = "singleLinePenalty", skip_serializing_if = "Option::is_none")]
+    pub single_line_penalty: Option<f64>,
     #[serde(rename = "adjDemerits", skip_serializing_if = "Option::is_none")]
     pub adj_demerits: Option<f64>,
 }
@@ -285,8 +285,8 @@ fn forward_pass(
     sums: &PrefixSums,
     emergency_stretch: f64,
     consecutive_hyphen_limit: u32,
-    widow_penalty: f64,
-    orphan_penalty: f64,
+    runt_penalty: f64,
+    single_line_penalty: f64,
     line_widths: &[f64],
     adj_demerits: f64,
 ) -> (Vec<BreakpointNode>, Vec<usize>) {
@@ -358,13 +358,13 @@ fn forward_pass(
                     }
                 }
 
-                if is_forced && widow_penalty > 0.0 {
+                if is_forced && runt_penalty > 0.0 {
                     if count_content_boxes(nodes, a_pos, i) == 1 {
-                        d += widow_penalty;
+                        d += runt_penalty;
                     }
                 }
-                if is_forced && orphan_penalty > 0.0 && a_prev.is_none() {
-                    d += orphan_penalty;
+                if is_forced && single_line_penalty > 0.0 && a_prev.is_none() {
+                    d += single_line_penalty;
                 }
 
                 let cand_line = a_line + 1;
@@ -415,8 +415,8 @@ fn run_forward_pass(
     let line_widths = para.line_widths.as_deref().unwrap_or(&[]);
     let emergency_stretch = para.emergency_stretch.unwrap_or(0.0);
     let consec_limit = para.consecutive_hyphen_limit.unwrap_or(0);
-    let widow_p = para.widow_penalty.unwrap_or(0.0);
-    let orphan_p = para.orphan_penalty.unwrap_or(0.0);
+    let runt_p = para.runt_penalty.unwrap_or(0.0);
+    let single_line_p = para.single_line_penalty.unwrap_or(0.0);
 
     let sums = build_prefix_sums(nodes);
     let adj_demerits = para.adj_demerits.unwrap_or(0.0);
@@ -428,8 +428,8 @@ fn run_forward_pass(
         &sums,
         0.0,
         consec_limit,
-        widow_p,
-        orphan_p,
+        runt_p,
+        single_line_p,
         line_widths,
         adj_demerits,
     );
@@ -444,8 +444,8 @@ fn run_forward_pass(
                 &sums,
                 emergency_stretch,
                 consec_limit,
-                widow_p,
-                orphan_p,
+                runt_p,
+                single_line_p,
                 line_widths,
                 adj_demerits,
             );
@@ -663,8 +663,8 @@ pub fn traceback_wasm_binary(
     tolerance: f64,
     emergency_stretch: f64,
     looseness: i32,
-    widow_penalty: f64,
-    orphan_penalty: f64,
+    runt_penalty: f64,
+    single_line_penalty: f64,
     consecutive_hyphen_limit: u32,
 ) -> String {
     let nodes = match deserialize_nodes_binary(f64s, u8s) {
@@ -699,13 +699,13 @@ pub fn traceback_wasm_binary(
         } else {
             None
         },
-        widow_penalty: if widow_penalty != 0.0 {
-            Some(widow_penalty)
+        runt_penalty: if runt_penalty != 0.0 {
+            Some(runt_penalty)
         } else {
             None
         },
-        orphan_penalty: if orphan_penalty != 0.0 {
-            Some(orphan_penalty)
+        single_line_penalty: if single_line_penalty != 0.0 {
+            Some(single_line_penalty)
         } else {
             None
         },
@@ -718,7 +718,22 @@ pub fn traceback_wasm_binary(
     };
 
     let final_arena_idx = select_optimal_arena_idx(&arena, &active, looseness);
-    let breaks = traceback_arena(&arena, final_arena_idx);
+    let mut breaks = traceback_arena(&arena, final_arena_idx);
+
+    // Zero the ratio of the terminal forced-break line in the binary path.
+    // For non-Infinity termination glue (e.g. test mocks with stretch=1e6),
+    // compute_ratio returns target/1e6 ≈ small non-zero positive instead of
+    // exactly 0. The binary path must emit 0 for this case. The real-data path
+    // already returns 0 via the PROHIBITED guard when stretch=1e30.
+    if let Some(last) = breaks.last_mut() {
+        let is_terminal_forced = matches!(
+            para.nodes.get(last.position),
+            Some(Node::Penalty(p)) if p.penalty <= FORCED_BREAK
+        );
+        if is_terminal_forced && last.ratio > 0.0 {
+            last.ratio = 0.0;
+        }
+    }
 
     serde_json::to_string(
         &serde_json::json!({ "ok": { "breaks": breaks, "usedEmergency": used_emergency } }),

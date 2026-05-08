@@ -206,3 +206,54 @@ describe('compileBatch — concurrency semaphore', () => {
     expect(results.every((r) => r.error === undefined)).toBe(true);
   });
 });
+
+// ─── AbortSignal ─────────────────────────────────────────────────────────────
+
+describe('compileBatch — AbortSignal', () => {
+  it('RT-5: pre-aborted signal causes compileBatch to reject with AbortError', async () => {
+    const controller = new AbortController();
+    controller.abort(); // abort before calling compileBatch
+
+    const records = [{ body: 'Record 0.' }, { body: 'Record 1.' }];
+
+    await expect(
+      compileBatch({
+        template: makeTemplate(),
+        output: 'rendered',
+        shaping: 'fontkit',
+        records,
+        signal: controller.signal,
+      }),
+    ).rejects.toMatchObject({ name: 'AbortError' });
+  });
+
+  it('RT-6: signal aborted mid-batch leaves pending records unstarted', async () => {
+    const controller = new AbortController();
+    let completedCount = 0;
+
+    // With concurrency=1, abort after the first record completes via onProgress.
+    // All subsequent records are waiting in the semaphore queue and should be
+    // abandoned — compileBatch must reject with AbortError.
+    await expect(
+      compileBatch({
+        template: makeTemplate(),
+        output: 'rendered',
+        shaping: 'fontkit',
+        concurrency: 1,
+        records: Array.from({ length: 6 }, (_, i) => ({
+          body: `Record ${i}.`,
+        })),
+        signal: controller.signal,
+        onProgress: (completed) => {
+          completedCount = completed;
+          if (completed === 1) {
+            controller.abort();
+          }
+        },
+      }),
+    ).rejects.toMatchObject({ name: 'AbortError' });
+
+    // Only the first record should have completed before the abort fired.
+    expect(completedCount).toBe(1);
+  });
+});

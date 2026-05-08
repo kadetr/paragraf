@@ -53,8 +53,8 @@ const buildParagraph = (
   tolerance: number,
   emergencyStretch?: number,
   consecutiveHyphenLimit?: number,
-  widowPenalty?: number,
-  orphanPenalty?: number,
+  runtPenalty?: number,
+  singleLinePenalty?: number,
   looseness?: number,
 ): Paragraph => {
   const measurer = createMeasurer(REGISTRY);
@@ -67,8 +67,8 @@ const buildParagraph = (
     tolerance,
     emergencyStretch,
     consecutiveHyphenLimit,
-    widowPenalty,
-    orphanPenalty,
+    runtPenalty,
+    singleLinePenalty,
     looseness,
   };
 };
@@ -391,10 +391,10 @@ describe('computeBreakpoints — consecutiveHyphenLimit', () => {
   });
 });
 
-// ─── Widow/orphan ─────────────────────────────────────────────────────────────
+// ─── runt/single-line penalty ─────────────────────────────────────────────────
 
-describe('computeBreakpoints — widowPenalty', () => {
-  it('without widowPenalty — single word last line is allowed', () => {
+describe('computeBreakpoints — runtPenalty', () => {
+  it('without runtPenalty — single word last line is allowed', () => {
     const para = buildParagraph(
       'In olden times when wishing still helped one',
       200,
@@ -404,7 +404,7 @@ describe('computeBreakpoints — widowPenalty', () => {
     expect(breaks.length).toBeGreaterThan(0);
   });
 
-  it('widowPenalty is accepted as a parameter without throwing', () => {
+  it('runtPenalty is accepted as a parameter without throwing', () => {
     const para = buildParagraph(
       'In olden times when wishing still helped one',
       200,
@@ -416,7 +416,7 @@ describe('computeBreakpoints — widowPenalty', () => {
     expect(() => computeBreakpoints(para)).not.toThrow();
   });
 
-  it('with high widowPenalty — avoids single word on last line when possible', () => {
+  it('with high runtPenalty — avoids single word on last line when possible', () => {
     const withoutPenalty = buildParagraph(
       'In olden times when wishing still helped one',
       200,
@@ -456,7 +456,7 @@ describe('computeBreakpoints — widowPenalty', () => {
     expect(withLastCount).toBeGreaterThanOrEqual(withoutLastCount);
   });
 
-  it('orphanPenalty is accepted as a parameter without throwing', () => {
+  it('singleLinePenalty is accepted as a parameter without throwing', () => {
     const para = buildParagraph(
       'In olden times when wishing still helped one',
       200,
@@ -469,13 +469,13 @@ describe('computeBreakpoints — widowPenalty', () => {
     expect(() => computeBreakpoints(para)).not.toThrow();
   });
 
-  it('single line paragraph with widowPenalty still composes', () => {
+  it('single line paragraph with runtPenalty still composes', () => {
     const para = buildParagraph('Hi there', 500, 1, undefined, undefined, 5000);
     const breaks = traceback(computeBreakpoints(para).node);
     expect(breaks.length).toBe(1);
   });
 
-  it('widowPenalty demonstrably changes selection when widow exists', () => {
+  it('runtPenalty demonstrably changes selection when widow exists', () => {
     const text = 'In olden times when wishing still helped one';
     const withoutPenalty = buildParagraph(text, 200, 2);
     const withPenalty = buildParagraph(
@@ -506,6 +506,48 @@ describe('computeBreakpoints — widowPenalty', () => {
 });
 
 // ─── Looseness ────────────────────────────────────────────────────────────────
+
+// ─── singleLinePenalty ────────────────────────────────────────────────────────
+
+describe('computeBreakpoints — singleLinePenalty', () => {
+  it('singleLinePenalty adds demerits when paragraph is set on a single line', () => {
+    // lineWidth=2000 ensures "Hi there" fits entirely on one line
+    const without = buildParagraph('Hi there', 2000, 2);
+    const with_ = { ...without, singleLinePenalty: 5000 };
+
+    const dWithout = computeBreakpoints(without).node.totalDemerits;
+    const dWith = computeBreakpoints(with_).node.totalDemerits;
+
+    expect(dWith).toBeGreaterThan(dWithout);
+  });
+
+  it('singleLinePenalty does not affect demerits for a multi-line paragraph', () => {
+    // lineWidth=200 forces "In olden times..." across multiple lines
+    const without = buildParagraph(
+      'In olden times when wishing still helped one',
+      200,
+      2,
+    );
+    const with_ = { ...without, singleLinePenalty: 5000 };
+
+    const dWithout = computeBreakpoints(without).node.totalDemerits;
+    const dWith = computeBreakpoints(with_).node.totalDemerits;
+
+    expect(dWith).toBe(dWithout);
+  });
+
+  it('singleLinePenalty demonstrably changes demerits when single-line path exists', () => {
+    const without = buildParagraph('Hi there', 2000, 2);
+    const with_ = { ...without, singleLinePenalty: 1000000 };
+
+    const rWithout = computeBreakpoints(without);
+    const rWith = computeBreakpoints(with_);
+
+    expect(rWith.node.totalDemerits).toBeGreaterThan(
+      rWithout.node.totalDemerits,
+    );
+  });
+});
 
 describe('computeBreakpoints — looseness', () => {
   it('looseness=0 produces optimal line count', () => {

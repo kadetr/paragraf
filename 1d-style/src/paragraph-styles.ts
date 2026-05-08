@@ -24,6 +24,9 @@ const DEFAULTS: ResolvedParagraphStyle = {
   tolerance: 2,
   looseness: 0,
   next: undefined,
+  features: undefined,
+  nestedStyles: undefined,
+  grepStyles: undefined,
 };
 
 // ─── Validation ───────────────────────────────────────────────────────────────
@@ -128,6 +131,9 @@ function resolveStyle(
       tolerance: def.tolerance ?? result.tolerance,
       looseness: def.looseness ?? result.looseness,
       next: def.next ?? result.next,
+      features: def.features ?? result.features,
+      nestedStyles: def.nestedStyles ?? result.nestedStyles,
+      grepStyles: def.grepStyles ?? result.grepStyles,
     };
   }
 

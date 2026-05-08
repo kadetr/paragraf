@@ -8,7 +8,7 @@ export default defineConfig({
   outDir: 'dist',
   sourcemap: false,
   // The wasm-bindgen glue must not be bundled — it uses __dirname and
-  // require('fs').readFileSync to locate knuth_plass_wasm_bg.wasm at runtime.
+  // require('fs').readFileSync to locate paragraf_shaping_wasm_bg.wasm at runtime.
   // Bundling would break the relative path resolution.
-  external: ['../wasm/pkg/knuth_plass_wasm.js'],
+  external: ['../wasm/pkg/paragraf_shaping_wasm.js'],
 });

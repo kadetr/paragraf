@@ -4,8 +4,10 @@ export {
   createDefaultFontEngine,
   wasmStatus,
   clearMeasureCache,
+  clearShapingState,
   getMeasureCacheStats,
   configureMeasureCache,
+  featureSetIdFromConfig,
 } from './paragraph.js';
 export type {
   ParagraphInput,
@@ -14,6 +16,7 @@ export type {
   ComposerOptions,
   MeasureCacheOptions,
   MeasureCacheStats,
+  FeatureConfig,
 } from './paragraph.js';
 
 // optical margin alignment

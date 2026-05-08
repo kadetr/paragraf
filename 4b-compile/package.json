@@ -54,7 +54,8 @@
   },
   "optionalDependencies": {
     "@paragraf/shaping-wasm": "^0.6.0",
-    "@paragraf/color-wasm": "^0.6.0"
+    "@paragraf/color-wasm": "^0.6.0",
+    "@paragraf/color": "^0.6.0"
   },
   "devDependencies": {
     "@types/node": "^22.19.15",

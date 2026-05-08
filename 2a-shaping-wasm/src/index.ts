@@ -15,5 +15,5 @@ const _require = createRequire(import.meta.url);
  * The returned object is the raw wasm-bindgen JS module.
  */
 export function loadShapingWasm(): unknown {
-  return _require('../wasm/pkg/knuth_plass_wasm.js');
+  return _require('../wasm/pkg/paragraf_shaping_wasm.js');
 }

@@ -13,7 +13,7 @@ import {
   measure_text_wasm,
   space_metrics_wasm,
   font_metrics_wasm,
-} from '../../2a-shaping-wasm/wasm/pkg-bundler/knuth_plass_wasm.js';
+} from '../../2a-shaping-wasm/wasm/pkg-bundler/paragraf_shaping_wasm.js';
 import {
   getBrowserMeasureCacheConfig,
   registerBrowserMeasureCacheClearer,

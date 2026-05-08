@@ -99,12 +99,74 @@ function parseCurvTag(view: DataView, tagOffset: number): TrcCurve {
 }
 
 function parseParaTag(view: DataView, tagOffset: number): TrcCurve {
-  // Parametric curve (ICC v4) — extract function type and use gamma approximation for simple cases.
   const fnType = view.getUint16(tagOffset + 8);
   const gamma = readS15Fixed16(view, tagOffset + 12);
   if (fnType === 0) return { kind: 'gamma', gamma };
-  // For types 1–4 (which include the sRGB piecewise), approximate with the gamma parameter.
-  return { kind: 'gamma', gamma };
+
+  // Types 1–4: read all s15Fixed16 parameters and sample into a 1024-point LUT.
+  const paramOffsets = [
+    [], // type 0: only gamma (handled above)
+    [16, 20], // type 1: g, a, b        → offsets 12, 16, 20
+    [16, 20, 24], // type 2: g, a, b, c     → offsets 12, 16, 20, 24
+    [16, 20, 24, 28], // type 3: g, a, b, c, d  → offsets 12, 16, 20, 24, 28
+    [16, 20, 24, 28, 32, 36], // type 4: g,a,b,c,d,e,f → 12…36
+  ];
+
+  const extraOffsets = paramOffsets[fnType] ?? [];
+  const params: number[] = [gamma];
+  for (const off of extraOffsets) {
+    params.push(readS15Fixed16(view, tagOffset + off));
+  }
+
+  const LUT_SIZE = 1024;
+  const values = new Float64Array(LUT_SIZE);
+  for (let i = 0; i < LUT_SIZE; i++) {
+    values[i] = sampleParametricCurve(fnType, params, i / (LUT_SIZE - 1));
+  }
+  return { kind: 'lut', values };
+}
+
+/**
+ * Evaluate an ICC v4 parametric curve (para tag §10.15) at x ∈ [0, 1].
+ *
+ * Types:
+ *   0: Y = X^g                              params: [g]
+ *   1: Y = (aX+b)^g if X ≥ -b/a, else 0    params: [g, a, b]
+ *   2: Y = (aX+b)^g + c if X ≥ -b/a, else c params: [g, a, b, c]
+ *   3: Y = (aX+b)^g if X ≥ d, else cX       params: [g, a, b, c, d]
+ *   4: Y = (aX+b)^g+e if X ≥ d, else cX+f   params: [g, a, b, c, d, e, f]
+ */
+export function sampleParametricCurve(
+  fnType: number,
+  params: number[],
+  x: number,
+): number {
+  const g = params[0] ?? 1;
+  const a = params[1] ?? 1;
+  const b = params[2] ?? 0;
+  const c = params[3] ?? 0;
+  const d = params[4] ?? 0;
+  const e = params[5] ?? 0;
+  const f = params[6] ?? 0;
+
+  switch (fnType) {
+    case 0:
+      return x <= 0 ? 0 : Math.pow(x, g);
+    case 1: {
+      const threshold = a !== 0 ? -b / a : 0;
+      return x >= threshold ? Math.pow(Math.max(a * x + b, 0), g) : 0;
+    }
+    case 2: {
+      const threshold = a !== 0 ? -b / a : 0;
+      return x >= threshold ? Math.pow(Math.max(a * x + b, 0), g) + c : c;
+    }
+    case 3:
+      return x >= d ? Math.pow(Math.max(a * x + b, 0), g) : c * x;
+    case 4:
+      return x >= d ? Math.pow(Math.max(a * x + b, 0), g) + e : c * x + f;
+    default:
+      return x <= 0 ? 0 : Math.pow(x, g);
+  }
 }
 
 function parseMlucTag(

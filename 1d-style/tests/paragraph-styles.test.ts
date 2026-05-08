@@ -274,3 +274,50 @@ describe('FontSpec — named FontWeight', () => {
     expect(styles.resolve('child').font.weight).toBe(400);
   });
 });
+
+// ─── F031: nestedStyles / grepStyles ─────────────────────────────────────────
+
+describe('defineStyles — F031: nestedStyles + grepStyles propagation', () => {
+  it('nestedStyles propagates to resolved style', () => {
+    const styles = defineStyles({
+      body: {
+        nestedStyles: [{ charStyle: 'drop-cap', through: 1 }],
+      },
+    });
+    expect(styles.resolve('body').nestedStyles).toEqual([
+      { charStyle: 'drop-cap', through: 1 },
+    ]);
+  });
+
+  it('grepStyles propagates to resolved style', () => {
+    const styles = defineStyles({
+      body: {
+        grepStyles: [{ charStyle: 'em', pattern: '\\b\\w+\\b' }],
+      },
+    });
+    expect(styles.resolve('body').grepStyles).toEqual([
+      { charStyle: 'em', pattern: '\\b\\w+\\b' },
+    ]);
+  });
+
+  it('child nestedStyles overrides parent nestedStyles', () => {
+    const styles = defineStyles({
+      parent: {
+        nestedStyles: [{ charStyle: 'drop-cap', through: 1 }],
+      },
+      child: {
+        extends: 'parent',
+        nestedStyles: [{ charStyle: 'run-in', through: 3, unitType: 'words' }],
+      },
+    });
+    expect(styles.resolve('child').nestedStyles).toEqual([
+      { charStyle: 'run-in', through: 3, unitType: 'words' },
+    ]);
+  });
+
+  it('nestedStyles and grepStyles are undefined when not declared', () => {
+    const styles = defineStyles({ plain: {} });
+    expect(styles.resolve('plain').nestedStyles).toBeUndefined();
+    expect(styles.resolve('plain').grepStyles).toBeUndefined();
+  });
+});

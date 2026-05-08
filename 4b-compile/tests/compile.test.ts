@@ -2,9 +2,11 @@
 //
 // Uses real Liberation Serif fonts from the monorepo's /fonts/ directory.
 
-import { describe, it, expect, beforeAll } from 'vitest';
+import { describe, it, expect, beforeAll, vi } from 'vitest';
 import * as path from 'path';
 import { defineTemplate } from '@paragraf/template';
+import * as typography from '@paragraf/typography';
+import type { RenderedDocument } from '@paragraf/typography';
 import { compile } from '../src/compile.js';
 import { compileBatch } from '../src/batch.js';
 import type { CompileOptions } from '../src/types.js';
@@ -461,5 +463,154 @@ describe('compileBatch()', () => {
     });
     expect(results).toHaveLength(8);
     expect(results.every((r) => r.result !== undefined)).toBe(true);
+  });
+});
+
+// ─── compile buildInput forwarding: spaceBefore / spaceAfter / hyphenation ───
+
+describe('compile buildInput forwarding', () => {
+  // Helper: build a minimal single-paragraph template with custom style overrides.
+  function makeSingleParaTemplate(
+    styleOverrides: Record<string, unknown> = {},
+  ) {
+    return defineTemplate({
+      layout: { size: 'A4', margins: 72 },
+      fonts: {
+        'Liberation Serif': {
+          regular: path.join(FONTS_DIR, 'LiberationSerif-Regular.ttf'),
+        },
+      },
+      styles: {
+        body: {
+          font: { family: 'Liberation Serif', size: 12 },
+          alignment: 'left',
+          lineHeight: 18,
+          ...styleOverrides,
+        },
+      },
+      content: [{ style: 'body', text: '{{text}}' }],
+    });
+  }
+
+  it('R7: spaceBefore > 0 is forwarded — first paragraph starts lower', async () => {
+    const baseResult = await compile({
+      template: makeSingleParaTemplate(),
+      data: { text: 'Hello world.' },
+      output: 'rendered',
+      shaping: 'fontkit',
+    });
+    const spaceResult = await compile({
+      template: makeSingleParaTemplate({ spaceBefore: 20 }),
+      data: { text: 'Hello world.' },
+      output: 'rendered',
+      shaping: 'fontkit',
+    });
+    const baseY = (baseResult.data as any).pages[0].items[0].origin.y;
+    const spaceY = (spaceResult.data as any).pages[0].items[0].origin.y;
+    expect(spaceY).toBeCloseTo(baseY + 20, 1);
+  });
+
+  it('R8: spaceAfter > 0 is forwarded — second paragraph starts lower', async () => {
+    function makeTwoParaTemplate(styleOverrides: Record<string, unknown> = {}) {
+      return defineTemplate({
+        layout: { size: 'A4', margins: 72 },
+        fonts: {
+          'Liberation Serif': {
+            regular: path.join(FONTS_DIR, 'LiberationSerif-Regular.ttf'),
+          },
+        },
+        styles: {
+          first: {
+            font: { family: 'Liberation Serif', size: 12 },
+            alignment: 'left',
+            lineHeight: 18,
+            ...styleOverrides,
+          },
+          second: {
+            font: { family: 'Liberation Serif', size: 12 },
+            alignment: 'left',
+            lineHeight: 18,
+          },
+        },
+        content: [
+          { style: 'first', text: '{{a}}' },
+          { style: 'second', text: '{{b}}' },
+        ],
+      });
+    }
+    const baseResult = await compile({
+      template: makeTwoParaTemplate(),
+      data: { a: 'First paragraph.', b: 'Second paragraph.' },
+      output: 'rendered',
+      shaping: 'fontkit',
+    });
+    const spaceResult = await compile({
+      template: makeTwoParaTemplate({ spaceAfter: 20 }),
+      data: { a: 'First paragraph.', b: 'Second paragraph.' },
+      output: 'rendered',
+      shaping: 'fontkit',
+    });
+    const baseY = (baseResult.data as any).pages[0].items[1].origin.y;
+    const spaceY = (spaceResult.data as any).pages[0].items[1].origin.y;
+    expect(spaceY).toBeCloseTo(baseY + 20, 1);
+  });
+
+  it('R9: hyphenation: false is forwarded — no hyphenated lines in output', async () => {
+    const result = await compile({
+      template: makeSingleParaTemplate({ hyphenation: false }),
+      data: { text: 'internationalization standardization' },
+      output: 'rendered',
+      shaping: 'fontkit',
+    });
+    const items: any[] = (result.data as any).pages.flatMap(
+      (p: any) => p.items,
+    );
+    // No segment text should end with the soft-hyphen marker used for line breaks.
+    for (const item of items) {
+      for (const line of item.rendered) {
+        const lineText = line.segments.map((s: any) => s.text).join('');
+        expect(lineText.endsWith('-')).toBe(false);
+      }
+    }
+  });
+});
+
+// ─── compile() — overflow count source (F004) ────────────────────────────────
+
+describe('compile() — overflow count matches RenderedDocument.oversetLineCount (F004)', () => {
+  it('overflowLines equals renderedDoc.oversetLineCount (not a manual composed-vs-placed diff)', async () => {
+    const longBody = 'word '.repeat(5000);
+    const result = await compile({
+      template: makeTemplate(),
+      data: { title: 'Overflow Test', body: longBody },
+      output: 'rendered',
+      shaping: 'fontkit',
+      maxPages: 1,
+      onOverflow: 'silent',
+    });
+    const renderedDoc = result.data as RenderedDocument;
+    expect(result.metadata.overflowLines).toBeGreaterThan(0);
+    expect(result.metadata.overflowLines).toBe(
+      renderedDoc.oversetLineCount ?? 0,
+    );
+  });
+});
+
+// ─── compile() — deriveLineWidths called before composeDocument (F015) ────────
+
+describe('compile() — deriveLineWidths called before composeDocument (F015)', () => {
+  it('calls deriveLineWidths from @paragraf/typography before composing', async () => {
+    const spy = vi.spyOn(typography, 'deriveLineWidths');
+    try {
+      await compile({
+        template: makeTemplate(),
+        data: SAMPLE_DATA,
+        output: 'rendered',
+        shaping: 'fontkit',
+      });
+      expect(spy).toHaveBeenCalled();
+    } finally {
+      spy.mockRestore();
+    }
   });
 });

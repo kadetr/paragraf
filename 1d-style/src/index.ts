@@ -2,7 +2,11 @@ export { defineStyles } from './paragraph-styles.js';
 export type { StyleRegistry } from './paragraph-styles.js';
 export { defineCharStyles } from './char-styles.js';
 export type { CharStyleRegistry } from './char-styles.js';
+export { featureSetIdFromConfig } from './types.js';
 export type {
+  FontFeatures,
+  NestedStyleRule,
+  GrepStyleRule,
   FontSpec,
   ParagraphStyleDef,
   CharStyleDef,
