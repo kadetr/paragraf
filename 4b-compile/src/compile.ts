@@ -485,6 +485,7 @@ function buildInput(
     ...(style.spaceBefore > 0 ? { spaceBefore: style.spaceBefore } : {}),
     ...(style.spaceAfter > 0 ? { spaceAfter: style.spaceAfter } : {}),
     ...(style.hyphenation === false ? { hyphenation: false } : {}),
+    ...(style.opticalMarginAlignment ? { opticalMarginAlignment: true } : {}),
   };
 }
 

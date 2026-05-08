@@ -614,3 +614,72 @@ describe('compile() — deriveLineWidths called before composeDocument (F015)', 
     }
   });
 });
+
+// ─── compile buildInput forwarding: opticalMarginAlignment (RT5–RT6) ─────────
+
+describe('compile buildInput forwarding — opticalMarginAlignment', () => {
+  function makeOmaTemplate(withOma: boolean) {
+    return defineTemplate({
+      layout: { size: 'A4', margins: 72 },
+      fonts: {
+        'Liberation Serif': {
+          regular: path.join(FONTS_DIR, 'LiberationSerif-Regular.ttf'),
+        },
+      },
+      styles: {
+        body: {
+          font: { family: 'Liberation Serif', size: 12 },
+          alignment: 'justified',
+          lineHeight: 18,
+          ...(withOma ? { opticalMarginAlignment: true } : {}),
+        },
+      },
+      content: [
+        {
+          style: 'body',
+          text: 'In olden times when wishing still helped one, there lived a king whose daughters were all beautiful.',
+        },
+      ],
+    });
+  }
+
+  it('RT5 — style with opticalMarginAlignment:true → composeDocument receives paragraph with flag set', async () => {
+    const spy = vi.spyOn(typography, 'composeDocument');
+    try {
+      await compile({
+        template: makeOmaTemplate(true),
+        data: {},
+        output: 'rendered',
+        shaping: 'fontkit',
+      });
+      expect(spy).toHaveBeenCalled();
+      const doc = spy.mock.calls[0]![0] as any;
+      const hasOmaFlag = doc.paragraphs.some(
+        (p: any) => p.opticalMarginAlignment === true,
+      );
+      expect(hasOmaFlag).toBe(true);
+    } finally {
+      spy.mockRestore();
+    }
+  });
+
+  it('RT6 — style without opticalMarginAlignment → composeDocument receives paragraph without flag', async () => {
+    const spy = vi.spyOn(typography, 'composeDocument');
+    try {
+      await compile({
+        template: makeOmaTemplate(false),
+        data: {},
+        output: 'rendered',
+        shaping: 'fontkit',
+      });
+      expect(spy).toHaveBeenCalled();
+      const doc = spy.mock.calls[0]![0] as any;
+      const hasOmaFlag = doc.paragraphs.some(
+        (p: any) => p.opticalMarginAlignment === true,
+      );
+      expect(hasOmaFlag).toBe(false);
+    } finally {
+      spy.mockRestore();
+    }
+  });
+});

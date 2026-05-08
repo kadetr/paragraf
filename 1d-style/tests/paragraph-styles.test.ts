@@ -321,3 +321,35 @@ describe('defineStyles — F031: nestedStyles + grepStyles propagation', () => {
     expect(styles.resolve('plain').grepStyles).toBeUndefined();
   });
 });
+
+// ─── OMA: opticalMarginAlignment propagation (RT1–RT4) ───────────────────────
+
+describe('defineStyles — opticalMarginAlignment propagation', () => {
+  it('RT1 — true on root style → resolved value is true', () => {
+    const styles = defineStyles({
+      body: { opticalMarginAlignment: true },
+    });
+    expect(styles.resolve('body').opticalMarginAlignment).toBe(true);
+  });
+
+  it('RT2 — unset → resolved value is undefined (not defaulted to false)', () => {
+    const styles = defineStyles({ plain: {} });
+    expect(styles.resolve('plain').opticalMarginAlignment).toBeUndefined();
+  });
+
+  it('RT3 — child inherits true from parent when child does not override', () => {
+    const styles = defineStyles({
+      base: { opticalMarginAlignment: true },
+      body: { extends: 'base' },
+    });
+    expect(styles.resolve('body').opticalMarginAlignment).toBe(true);
+  });
+
+  it('RT4 — child with false overrides parent true', () => {
+    const styles = defineStyles({
+      base: { opticalMarginAlignment: true },
+      heading: { extends: 'base', opticalMarginAlignment: false },
+    });
+    expect(styles.resolve('heading').opticalMarginAlignment).toBe(false);
+  });
+});
