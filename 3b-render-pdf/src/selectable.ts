@@ -148,7 +148,7 @@ export function hitTestRendered(
 
     // Point is within this line's vertical band. Find the best segment.
     const segs = line.segments;
-    if (segs.length === 0) return { lineIndex: li, segmentIndex: 0 };
+    if (segs.length === 0) return null;
 
     // Find the segment with the largest x-start that is still ≤ px.
     // We compare by value (not array order) so the result is correct for

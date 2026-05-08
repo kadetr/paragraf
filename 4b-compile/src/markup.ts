@@ -242,11 +242,17 @@ export function parseInlineMarkup(
       // close tag — flush accumulated text under current scope, pop matching entry
       flushText();
       // Pop the most recent matching tag from the stack
+      let matched = false;
       for (let i = stack.length - 1; i >= 0; i--) {
         if (stack[i]!.tag.kind === token.name) {
           stack.splice(i, 1);
+          matched = true;
           break;
         }
+      }
+      // Unmatched close tag — preserve as literal text rather than silently dropping
+      if (!matched) {
+        pendingText += `</${token.name}>`;
       }
     }
   }

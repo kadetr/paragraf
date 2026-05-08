@@ -212,8 +212,8 @@ export interface ParagraphInput {
   /** Space below the last line of this paragraph (points). Applied by layoutDocument. */
   spaceAfter?: number;
   /**
-   * When false, disables hyphenation for this paragraph in both text mode and
-   * spans mode. RTL paragraphs are unaffected.
+   * When false, disables hyphenation for this paragraph (LTR text-mode and
+   * spans-mode). RTL paragraphs are unaffected — they do not hyphenate.
    */
   hyphenation?: boolean;
   /** Fixed left margin reserved on every line in points (TeX \leftskip equivalent). @since v0.6.1 */
@@ -578,6 +578,7 @@ const spansToWords = (
   spans: TextSpan[],
   opts: HyphenateOptions,
   measurer: Measurer,
+  enableHyphenation = true,
 ): HyphenatedWordWithFont[] => {
   const wordSegsList: SpanSegment[][] = [];
   let currentWord: SpanSegment[] = [];
@@ -620,6 +621,18 @@ const spansToWords = (
 
   return wordSegsList.map((segs, index) => {
     const wordText = segs.map((s) => s.text).join('');
+
+    if (!enableHyphenation) {
+      return {
+        original: wordText,
+        fragments: [wordText],
+        hyphenable: false,
+        hasSoftHyphen: false,
+        font: segs[0].font,
+        segments: mapFragmentsToSegments(segs, [wordText]),
+      };
+    }
+
     const hyphenated = hyphenateWord(
       wordText,
       opts,
@@ -809,7 +822,12 @@ export const createParagraphComposer = async (
       }));
     } else if (hasSpans) {
       // span-based LTR input
-      withFonts = spansToWords(spans!, opts, measurer);
+      withFonts = spansToWords(
+        spans!,
+        opts,
+        measurer,
+        input.hyphenation !== false,
+      );
     } else if (input.hyphenation === false) {
       // hyphenation disabled — split by whitespace, no hyphen breaks
       const words = (text || '')

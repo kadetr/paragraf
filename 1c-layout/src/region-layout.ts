@@ -76,10 +76,27 @@ export function framesForRegions(
     const gutter =
       region.gutter !== undefined ? parseDimension(region.gutter) : 0;
 
+    if (!Number.isInteger(columns) || columns < 1) {
+      throw new RangeError(
+        `[paragraf] framesForRegions(): columns must be a positive integer (got ${columns})`,
+      );
+    }
+    if (gutter < 0) {
+      throw new RangeError(
+        `[paragraf] framesForRegions(): gutter must be non-negative (got ${gutter})`,
+      );
+    }
+
     const colWidth =
       columns === 1
         ? regionWidth
         : (regionWidth - gutter * (columns - 1)) / columns;
+
+    if (colWidth <= 0) {
+      throw new RangeError(
+        `[paragraf] framesForRegions(): computed column width is ${colWidth}pt — check regionWidth, columns, and gutter values`,
+      );
+    }
 
     for (let c = 0; c < columns; c++) {
       frames.push({
