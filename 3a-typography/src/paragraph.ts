@@ -212,8 +212,8 @@ export interface ParagraphInput {
   /** Space below the last line of this paragraph (points). Applied by layoutDocument. */
   spaceAfter?: number;
   /**
-   * When false, disables hyphenation for this paragraph (text-mode LTR only).
-   * spans-mode and RTL paragraphs are unaffected — they do not hyphenate.
+   * When false, disables hyphenation for this paragraph in both text mode and
+   * spans mode. RTL paragraphs are unaffected.
    */
   hyphenation?: boolean;
   /** Fixed left margin reserved on every line in points (TeX \leftskip equivalent). @since v0.6.1 */

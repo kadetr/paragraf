@@ -143,7 +143,7 @@ export interface CompileBatchOptions<T> extends Omit<
   /**
    * Optional cancellation signal. When the signal is aborted, any records
    * that have not yet started are not started, and `compileBatch` rejects
-   * with a `DOMException` (`name: 'AbortError'`). Records that are already
+   * with an `Error` whose `name` is `'AbortError'`. Records that are already
    * in-flight complete normally — abort is pending-only cancellation.
    */
   signal?: AbortSignal;
