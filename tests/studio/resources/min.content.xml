@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<content>
+  <section frame="main">
+    <p style="body">Hello, Paragraf Studio.</p>
+    <p style="body">This is a minimal sample document with a single frame and plain body text.</p>
+  </section>
+</content>

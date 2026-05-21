@@ -1,0 +1,111 @@
+{
+  "layout": {
+    "size": "A4",
+    "margins": {
+      "top": "25mm",
+      "right": "20mm",
+      "bottom": "25mm",
+      "left": "20mm"
+    }
+  },
+  "fonts": {
+    "Liberation Serif": {
+      "regular": "../../fonts/LiberationSerif-Regular.ttf",
+      "bold": "../../fonts/LiberationSerif-Bold.ttf",
+      "italic": "../../fonts/LiberationSerif-Italic.ttf",
+      "boldItalic": "../../fonts/LiberationSerif-BoldItalic.ttf"
+    }
+  },
+  "styles": {
+    "heading": {
+      "font": {
+        "family": "Liberation Serif",
+        "size": 20,
+        "weight": "bold"
+      },
+      "lineHeight": 28,
+      "alignment": "left",
+      "spaceAfter": 8
+    },
+    "subheading": {
+      "font": {
+        "family": "Liberation Serif",
+        "size": 14,
+        "weight": "bold"
+      },
+      "lineHeight": 20,
+      "alignment": "left",
+      "spaceBefore": 12,
+      "spaceAfter": 4
+    },
+    "body": {
+      "font": {
+        "family": "Liberation Serif",
+        "size": 11
+      },
+      "lineHeight": 17,
+      "alignment": "justified",
+      "hyphenation": true,
+      "firstLineIndent": 11,
+      "tolerance": 3,
+      "emergencyStretch": 20
+    },
+    "caption": {
+      "font": {
+        "family": "Liberation Serif",
+        "size": 9,
+        "style": "italic"
+      },
+      "lineHeight": 13,
+      "alignment": "center",
+      "spaceAfter": 6
+    },
+    "meta": {
+      "font": {
+        "family": "Liberation Serif",
+        "size": 9,
+        "style": "italic"
+      },
+      "lineHeight": 13,
+      "alignment": "left",
+      "spaceAfter": 6
+    }
+  },
+  "frames": {
+    "title-block": {
+      "height": "16mm",
+      "columns": 1
+    },
+    "body-text": {
+      "height": "auto",
+      "columns": 2,
+      "gutter": "6mm"
+    },
+    "footer-note": {
+      "height": "20mm"
+    }
+  },
+  "pages": {
+    "first": {
+      "frames": [
+        "title-block",
+        "body-text",
+        "footer-note"
+      ]
+    },
+    "default": {
+      "frames": [
+        "body-text",
+        "footer-note"
+      ]
+    }
+  },
+  "compile": {
+    "shaping": "wasm",
+    "selectable": true,
+    "maxPages": 10,
+    "onOverflow": "truncate",
+    "hyphenation": true,
+    "opticalMargins": true
+  }
+}

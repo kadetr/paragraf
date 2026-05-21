@@ -1,0 +1,51 @@
+{
+  "name": "@paragraf/studio",
+  "version": "0.1.0",
+  "description": "Studio schema translation layer for paragraf — validates and translates studio template.json + content.xml into compile-ready objects.",
+  "license": "MIT",
+  "private": true,
+  "main": "out/main/index.js",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "dev": "electron-vite dev",
+    "build": "electron-vite build",
+    "preview": "electron-vite preview",
+    "test": "vitest run --passWithNoTests",
+    "test:watch": "vitest",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@codemirror/lang-json": "^6.0.2",
+    "@codemirror/lang-xml": "^6.1.0",
+    "@codemirror/state": "^6.6.0",
+    "@codemirror/view": "^6.42.1",
+    "@paragraf/compile": "^0.6.0",
+    "@paragraf/layout": "^0.6.0",
+    "@paragraf/style": "^0.6.0",
+    "@paragraf/template": "^0.6.0",
+    "@xmldom/xmldom": "^0.9.0",
+    "chokidar": "^5.0.0",
+    "electron": "^42.0.0",
+    "electron-store": "^11.0.2",
+    "react": "^19.2.6",
+    "react-dom": "^19.2.6"
+  },
+  "devDependencies": {
+    "@testing-library/dom": "^10.4.1",
+    "@testing-library/jest-dom": "^6.6.3",
+    "@testing-library/react": "^16.3.0",
+    "@testing-library/user-event": "^14.5.2",
+    "@types/node": "^22.19.15",
+    "@types/react": "^19.2.14",
+    "@types/react-dom": "^19.2.3",
+    "@vitejs/plugin-react": "^6.0.1",
+    "electron-vite": "^5.0.0",
+    "happy-dom": "^17.1.0",
+    "tsx": "^4.21.0",
+    "typescript": "^5.4.0",
+    "vitest": "^3.2.4"
+  }
+}

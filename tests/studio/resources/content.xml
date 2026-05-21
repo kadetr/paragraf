@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<content>
+  <!-- First-page title block -->
+  <section frame="title-block">
+    <p style="heading">The Quick Brown Fox Tells Story</p>
+  </section>
+
+  <!-- Main body — flows across all pages (two columns on first, then default) -->
+  <section frame="body-text">
+    <p style="subheading">A typesetting test document for Paragraf Studio</p>
+    <p style="meta">Published 2026 · Paragraf Project</p>
+    <p style="body">
+      The quick brown fox jumps over the lazy dog. Sphinx of black quartz, judge my vow.
+      Pack my box with five dozen liquor jugs. How vexingly quick daft zebras jump.
+    </p>
+    <p style="subheading">Section One: Typography Basics</p>
+    <p style="body">
+      Good typography begins with choosing the right typeface for the task. Serif typefaces
+      like Liberation Serif are traditionally used for body text in print because the serifs
+      guide the reader's eye along the baseline, improving reading speed and comprehension
+      across long passages of continuous prose.
+    </p>
+    <p style="body">
+      Line spacing — the vertical distance between successive baselines — is as important as
+      the typeface itself. A comfortable ratio of line height to font size is typically between
+      1.4 and 1.6 for body text. Paragraf expresses this as an absolute point value via the
+      <b>lineHeight</b> property.
+    </p>
+    <p style="subheading">Section Two: Justification and Hyphenation</p>
+    <p style="body">
+      Justified text is the standard for book and magazine composition. The Knuth–Plass
+      algorithm, used by Paragraf, computes globally optimal line breaks that minimise the
+      total demerits across an entire paragraph, avoiding the ugly rivers of whitespace that
+      simpler greedy algorithms produce. Hyphenation is enabled in this document.
+    </p>
+    <p style="body">
+      The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog.
+      The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog.
+      The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog.
+    </p>
+    <p style="subheading">Section Three: Multi-column Layout</p>
+    <p style="body">
+      This body-text frame is configured with two columns and a 6 mm gutter. The columns share
+      the available width equally after the gutter is subtracted. Column breaks are handled
+      automatically by the compile layer when text overflows a column's height.
+    </p>
+    <p style="body">
+      Dimension values throughout studio's template.json accept CSS-like strings: <b>20mm</b>,
+      <b>1in</b>, <b>72pt</b>, or plain numbers for points.
+      The translate layer converts all of these to points before passing them to the compile pipeline.
+    </p>
+  </section>
+
+  <!-- Footer note — appears on every page -->
+  <section frame="footer-note">
+    <p style="meta">Paragraf Studio sample</p>
+    <p style="meta">template + content source</p>
+  </section>
+</content>

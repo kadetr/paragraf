@@ -1,0 +1,40 @@
+{
+  "layout": {
+    "size": "A4",
+    "margins": "20mm"
+  },
+  "fonts": {
+    "Liberation Serif": {
+      "regular": "../../../fonts/LiberationSerif-Regular.ttf",
+      "bold": "../../../fonts/LiberationSerif-Bold.ttf"
+    }
+  },
+  "styles": {
+    "body": {
+      "font": {
+        "family": "Liberation Serif",
+        "size": 11
+      },
+      "lineHeight": 16,
+      "alignment": "left"
+    }
+  },
+  "frames": {
+    "main": {
+      "height": "auto"
+    }
+  },
+  "pages": {
+    "default": {
+      "frames": [
+        "main"
+      ]
+    }
+  },
+  "compile": {
+    "shaping": "wasm",
+    "hyphenation": true,
+    "opticalMargins": true,
+    "selectable": true
+  }
+}

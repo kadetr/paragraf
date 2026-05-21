@@ -21,9 +21,10 @@ import type {
   FontRegistry,
   Language,
   TextSpan,
+  Frame,
 } from '@paragraf/types';
 import { resolveWeight } from '@paragraf/types';
-import { parseDimension, PageLayout } from '@paragraf/layout';
+import { parseDimension, PageLayout, resolvePageSize } from '@paragraf/layout';
 import type { Margins } from '@paragraf/layout';
 import { defineStyles } from '@paragraf/style';
 import type { CharStyleDef, ResolvedParagraphStyle } from '@paragraf/style';
@@ -158,8 +159,10 @@ export async function compile<T = unknown>(
 
   // ── 6 + 7. Interpolate slots → ParagraphInputs ────────────────────────────
   const paragraphs: ParagraphInput[] = [];
+  const frameAssignments: number[] = [];
 
   for (const slot of template.content) {
+    const slotFrameIndex = getSlotFrameIndex(slot);
     const resolved = resolveText(slot.text, record);
 
     if (resolved === null) {
@@ -177,6 +180,7 @@ export async function compile<T = unknown>(
             verbose,
           ),
         );
+        frameAssignments.push(slotFrameIndex);
         continue;
       }
 
@@ -192,6 +196,7 @@ export async function compile<T = unknown>(
           verbose,
         ),
       );
+      frameAssignments.push(slotFrameIndex);
       continue;
     }
 
@@ -209,6 +214,7 @@ export async function compile<T = unknown>(
         verbose,
       ),
     );
+    frameAssignments.push(slotFrameIndex);
   }
 
   if (paragraphs.length === 0) {
@@ -235,7 +241,7 @@ export async function compile<T = unknown>(
 
   // ── 9. Compose document ───────────────────────────────────────────────────
   const doc: Document = {
-    paragraphs: deriveLineWidths(paragraphs, frames),
+    paragraphs: deriveLineWidths(paragraphs, frames, frameAssignments),
     frames,
   };
   const composedDoc = composeDocument(doc, composer);
@@ -332,6 +338,10 @@ export async function compile<T = unknown>(
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
 function buildPageLayout(layout: Template['layout']): PageLayout {
+  if (layout.pages && layout.pages.length > 0) {
+    return buildRegionPageLayout(layout) as unknown as PageLayout;
+  }
+
   const margins = resolveMargins(layout.margins);
   const gutter =
     layout.gutter !== undefined ? parseDimension(layout.gutter) : undefined;
@@ -344,6 +354,118 @@ function buildPageLayout(layout: Template['layout']): PageLayout {
     gutter,
     bleed,
   });
+}
+
+function buildRegionPageLayout(layout: Template['layout']): {
+  pageSize: [number, number];
+  frames(pageCount: number): Frame[];
+} {
+  const margins = resolveMargins(layout.margins);
+  const marginBox: Margins =
+    typeof margins === 'number'
+      ? { top: margins, right: margins, bottom: margins, left: margins }
+      : margins;
+
+  const [trimWidth, trimHeight] = resolvePageSize(layout.size);
+  const bleed = layout.bleed !== undefined ? parseDimension(layout.bleed) : 0;
+  const textX = bleed + marginBox.left;
+  const textY = bleed + marginBox.top;
+  const textWidth = trimWidth - marginBox.left - marginBox.right;
+  const pageSize: [number, number] = [
+    trimWidth + 2 * bleed,
+    trimHeight + 2 * bleed,
+  ];
+
+  const pageSpecs = layout.pages ?? [];
+
+  return {
+    pageSize,
+    frames(pageCount: number): Frame[] {
+      const allFrames: Frame[] = [];
+      for (let page = 0; page < pageCount; page++) {
+        const spec = resolveTemplatePageSpec(page + 1, pageSpecs);
+        if (!spec) continue;
+        let stackY = 0;
+        for (const region of spec.regions) {
+          const regionHeight = parseDimension(region.height);
+          const regionX = region.x !== undefined ? parseDimension(region.x) : 0;
+          const regionY =
+            region.y !== undefined ? parseDimension(region.y) : stackY;
+          const regionWidth =
+            region.width !== undefined
+              ? parseDimension(region.width)
+              : textWidth;
+          const regionColumns = region.columns ?? 1;
+          const regionGutter =
+            region.gutter !== undefined ? parseDimension(region.gutter) : 0;
+
+          if (!Number.isInteger(regionColumns) || regionColumns < 1) {
+            throw new RangeError(
+              `[paragraf/compile] Invalid region columns (${regionColumns}) for page ${page + 1}.`,
+            );
+          }
+
+          allFrames.push({
+            page,
+            x: textX + regionX,
+            y: textY + regionY,
+            width: regionWidth,
+            height: regionHeight,
+            ...(regionColumns > 1
+              ? { columnCount: regionColumns, gutter: regionGutter }
+              : {}),
+          });
+
+          stackY += regionHeight;
+        }
+      }
+      return allFrames;
+    },
+  };
+}
+
+function getSlotFrameIndex(slot: Template['content'][number]): number {
+  const maybe = (slot as { frameIndex?: unknown }).frameIndex;
+  return typeof maybe === 'number' && Number.isInteger(maybe) && maybe >= 0
+    ? maybe
+    : 0;
+}
+
+function resolveTemplatePageSpec(
+  pageNumber: number,
+  specs: NonNullable<Template['layout']['pages']>,
+): NonNullable<Template['layout']['pages']>[number] | undefined {
+  let fallback: NonNullable<Template['layout']['pages']>[number] | undefined;
+
+  for (const spec of specs) {
+    const range = spec.range;
+    if (range === 'default') {
+      fallback = spec;
+      continue;
+    }
+
+    if (typeof range === 'number') {
+      if (pageNumber === range) return spec;
+      continue;
+    }
+
+    if (typeof range === 'string') {
+      const plusMatch = /^(\d+)\+$/.exec(range);
+      if (plusMatch) {
+        if (pageNumber >= Number(plusMatch[1])) return spec;
+        continue;
+      }
+
+      const spanMatch = /^(\d+)-(\d+)$/.exec(range);
+      if (spanMatch) {
+        const start = Number(spanMatch[1]);
+        const end = Number(spanMatch[2]);
+        if (pageNumber >= start && pageNumber <= end) return spec;
+      }
+    }
+  }
+
+  return fallback ?? specs[0];
 }
 
 function resolveMargins(m: Dimension | DimensionMargins): number | Margins {
@@ -476,6 +598,9 @@ function buildInput(
     firstLineIndent: style.firstLineIndent,
     tolerance: style.tolerance,
     looseness: style.looseness,
+    ...(style.emergencyStretch !== undefined
+      ? { emergencyStretch: style.emergencyStretch }
+      : {}),
     // Only forward lineHeight when it is a valid positive finite number; invalid
     // values (zero, negative, NaN, Infinity) would cause overlapping text or
     // unstable layout and should be silently ignored.

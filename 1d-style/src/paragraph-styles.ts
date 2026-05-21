@@ -130,6 +130,7 @@ function resolveStyle(
       firstLineIndent: def.firstLineIndent ?? result.firstLineIndent,
       tolerance: def.tolerance ?? result.tolerance,
       looseness: def.looseness ?? result.looseness,
+      emergencyStretch: def.emergencyStretch ?? result.emergencyStretch,
       next: def.next ?? result.next,
       features: def.features ?? result.features,
       nestedStyles: def.nestedStyles ?? result.nestedStyles,
