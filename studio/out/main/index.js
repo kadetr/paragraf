@@ -1,6 +1,6 @@
 import { n as parseDimension, t as resolvePageSize } from "./chunks/sizes-CsnQI3a3.js";
 import { BrowserWindow, app, dialog, ipcMain, shell } from "electron";
-import { basename, join, resolve } from "path";
+import { basename, join, relative, resolve } from "path";
 import { mkdir, readFile, rename, writeFile } from "fs/promises";
 import { Worker } from "worker_threads";
 import chokidar from "chokidar";
@@ -251,6 +251,64 @@ function _resolveVerticalMargins(margins) {
 		topMargin: v,
 		bottomMargin: v
 	};
+}
+/** Extract left margin value in points from the studio margins field. */
+function _resolveLeftMargin(margins) {
+	if (typeof margins === "object" && !Array.isArray(margins)) return parseDimension(margins.left);
+	return parseDimension(margins);
+}
+/**
+* Compute absolute frame positions (in points, from page top-left) for the
+* named page in a StudioTemplate.  Used to drive the FrameOverlay in the
+* preview panel.
+*
+* @param t       — validated StudioTemplate
+* @param pageKey — which page to use; falls back to the first defined page
+* @returns array of StudioFrameGeometry (empty if the page has no text frames)
+*/
+function computeFrameGeometry(t, pageKey = "default") {
+	const page = t.pages[pageKey] ?? t.pages[Object.keys(t.pages)[0]];
+	if (!page) return [];
+	const [pageW, pageH] = resolvePageSize(t.layout.size);
+	const { topMargin, bottomMargin } = _resolveVerticalMargins(t.layout.margins);
+	const leftMargin = _resolveLeftMargin(t.layout.margins);
+	const rightMargin = (() => {
+		const m = t.layout.margins;
+		if (typeof m === "object" && !Array.isArray(m)) return parseDimension(m.right);
+		return parseDimension(m);
+	})();
+	const usableWidth = pageW - leftMargin - rightMargin;
+	const availableH = pageH - topMargin - bottomMargin;
+	let fixedTotal = 0;
+	let hasAuto = false;
+	for (const frameName of page.frames) {
+		const frame = t.frames[frameName];
+		if (!frame || frame.type === "image") continue;
+		if (frame.height === "auto") hasAuto = true;
+		else fixedTotal += parseDimension(frame.height);
+	}
+	const autoHeight = hasAuto ? availableH - fixedTotal : 0;
+	const result = [];
+	let cumulativeY = 0;
+	for (const frameName of page.frames) {
+		const frame = t.frames[frameName];
+		if (!frame || frame.type === "image") continue;
+		const fWidth = frame.width !== void 0 ? parseDimension(frame.width) : usableWidth;
+		const fHeight = frame.height === "auto" ? autoHeight : parseDimension(frame.height);
+		const fX = leftMargin + (frame.x !== void 0 ? parseDimension(frame.x) : 0);
+		const fY = frame.y !== void 0 ? topMargin + parseDimension(frame.y) : topMargin + cumulativeY;
+		result.push({
+			name: frameName,
+			x: fX,
+			y: fY,
+			width: fWidth,
+			height: fHeight,
+			columnCount: frame.columns ?? 1,
+			columnGutter: frame.gutter !== void 0 ? parseDimension(frame.gutter) : 0
+		});
+		if (frame.y === void 0) cumulativeY += fHeight;
+	}
+	return result;
 }
 //#endregion
 //#region src/schema/content-parser.ts
@@ -528,9 +586,9 @@ function startWatcher(projectPath) {
 		}
 	});
 	watcher.on("change", (filePath) => {
-		const basename = filePath.replace(projectPath + "/", "").replace(projectPath + "\\", "");
-		const changedFile = FILE_MAP[basename] ?? "template";
-		if (ownWritePending.has(basename)) ownWritePending.delete(basename);
+		const rel = relative(projectPath, filePath);
+		const changedFile = FILE_MAP[rel] ?? "template";
+		if (ownWritePending.has(rel)) ownWritePending.delete(rel);
 		else mainWindow?.webContents.send("fileChanged", changedFile);
 		if (debounceTimer) clearTimeout(debounceTimer);
 		debounceTimer = setTimeout(() => triggerCompile(projectPath), 300);
@@ -571,6 +629,7 @@ async function triggerCompile(projectPath, outputOverride) {
 			fonts: raw["fonts"] ?? {},
 			shaping: compileOptions.shaping ?? "fontkit"
 		});
+		const frameGeometry = outputOverride !== "pdf" ? computeFrameGeometry(studioTemplate) : void 0;
 		const input = {
 			template,
 			options: {
@@ -581,7 +640,8 @@ async function triggerCompile(projectPath, outputOverride) {
 			},
 			projectPath,
 			fontsKey,
-			validationErrors: translationErrors.length > 0 ? translationErrors : void 0
+			validationErrors: translationErrors.length > 0 ? translationErrors : void 0,
+			frameGeometry
 		};
 		compileWorker.postMessage(input);
 	} catch (err) {
@@ -604,6 +664,48 @@ ipcMain.handle("openFolder", async () => {
 	await triggerCompile(projectPath);
 	return projectPath;
 });
+var DEFAULT_TEMPLATE_JSON = JSON.stringify({
+	layout: {
+		size: "A4",
+		margins: 72
+	},
+	fonts: {},
+	styles: { body: {
+		font: {
+			family: "System",
+			size: 12
+		},
+		lineHeight: 18,
+		alignment: "left"
+	} },
+	frames: { body: { height: "auto" } },
+	pages: { default: { frames: ["body"] } },
+	compile: {
+		shaping: "js",
+		hyphenation: false
+	}
+}, null, 2);
+var DEFAULT_CONTENT_XML = `<content>
+  <section frame="body">
+    <p style="body">Start writing here.</p>
+  </section>
+</content>
+`;
+ipcMain.handle("newProject", async () => {
+	const result = await dialog.showOpenDialog({
+		properties: ["openDirectory", "createDirectory"],
+		title: "Choose Folder for New Project"
+	});
+	if (result.canceled || result.filePaths.length === 0) return null;
+	const projectPath = result.filePaths[0];
+	await writeFile(join(projectPath, "template.json"), DEFAULT_TEMPLATE_JSON, "utf-8");
+	await writeFile(join(projectPath, "content.xml"), DEFAULT_CONTENT_XML, "utf-8");
+	terminateWorker();
+	compileWorker = spawnWorker(projectPath);
+	startWatcher(projectPath);
+	await triggerCompile(projectPath);
+	return projectPath;
+});
 ipcMain.handle("triggerPdfCompile", async () => {
 	if (!currentProjectPath) return;
 	await triggerCompile(currentProjectPath, "pdf");
@@ -620,22 +722,23 @@ ipcMain.on("setWorkspaceState", (_event, state) => {
 });
 ipcMain.handle("readProjectFile", async (_event, filename) => {
 	if (!currentProjectPath) return null;
-	if (filename.includes("/") || filename.includes("\\") || filename.includes("..")) return null;
+	const resolved = resolve(currentProjectPath, filename);
+	if (!resolved.startsWith(currentProjectPath + "/") && resolved !== currentProjectPath) return null;
 	try {
-		return await readFile(join(currentProjectPath, filename), "utf-8");
+		return await readFile(resolved, "utf-8");
 	} catch {
 		return null;
 	}
 });
 ipcMain.handle("writeProjectFile", async (_event, filename, content) => {
 	if (!currentProjectPath) return false;
-	if (filename.includes("/") || filename.includes("\\") || filename.includes("..")) return false;
+	const resolved = resolve(currentProjectPath, filename);
+	if (!resolved.startsWith(currentProjectPath + "/") && resolved !== currentProjectPath) return false;
 	try {
-		const filePath = join(currentProjectPath, filename);
-		const tmpPath = filePath + ".tmp";
+		const tmpPath = resolved + ".tmp";
 		await writeFile(tmpPath, content, "utf-8");
-		ownWritePending.add(filename);
-		await rename(tmpPath, filePath);
+		ownWritePending.add(relative(currentProjectPath, resolved));
+		await rename(tmpPath, resolved);
 		return true;
 	} catch {
 		return false;

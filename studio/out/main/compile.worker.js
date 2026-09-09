@@ -142218,7 +142218,8 @@ async function handleMessage(input, sessionCache = {
 		const raw = result.data;
 		return {
 			type: "svg",
-			svgPages: Array.isArray(raw) ? raw : [raw]
+			svgPages: Array.isArray(raw) ? raw : [raw],
+			frameGeometry: input.frameGeometry
 		};
 	} catch (err) {
 		return {

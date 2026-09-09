@@ -4,11 +4,18 @@ contextBridge.exposeInMainWorld("studio", {
 	openFolder() {
 		return ipcRenderer.invoke("openFolder");
 	},
+	newProject() {
+		return ipcRenderer.invoke("newProject");
+	},
 	onCompileResult(cb) {
-		ipcRenderer.on("compileResult", (_event, result) => cb(result));
+		const handler = (_event, result) => cb(result);
+		ipcRenderer.on("compileResult", handler);
+		return () => ipcRenderer.removeListener("compileResult", handler);
 	},
 	onFileChanged(cb) {
-		ipcRenderer.on("fileChanged", (_event, file) => cb(file));
+		const handler = (_event, file) => cb(file);
+		ipcRenderer.on("fileChanged", handler);
+		return () => ipcRenderer.removeListener("fileChanged", handler);
 	},
 	getWorkspaceState() {
 		return ipcRenderer.sendSync("getWorkspaceState");

@@ -10,7 +10,7 @@
 
 import { app, BrowserWindow, dialog, ipcMain, shell } from 'electron';
 import { join, resolve, basename, relative } from 'path';
-import { readFile, writeFile, rename, mkdir } from 'fs/promises';
+import { readFile, writeFile, rename } from 'fs/promises';
 import { Worker } from 'worker_threads';
 import chokidar from 'chokidar';
 import Store from 'electron-store';
@@ -91,18 +91,25 @@ function spawnWorker(projectPath: string): Worker {
   });
 
   worker.on('message', async (result: CompileWorkerResult) => {
-    // Intercept PDF buffer — write to output/ and send file path instead.
+    // Intercept PDF buffer — show a save dialog, write to chosen path.
     if (result.type === 'pdf') {
-      if (!currentProjectPath) return;
+      if (!currentProjectPath || !mainWindow) return;
       const projectName = basename(currentProjectPath);
       const ts = new Date()
         .toISOString()
         .replace(/[:.]/g, '-')
         .replace('T', '_')
         .slice(0, 19);
-      const outputDir = join(currentProjectPath, 'output');
-      await mkdir(outputDir, { recursive: true });
-      const filePath = join(outputDir, `${projectName}-${ts}.pdf`);
+      const defaultName = `${projectName}-${ts}.pdf`;
+
+      const { canceled, filePath } = await dialog.showSaveDialog(mainWindow, {
+        title: 'Save PDF',
+        defaultPath: join(currentProjectPath, defaultName),
+        filters: [{ name: 'PDF', extensions: ['pdf'] }],
+      });
+
+      if (canceled || !filePath) return;
+
       await writeFile(
         filePath,
         (result as unknown as { type: 'pdf'; buffer: Buffer }).buffer,
