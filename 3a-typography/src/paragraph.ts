@@ -951,6 +951,21 @@ export const createParagraphComposer = async (
       lines = lines.map((line) => ({ ...line, lineHeight: lh }));
     }
 
+    // Fix firstLineIndent visual rendering: the indent box is counted in
+    // boxWidthSum (ensuring correct word-spacing calculation) but its width is
+    // never applied as a positional offset in layoutParagraph, so the first word
+    // lands at the column left edge instead of origin.x + indent. Stamp leftSkip
+    // on line 0 so the renderer advances wordX by the indent amount.
+    // Skip for RTL — indent handling there is different.
+    if (
+      firstLineIndent > 0 &&
+      direction !== 'rtl' &&
+      lines.length > 0 &&
+      !lines[0].leftSkip
+    ) {
+      lines = [{ ...lines[0], leftSkip: firstLineIndent }, ...lines.slice(1)];
+    }
+
     return {
       lines,
       lineCount: lines.length,

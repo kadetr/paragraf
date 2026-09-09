@@ -103,6 +103,12 @@ export interface ParagraphStyleDef {
   // KP algorithm tuning
   tolerance?: number; // KP tolerance; default 2
   looseness?: number; // KP looseness; default 0
+  /**
+   * Extra stretch budget (in points) when no solution is found at the current
+   * tolerance. Mirrors the `emergencyStretch` field on `ParagraphInput`.
+   * When absent (or 0) the composer throws if no valid breakpoint exists.
+   */
+  emergencyStretch?: number;
 
   // Style flow
   next?: string; // name of style to apply to the following paragraph
@@ -142,6 +148,7 @@ export interface ResolvedParagraphStyle {
   // KP tuning
   tolerance: number;
   looseness: number;
+  emergencyStretch?: number;
 
   // Style flow (optional — only present if declared in the chain)
   next?: string;
