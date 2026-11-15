@@ -4,6 +4,16 @@ All notable changes to this project will be documented in this file.
 
 ---
 
+## Unreleased
+
+### Documentation
+
+- **README accuracy.** Removed "the only" / "no other library" claims; react-pdf and Typst are now in the comparison (both do whole-paragraph line breaking). Stated plainly that the compiled WASM shaper is not committed to the repository (it is built in CI and shipped in the npm package), and that the `@paragraf/*` packages are not on the npm registry yet.
+- **AI-PRIMER.md** document index now lists files that exist in the repository instead of a `docs/` folder that does not.
+- Removed stale version references (`v0.8`, `v0.12`, `v2`) from source comments in `@paragraf/typography`. No code change.
+
+---
+
 ## v0.6.0 — 2026-04-23
 
 ### ⚠️ Breaking changes
