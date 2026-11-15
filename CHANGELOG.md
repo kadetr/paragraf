@@ -11,6 +11,9 @@ All notable changes to this project will be documented in this file.
 #### Type check in CI
 `npm run typecheck` runs `tsc --noEmit` in every workspace, and CI runs it before the tests. Vitest strips types, so type errors had accumulated unnoticed; all are fixed.
 
+#### Studio build output no longer tracked
+`studio/out/` is build output from `electron-vite` and went stale with every engine change. It is removed from git and ignored. Run `npm run build --workspace=studio` (or `npm run dev --workspace=studio`) to produce it.
+
 ### Fixes
 
 #### Studio: `onOverflow: "error"` now raises an error
