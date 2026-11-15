@@ -295,7 +295,9 @@ describe('cross-language: minLeft/minRight enforcement', () => {
       tr: ['hipotez', 'matematik', 'bilgisayar'],
     };
     for (const lang of languages) {
-      for (const word of corpus[lang] ?? []) {
+      const words = corpus[lang];
+      expect(words, `no corpus for language "${lang}"`).toBeDefined();
+      for (const word of words ?? []) {
         const frags = frag(word, opts(lang));
         if (frags.length > 1) {
           expect(frags[0].length).toBeGreaterThanOrEqual(2);
@@ -318,7 +320,9 @@ describe('cross-language: minLeft/minRight enforcement', () => {
       tr: ['hipotez', 'matematik', 'bilgisayar'],
     };
     for (const lang of languages) {
-      for (const word of corpus[lang] ?? []) {
+      const words = corpus[lang];
+      expect(words, `no corpus for language "${lang}"`).toBeDefined();
+      for (const word of words ?? []) {
         const frags = frag(word, opts(lang));
         if (frags.length > 1) {
           expect(frags[frags.length - 1].length).toBeGreaterThanOrEqual(3);

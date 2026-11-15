@@ -182,6 +182,25 @@ describe('RT19 — compile.selectable: true → CompileOptions.selectable = true
   });
 });
 
+// ─── onOverflow ──────────────────────────────────────────────────────────────
+
+describe('compile.onOverflow → CompileOptions.onOverflow', () => {
+  it('maps "error" to "throw" so that overflow stops the compile', () => {
+    const t = makeTemplate({ compile: { onOverflow: 'error' } });
+    expect(translateToTemplate(t).compileOptions.onOverflow).toBe('throw');
+  });
+
+  it('maps "truncate" to "silent"', () => {
+    const t = makeTemplate({ compile: { onOverflow: 'truncate' } });
+    expect(translateToTemplate(t).compileOptions.onOverflow).toBe('silent');
+  });
+
+  it('leaves onOverflow unset when the template does not set it', () => {
+    const t = makeTemplate({ compile: { selectable: true } });
+    expect(translateToTemplate(t).compileOptions.onOverflow).toBeUndefined();
+  });
+});
+
 // ─── RT20 ────────────────────────────────────────────────────────────────────
 
 describe('RT20 — compile.opticalMargins: true → studioSettings (not CompileOptions)', () => {
