@@ -1,0 +1,9 @@
+{
+  "id": "en-narrow-w200",
+  "mirrors": "MT-01",
+  "engine": "wasm",
+  "error": "Paragraph could not be set within tolerance.",
+  "lineCount": 0,
+  "usedEmergency": false,
+  "lines": []
+}

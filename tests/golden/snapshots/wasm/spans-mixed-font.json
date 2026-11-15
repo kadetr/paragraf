@@ -1,0 +1,61 @@
+{
+  "id": "spans-mixed-font",
+  "mirrors": "MT-05",
+  "engine": "wasm",
+  "lineCount": 4,
+  "usedEmergency": false,
+  "lines": [
+    {
+      "text": "Mixed-font spans are fully supported. Bold text and italic text flow together in the same para-",
+      "hyphenated": true,
+      "ratio": 0.0024,
+      "wordSpacing": 3.0049,
+      "lineWidth": 451.28,
+      "alignment": "justified",
+      "direction": "ltr",
+      "isRunt": false,
+      "baseline": 80.332,
+      "x": [72, 129.6611, 159.332, 176.9853, 202.6542, 219.3241, 238.6542, 255.9853, 283.0018, 305.3251, 325.6561, 353.3231, 373.6483, 398.6492, 407.9832, 440.9705, 453.3093, 470.9744, 498.6355],
+      "y": [80.332, 80.332, 80.332, 80.332, 80.332, 80.332, 80.332, 80.332, 80.332, 80.332, 80.332, 80.332, 80.332, 80.332, 80.332, 80.332, 80.332, 80.332, 80.332]
+    },
+    {
+      "text": "graph, each measured with its own OpenType metrics. A large heading word",
+      "hyphenated": false,
+      "ratio": 0.8413,
+      "wordSpacing": 5.3211,
+      "lineWidth": 451.28,
+      "alignment": "justified",
+      "direction": "ltr",
+      "isRunt": false,
+      "baseline": 96.9111,
+      "x": [72, 107.6434, 134.943, 154.9293, 186.2426, 212.8976, 229.5566, 255.5437, 310.6753, 328.6695, 354.3167, 372.6369, 416.9374, 453.9482, 483.281],
+      "y": [96.9111, 96.9111, 96.9111, 96.9111, 96.9111, 96.9111, 96.9111, 96.9111, 96.9111, 96.9111, 96.9111, 96.9111, 96.9111, 96.9111, 96.9111]
+    },
+    {
+      "text": "appears inline and its lineHeight should expand to accommodate it without clipping. Word",
+      "hyphenated": false,
+      "ratio": 0.4756,
+      "wordSpacing": 4.445,
+      "lineWidth": 451.28,
+      "alignment": "justified",
+      "direction": "ltr",
+      "isRunt": false,
+      "baseline": 111.8145,
+      "x": [72, 83.3262, 113.0896, 122.4236, 144.8627, 166.634, 182.4169, 200.411, 237.5162, 273.9652, 285.2914, 313.0626, 326.8416, 337.494, 358.1541, 373.4881, 397.9195, 409.0325, 430.3665, 450.1455, 468.1396, 496.9187],
+      "y": [111.8145, 111.8145, 111.8145, 111.8145, 111.8145, 111.8145, 111.8145, 111.8145, 111.8145, 111.8145, 111.8145, 111.8145, 111.8145, 111.8145, 111.8145, 111.8145, 111.8145, 111.8145, 111.8145, 111.8145, 111.8145, 111.8145]
+    },
+    {
+      "text": "spacing is computed from the dominant font on each line.",
+      "hyphenated": false,
+      "ratio": 0,
+      "wordSpacing": 3,
+      "lineWidth": 451.28,
+      "alignment": "justified",
+      "direction": "ltr",
+      "isRunt": false,
+      "baseline": 124.5234,
+      "x": [72, 93.3223, 111.6563, 122.6602, 143.3203, 172.9805, 199.3066, 216.9668, 238.3008, 241.6348, 265.2949, 287.625, 302.625, 327.6035],
+      "y": [124.5234, 124.5234, 124.5234, 124.5234, 124.5234, 124.5234, 124.5234, 124.5234, 124.5234, 124.5234, 124.5234, 124.5234, 124.5234, 124.5234]
+    }
+  ]
+}
