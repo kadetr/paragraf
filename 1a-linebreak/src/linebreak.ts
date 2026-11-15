@@ -5,8 +5,6 @@ import {
   Box,
   BreakpointNode,
   Paragraph,
-  FORCED_BREAK,
-  PROHIBITED,
   DOUBLE_HYPHEN_PENALTY,
   isForced,
   isProhibited,

@@ -14,7 +14,6 @@ import {
 import { Measurer } from '@paragraf/types';
 import {
   layoutParagraph,
-  RenderedParagraph,
   BaselineGrid,
   Frame,
   RenderedItem,

@@ -119,6 +119,7 @@ function buildLine(
     ratio: 0,
     alignment: lineAlignment,
     isWidow: false,
+    isRunt: false,
     lineWidth,
     lineHeight,
     baseline,

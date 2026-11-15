@@ -7,12 +7,12 @@
 //   absolutely over the rendered SVG.
 
 import React, { useState, useRef, useEffect } from 'react';
-import type { CompileWorkerResult, StudioFrameGeometry } from '../ipc-types.js';
+import type { CompileResult, StudioFrameGeometry } from '../ipc-types.js';
 import { FrameOverlay } from '../components/FrameOverlay.js';
 import { StaleBanner } from '../components/StaleBanner.js';
 
 interface PreviewPanelProps {
-  result: CompileWorkerResult | null;
+  result: CompileResult | null;
   isCompiling: boolean;
   /** When non-null, the preview is stale and this is the first error message. */
   lastError: string | null;

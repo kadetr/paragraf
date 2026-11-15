@@ -601,7 +601,9 @@ const P4_FONT_12 = {
   style: 'normal',
   stretch: 'normal',
 };
-const P4_REGISTRY = new Map([[P4_FONT_ID, { filePath: P4_FONT_PATH }]]);
+const P4_REGISTRY = new Map([
+  [P4_FONT_ID, { id: P4_FONT_ID, family: P4_FONT_ID, filePath: P4_FONT_PATH }],
+]);
 let p4Measurer: ReturnType<typeof createMeasurer>;
 
 describe('Phase 4 — font shaping via rustybuzz', () => {

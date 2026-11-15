@@ -170,7 +170,7 @@ export function sampleParametricCurve(
 }
 
 function parseMlucTag(
-  bytes: Uint8Array,
+  _bytes: Uint8Array,
   view: DataView,
   tagOffset: number,
 ): string {

@@ -154,7 +154,9 @@ export function translateToTemplate(t: StudioTemplate): TranslationResult {
     if (t.compile.maxPages !== undefined)
       compileOptions.maxPages = t.compile.maxPages;
     if (t.compile.onOverflow !== undefined)
-      compileOptions.onOverflow = t.compile.onOverflow;
+      // Studio's schema names differ from @paragraf/compile's OverflowBehavior.
+      compileOptions.onOverflow =
+        t.compile.onOverflow === 'error' ? 'throw' : 'silent';
     // Studio-specific: not passed to CompileOptions
     if (t.compile.opticalMargins !== undefined)
       studioSettings.opticalMargins = t.compile.opticalMargins;

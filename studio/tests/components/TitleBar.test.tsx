@@ -20,6 +20,8 @@ describe('RT10 — project name and path displayed from props', () => {
         onEditorLayoutChange={vi.fn()}
         onPreviewVisibleChange={vi.fn()}
         onOpenFolder={vi.fn()}
+        onNewProject={vi.fn()}
+        onToggleEditorSettings={vi.fn()}
       />,
     );
 
@@ -45,6 +47,8 @@ describe('RT11 — OMA checkbox checked state reflects compile.opticalMargins fr
         onEditorLayoutChange={vi.fn()}
         onPreviewVisibleChange={vi.fn()}
         onOpenFolder={vi.fn()}
+        onNewProject={vi.fn()}
+        onToggleEditorSettings={vi.fn()}
       />,
     );
     expect(screen.getByTestId('oma-checkbox')).toBeChecked();
@@ -62,6 +66,8 @@ describe('RT11 — OMA checkbox checked state reflects compile.opticalMargins fr
         onEditorLayoutChange={vi.fn()}
         onPreviewVisibleChange={vi.fn()}
         onOpenFolder={vi.fn()}
+        onNewProject={vi.fn()}
+        onToggleEditorSettings={vi.fn()}
       />,
     );
     expect(screen.getByTestId('oma-checkbox')).not.toBeChecked();
@@ -98,6 +104,8 @@ describe('RT12 — clicking OMA checkbox calls window.studio.setCompileSetting',
         onEditorLayoutChange={vi.fn()}
         onPreviewVisibleChange={vi.fn()}
         onOpenFolder={vi.fn()}
+        onNewProject={vi.fn()}
+        onToggleEditorSettings={vi.fn()}
       />,
     );
 
@@ -121,6 +129,8 @@ describe('RT12 — clicking OMA checkbox calls window.studio.setCompileSetting',
         onEditorLayoutChange={vi.fn()}
         onPreviewVisibleChange={vi.fn()}
         onOpenFolder={vi.fn()}
+        onNewProject={vi.fn()}
+        onToggleEditorSettings={vi.fn()}
       />,
     );
 
@@ -146,6 +156,8 @@ describe('preview toggle in menu bar', () => {
         onEditorLayoutChange={vi.fn()}
         onPreviewVisibleChange={onPreviewVisibleChange}
         onOpenFolder={vi.fn()}
+        onNewProject={vi.fn()}
+        onToggleEditorSettings={vi.fn()}
       />,
     );
 

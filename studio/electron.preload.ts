@@ -7,7 +7,7 @@
 import { contextBridge, ipcRenderer } from 'electron';
 import type {
   IpcApi,
-  CompileWorkerResult,
+  CompileResult,
   ChangedFile,
   WorkspaceState,
 } from './src/ipc-types.js';
@@ -21,10 +21,10 @@ const api: IpcApi = {
     return ipcRenderer.invoke('newProject');
   },
 
-  onCompileResult(cb: (result: CompileWorkerResult) => void): () => void {
+  onCompileResult(cb: (result: CompileResult) => void): () => void {
     const handler = (
       _event: Electron.IpcRendererEvent,
-      result: CompileWorkerResult,
+      result: CompileResult,
     ): void => cb(result);
     ipcRenderer.on('compileResult', handler);
     return () => ipcRenderer.removeListener('compileResult', handler);

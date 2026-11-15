@@ -18,6 +18,7 @@ import Store from 'electron-store';
 import type {
   CompileWorkerInput,
   CompileWorkerResult,
+  CompileResult,
   ChangedFile,
   WorkspaceState,
 } from './src/ipc-types.js';
@@ -112,10 +113,13 @@ function spawnWorker(projectPath: string): Worker {
 
       await writeFile(
         filePath,
-        (result as unknown as { type: 'pdf'; buffer: Buffer }).buffer,
+        result.buffer,
       );
       shell.openPath(filePath);
-      mainWindow?.webContents.send('compileResult', { type: 'pdf', filePath });
+      mainWindow?.webContents.send('compileResult', {
+        type: 'pdf',
+        filePath,
+      } satisfies CompileResult);
       return;
     }
     mainWindow?.webContents.send('compileResult', result);
@@ -126,7 +130,7 @@ function spawnWorker(projectPath: string): Worker {
     mainWindow?.webContents.send('compileResult', {
       type: 'compile-error',
       message: err.message,
-    } satisfies CompileWorkerResult);
+    } satisfies CompileResult);
   });
 
   return worker;
@@ -291,7 +295,7 @@ async function triggerCompile(
     mainWindow?.webContents.send('compileResult', {
       type: 'compile-error',
       message: err instanceof Error ? err.message : String(err),
-    } satisfies CompileWorkerResult);
+    } satisfies CompileResult);
   }
 }
 
