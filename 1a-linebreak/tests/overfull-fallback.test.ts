@@ -244,3 +244,46 @@ describe("overfull fallback — invariants on random paragraphs", () => {
     expect(overfullLines).toBeGreaterThan(100);
   });
 });
+
+// ─── Options that must not make the fallback worse ───────────────────────────
+
+describe('overfull fallback — hyphen limit and looseness', () => {
+  const hyphen = (): Node => ({
+    type: 'penalty',
+    width: 4,
+    penalty: 50,
+    flagged: true,
+  });
+
+  it('drops consecutiveHyphenLimit rather than letting a line stick out', () => {
+    // One word in four 40 pt fragments at a measure of 50: the only way to
+    // fit is to hyphenate three lines in a row.
+    const nodes: Node[] = [
+      box(40, 'a'),
+      hyphen(),
+      box(40, 'b'),
+      hyphen(),
+      box(40, 'c'),
+      hyphen(),
+      box(40, 'd'),
+      ...END,
+    ];
+    const { breaks, usedFallback } = run({
+      nodes,
+      lineWidth: 50,
+      tolerance: 2,
+      consecutiveHyphenLimit: 1,
+    });
+    expect(usedFallback).toBe(true);
+    expect(breaks.map((b) => b.position)).toEqual([1, 3, 5, 8]);
+    expect(breaks.some((b) => b.overfull)).toBe(false);
+  });
+
+  it('ignores looseness: no extra, empty or near-empty lines', () => {
+    const nodes = words([40, 40, 40, 40, 40, 40]);
+    const base: Paragraph = { nodes, lineWidth: 100, tolerance: 2 };
+    const plain = run(base).breaks;
+    expect(run({ ...base, looseness: 1 }).breaks).toEqual(plain);
+    expect(run({ ...base, looseness: -1 }).breaks).toEqual(plain);
+  });
+});

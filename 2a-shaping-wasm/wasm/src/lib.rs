@@ -420,7 +420,8 @@ fn forward_pass(
             };
             if feasible {
                 let consec = if is_flagged { a_ch + 1 } else { 0 };
-                if consecutive_hyphen_limit > 0 && consec > consecutive_hyphen_limit {
+                // The fallback pass drops the hyphen limit (see linebreak.ts).
+                if !fallback && consecutive_hyphen_limit > 0 && consec > consecutive_hyphen_limit {
                     continue;
                 }
 
@@ -635,6 +636,8 @@ pub fn compute_breakpoints_wasm(input_json: &str) -> String {
         Err(e) => return serde_json::to_string(&serde_json::json!({ "error": e })).unwrap(),
     };
 
+    // Looseness is ignored after a fallback (see linebreak.ts).
+    let looseness = if used_fallback { 0 } else { looseness };
     let final_arena_idx = select_optimal_arena_idx(&arena, &active, looseness);
     let final_pos = active
         .iter()
@@ -882,6 +885,8 @@ pub fn traceback_wasm_binary(
         Err(e) => return serde_json::to_string(&serde_json::json!({ "error": e })).unwrap(),
     };
 
+    // Looseness is ignored after a fallback (see linebreak.ts).
+    let looseness = if used_fallback { 0 } else { looseness };
     let final_arena_idx = select_optimal_arena_idx(&arena, &active, looseness);
     let mut breaks = traceback_arena(&arena, final_arena_idx);
 
@@ -930,6 +935,8 @@ pub fn traceback_wasm(input_json: &str) -> String {
         Err(e) => return serde_json::to_string(&serde_json::json!({ "error": e })).unwrap(),
     };
 
+    // Looseness is ignored after a fallback (see linebreak.ts).
+    let looseness = if used_fallback { 0 } else { looseness };
     let final_arena_idx = select_optimal_arena_idx(&arena, &active, looseness);
     let breaks = traceback_arena(&arena, final_arena_idx);
 

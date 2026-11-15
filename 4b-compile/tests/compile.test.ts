@@ -290,6 +290,26 @@ describe('compile() — paragraphs that cannot be set within tolerance', () => {
     });
   }
 
+  it('warns about a paragraph set by the fallback even when no line is overfull', async () => {
+    // Every word fits the 195 pt column, but not within a tolerance of 0.
+    const template = narrowTemplate();
+    (template.styles as any).body.tolerance = 0;
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const result = await compile({
+      template,
+      data: { intro: data.intro, body: data.intro },
+      output: 'rendered',
+      shaping: 'fontkit',
+    });
+    const warnings = warn.mock.calls.map((c) => String(c[0]));
+    warn.mockRestore();
+    expect(result.metadata.overfullLines).toEqual([]);
+    expect(result.metadata.fallbackParagraphs).toEqual([0, 1]);
+    expect(
+      warnings.some((w) => /2 paragraph\(s\) could not be set within tolerance/.test(w)),
+    ).toBe(true);
+  });
+
   it('a PDF comes out', async () => {
     const result = await compile({
       template: narrowTemplate(),

@@ -155,7 +155,12 @@ const infeasibleParagraph = (seed: number): Node[] => {
   return nodes;
 };
 
-const compareFallback = (emergencyStretch: number, hyphenLimit: number) => {
+const compareFallback = (
+  emergencyStretch: number,
+  hyphenLimit: number,
+  looseness = 0,
+  adjDemerits = 0,
+) => {
   let overfullLines = 0;
   for (let seed = 1; seed <= 80; seed++) {
     const nodes = infeasibleParagraph(seed);
@@ -167,6 +172,8 @@ const compareFallback = (emergencyStretch: number, hyphenLimit: number) => {
       tolerance,
       emergencyStretch,
       consecutiveHyphenLimit: hyphenLimit,
+      looseness,
+      adjDemerits,
     };
 
     // Strict mode: both refuse.
@@ -174,8 +181,8 @@ const compareFallback = (emergencyStretch: number, hyphenLimit: number) => {
       computeBreakpoints({ ...base, onInfeasible: 'throw' }),
     ).toThrow();
     const strict = tracebackWasmBinary(
-      wasm, nodes, lineWidth, tolerance, emergencyStretch, 0, hyphenLimit,
-      [], 0, 0, 0, 'throw',
+      wasm, nodes, lineWidth, tolerance, emergencyStretch, looseness,
+      hyphenLimit, [], 0, 0, adjDemerits, 'throw',
     );
     expect('error' in strict, `seed ${seed}`).toBe(true);
 
@@ -183,7 +190,8 @@ const compareFallback = (emergencyStretch: number, hyphenLimit: number) => {
     const tsResult = computeBreakpoints(base);
     const ts = traceback(tsResult.node);
     const res = tracebackWasmBinary(
-      wasm, nodes, lineWidth, tolerance, emergencyStretch, 0, hyphenLimit,
+      wasm, nodes, lineWidth, tolerance, emergencyStretch, looseness,
+      hyphenLimit, [], 0, 0, adjDemerits,
     );
     expect('ok' in res, `seed ${seed}`).toBe(true);
     expect(res.ok.usedFallback, `seed ${seed}`).toBe(true);
@@ -196,6 +204,9 @@ const compareFallback = (emergencyStretch: number, hyphenLimit: number) => {
     );
     expect(rs.map((b) => b.overfull === true), `seed ${seed}`).toEqual(
       ts.map((b) => b.overfull === true),
+    );
+    expect(rs.map((b) => [b.flagged, b.line]), `seed ${seed}`).toEqual(
+      ts.map((b) => [b.flagged, b.line]),
     );
     rs.forEach((b, k) => {
       expect(Number.isFinite(b.ratio), `seed ${seed} line ${k}`).toBe(true);
@@ -210,4 +221,26 @@ describe('Rust and TypeScript agree on the overfull fallback', () => {
   it('without emergency stretch', () => compareFallback(0, 0));
   it('with emergency stretch that is not enough', () => compareFallback(15, 0));
   it('with consecutiveHyphenLimit = 1', () => compareFallback(0, 1));
+  it('with looseness = 1', () => compareFallback(0, 0, 1));
+  it('with adjDemerits = 10000, looseness = -1 and a hyphen limit', () =>
+    compareFallback(10, 1, -1, 10000));
+
+  it('a word that only fits by hyphenating every line, limit 1', () => {
+    const h = { type: 'penalty', width: 4, penalty: 50, flagged: true } as Node;
+    const b = (): Node => ({ type: 'box', width: 40, content: 'x', font: FONT });
+    const nodes: Node[] = [
+      b(), h, b(), h, b(), h, b(),
+      { type: 'glue', kind: 'termination', width: 0, stretch: Infinity, shrink: 0 },
+      { type: 'penalty', width: 0, penalty: FORCED_BREAK, flagged: false },
+    ];
+    const ts = traceback(
+      computeBreakpoints({
+        nodes, lineWidth: 50, tolerance: 2, consecutiveHyphenLimit: 1,
+      }).node,
+    );
+    const res = tracebackWasmBinary(wasm, nodes, 50, 2, 0, 0, 1);
+    expect(res.ok.breaks.map((x: any) => x.position)).toEqual([1, 3, 5, 8]);
+    expect(ts.map((x) => x.position)).toEqual([1, 3, 5, 8]);
+    expect(res.ok.breaks.some((x: any) => x.overfull)).toBe(false);
+  });
 });

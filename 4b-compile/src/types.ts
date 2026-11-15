@@ -16,13 +16,13 @@ export type OverflowBehavior = 'silent' | 'throw';
 /** What to do with a paragraph that cannot be set within its tolerance. */
 export type InfeasibleBehavior = 'throw' | 'overfull';
 
-/** One line that sticks out past the right edge of its frame. */
+/** One line that is wider than its measure and sticks out of its frame. */
 export interface OverfullLine {
   /** Index of the paragraph, counting composed paragraphs from 0 in document order. */
   paragraph: number;
   /** Index of the line within that paragraph, from 0. */
   line: number;
-  /** How far the line sticks out, in points. */
+  /** How much wider than its measure the line is, in points. */
   overflow: number;
   /** The words on the line, so it can be found in the source. */
   text: string;
@@ -142,8 +142,8 @@ export interface CompileResult {
      */
     overflowLines: number;
     /**
-     * Lines that stick out past the right edge of their frame because their
-     * content cannot fit the measure. Empty when every line fits.
+     * Lines that stick out of their frame because their content cannot fit
+     * the measure. Empty when every line fits.
      * Not to be confused with `overflowLines` (lines beyond the last page).
      * @since v0.7
      */

@@ -269,13 +269,17 @@ export async function compile<T = unknown>(
       }
     });
   });
-  if (verbose && overfullLines.length > 0) {
+  if (verbose && fallbackParagraphs.length > 0) {
     const first = overfullLines[0];
     console.warn(
-      `[paragraf/compile] ${overfullLines.length} overfull line(s): content wider than the frame. ` +
-        `First: paragraph ${first.paragraph}, line ${first.line}, ` +
-        `${first.overflow.toFixed(1)}pt too wide ("${first.text.slice(0, 60)}"). ` +
-        `See metadata.overfullLines.`,
+      `[paragraf/compile] ${fallbackParagraphs.length} paragraph(s) could not be set within tolerance ` +
+        `(paragraph ${fallbackParagraphs.slice(0, 5).join(', ')}${fallbackParagraphs.length > 5 ? ', …' : ''}); ` +
+        `${overfullLines.length} overfull line(s).` +
+        (first
+          ? ` First: paragraph ${first.paragraph}, line ${first.line}, ` +
+            `${first.overflow.toFixed(1)}pt too wide ("${first.text.slice(0, 60)}").`
+          : '') +
+        ` See metadata.fallbackParagraphs and metadata.overfullLines.`,
     );
   }
 

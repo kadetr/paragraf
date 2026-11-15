@@ -342,7 +342,8 @@ export interface ComposedLine {
   glyphExpansion?: number; // per-line glyph scale delta (range: -maxGlyphExpansion..+maxGlyphExpansion); 0 when disabled
   /**
    * True when the line is wider than its measure even with every space fully
-   * shrunk, so it sticks out past the right edge. Absent on normal lines.
+   * shrunk, so it sticks out of the measure (to the right in left-aligned and
+   * justified text). Absent on normal lines.
    * @since v0.7
    */
   overfull?: boolean;

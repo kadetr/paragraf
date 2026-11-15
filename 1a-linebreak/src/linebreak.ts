@@ -263,7 +263,10 @@ const forwardPass = (
       if (fallback ? ratio >= -1 : isFeasible(ratio, tolerance)) {
         const consecutiveHyphens = isFlagged ? a.consecutiveHyphens + 1 : 0;
 
+        // The fallback pass drops the hyphen limit: enforcing it there could
+        // only turn a line that fits into one that sticks out.
         if (
+          !fallback &&
           consecutiveHyphenLimit > 0 &&
           consecutiveHyphens > consecutiveHyphenLimit
         ) {
@@ -465,7 +468,11 @@ export const computeBreakpoints = (paragraph: Paragraph): BreakpointResult => {
     curr.totalDemerits < prev.totalDemerits ? curr : prev,
   );
 
-  if (looseness === 0) return { node: optimal, usedEmergency, usedFallback };
+  // Looseness is ignored after a fallback: its lines are already outside the
+  // tolerance, and asking for more of them only adds near-empty lines.
+  if (looseness === 0 || usedFallback) {
+    return { node: optimal, usedEmergency, usedFallback };
+  }
 
   const targetLine = optimal.line + looseness;
   const candidates = active.filter((n) => n.line === targetLine);

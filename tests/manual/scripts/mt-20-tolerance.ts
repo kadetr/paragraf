@@ -47,11 +47,12 @@ type SweepRow = {
 };
 const rows: SweepRow[] = [];
 
-// Use a narrow column (250pt) so that tight tolerance (1) is infeasible while
-// higher tolerances (≥2) succeed — demonstrating that tolerance has real effect.
+// Use a narrow column (250pt) so that tight tolerance (1) is infeasible (set
+// by the fallback) while higher tolerances (≥2) succeed — demonstrating that
+// tolerance has real effect.
 const NARROW_W = 250;
 
-console.log('\n  Tol  Lines  RatioVar  Time(ms)  Emergency  Infeasible');
+console.log('\n  Tol  Lines  RatioVar  Time(ms)  Emergency  Fallback (infeasible)');
 console.log('  ────────────────────────────────────────────────────');
 
 let failures = 0;
@@ -67,6 +68,9 @@ for (const tolerance of TOLERANCES) {
       lineWidth: NARROW_W,
       tolerance,
     });
+    // Since v0.7 an infeasible paragraph is set by the overfull fallback
+    // instead of throwing; `usedFallback` says that the tolerance was too tight.
+    infeasible = out.usedFallback;
   } catch {
     infeasible = true;
   }

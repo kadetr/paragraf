@@ -76,8 +76,9 @@ export const CASES: GoldenCase[] = [
   // optimum normally stays the same. At 250 pt the threshold lies between 1
   // (infeasible: set by the overfull fallback) and 1.5 (sets normally). The
   // pair at 160 pt has its threshold between 2 and 3. The fallback accepts
-  // any line that fits, so it finds the same lines a higher tolerance finds;
-  // the cases of a pair then differ only in `usedFallback`. DISTINCT_PAIRS
+  // any line that fits; for these two paragraphs that happens to give the
+  // same lines as the higher tolerance, so the cases of a pair differ only
+  // in `usedFallback`. DISTINCT_PAIRS
   // below asserts that each pair really differs.
   en('en-body-w250-t1', 'MT-20', { lineWidth: 250, tolerance: 1 }),
   en('en-body-w250-t1_5', 'MT-20', { lineWidth: 250, tolerance: 1.5 }),
