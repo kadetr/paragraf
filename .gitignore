@@ -8,6 +8,7 @@ dist/
 coverage/
 tests/manual/outputs/
 tests/golden/outputs/
+studio/out/
 output/
 internal/
 methodology/
