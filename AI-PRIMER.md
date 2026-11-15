@@ -2,7 +2,7 @@
 updated: 261115-1300
 
 Paste this file at the start of a Claude.ai or Gemini session when working without full context.
-For deeper work, attach `methodology.md` first, then the relevant `inner-context/[package]/` folder and the active plan.
+For deeper work, also attach the README of the package you are changing and the relevant file from `documents/`.
 
 ---
 
@@ -22,7 +22,7 @@ L4  template, compile
 
 ## Process Rules
 TDD: write the failing test first. Test descriptions are human-authored; test code and implementations may be LLM-generated.
-`npm run typecheck`, `npm test` and `npm run test:e2e` must pass before a change is merged.
+`npm test` and `npm run test:e2e` must pass before a change is merged, and so must the type check where the branch has one.
 
 ## Document Index
 Documents that are in this repository:
@@ -37,7 +37,7 @@ Documents that are in this repository:
 | `io-schemas.md` | `documents/` | Input and output types per package |
 | `architecture.png` | `documents/` | Layer diagram |
 | `new-approach/` | `documents/new-approach/` | Documentation restructuring (in progress) |
-| Package READMEs | `<package>/README.md` | Per-package API |
+| Package READMEs | `<package>/README.md` | Per-package API (most packages have one) |
 
 The maintainer's process documents (methodology, work pool, roadmap, plans, archive) are kept in local `methodology/` and `internal/` folders that are git-ignored. They are not in a clone of this repository; ask the maintainer if a session needs them.
 

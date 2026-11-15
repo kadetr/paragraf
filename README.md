@@ -12,13 +12,13 @@
 
 Generating documents programmatically in Node.js means choosing between:
 
-- **Headless Chrome / Puppeteer** — renders HTML to PDF. Quality is whatever CSS gives you: greedy line breaking, dictionary hyphenation only where the browser ships one, no control over glyph-level metrics. Output looks like a webpage printed to PDF.
+- **Headless Chrome / Puppeteer** — renders HTML to PDF. Quality is whatever CSS gives you: greedy line breaking by default, dictionary hyphenation only where the browser ships one, no control over glyph-level metrics. Output looks like a webpage printed to PDF.
 - **pdfmake / jsPDF** — programmatic PDF, but greedy line breaking and no OpenType shaping. Adequate for invoices and reports where typography quality doesn't matter.
 - **react-pdf** — React components to PDF, with a Knuth-Plass line breaker and fontkit shaping. A good fit for component-style layouts; it does not offer optical margin alignment, ICC colour management, or InDesign-style paragraph styles.
 - **LaTeX and Typst pipelines** — publication quality, but they run as a separate process with their own markup language and templating. Not Node libraries.
 - **InDesign Server** — the professional standard. Expensive, GUI-dependent, operationally complex, and not scriptable in JavaScript.
 
-**paragraf is the missing option:** publication-quality typesetting as a Node.js library. No TeX installation, no browser process, no InDesign licence. The same paragraph-composition techniques InDesign and TeX use, scriptable from TypeScript.
+**Where paragraf fits:** publication-quality typesetting as a Node.js library, with the print-production parts (optical margins, ICC colour, paragraph styles, multi-frame documents) included. No TeX installation, no browser process, no InDesign licence. The same paragraph-composition techniques InDesign and TeX use, scriptable from TypeScript.
 
 ---
 
@@ -45,22 +45,21 @@ Most JavaScript PDF libraries use a greedy algorithm — fill each line as full 
 | Capability | paragraf | Puppeteer | pdfmake | react-pdf | LaTeX | Typst |
 |---|:---:|:---:|:---:|:---:|:---:|:---:|
 | Knuth-Plass (whole-paragraph) line breaking | ✅ | — | — | ✅ | ✅ | ✅ |
-| Real OpenType shaping (GSUB/GPOS) | ✅ | partial¹ | — | ✅⁴ | ✅ | ✅ |
+| Real OpenType shaping (GSUB/GPOS) | ✅ | ✅¹ | — | ✅² | ✅ | ✅ |
 | Multi-language hyphenation | ✅ (22) | via CSS | — | ✅ | ✅ | ✅ |
 | Unicode BiDi (Arabic, Hebrew) | partial³ | ✅ | — | ✅ | partial | ✅ |
 | Optical margin alignment | ✅ | — | — | — | ✅ | ✅ |
 | Multi-frame / multi-column layout | ✅ | via CSS | ✅ | via flexbox | ✅ | ✅ |
 | Selectable text in PDF output | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| Node-native (no subprocess, no separate toolchain) | ✅ | — | ✅ | ✅ | — | —⁵ |
+| Node-native (no subprocess, no separate toolchain) | ✅ | — | ✅ | ✅ | — | —⁴ |
 | Open source | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
 
 This table reflects our reading of each project's documentation in November 2026. If an entry is out of date, please open an issue.
 
-¹ Puppeteer delegates shaping to the OS renderer (CoreText/DirectWrite). Quality varies by platform and cannot be controlled programmatically.  
-² The `FontEngine` interface is environment-agnostic, but the bundled fontkit adapter (`createMeasurer`, `FontkitEngine`) reads font files from disk via Node's `fs.openSync` and is Node-only. In a browser you must supply your own `FontEngine` implementation backed by `fetch`/`ArrayBuffer`.  
+¹ Chromium shapes text with HarfBuzz. Shaping can only be influenced through CSS (`font-feature-settings` and related properties), not addressed per glyph.  
+² react-pdf shapes text with fontkit, the same library paragraf uses as its fallback when the WASM shaper is absent.  
 ³ Paragraph-level direction detection and visual reordering via the first-strong character heuristic. Full Unicode Bidirectional Algorithm (UBA) line-level reordering is not yet implemented.  
-⁴ react-pdf shapes text with fontkit, the same library paragraf uses as its fallback when the WASM shaper is absent.  
-⁵ Typst is a Rust compiler with its own markup language. It can be called from Node as a command-line tool or through community WebAssembly bindings.
+⁴ Typst is a Rust compiler with its own markup language. It can be called from Node as a command-line tool or through community WebAssembly bindings.
 
 **Browser path.** The packages that run in a browser without modification are: `@paragraf/types`, `@paragraf/color`, `@paragraf/linebreak`, `@paragraf/layout`, `@paragraf/style`, and `@paragraf/render-core`. Pair them with a custom `FontEngine` that loads fonts via `fetch`. `@paragraf/typography`, `@paragraf/render-pdf`, `@paragraf/shaping-wasm`, `@paragraf/compile`, and `@paragraf/font-engine` (with the built-in adapters) are Node-only.
 
@@ -77,7 +76,7 @@ Twelve packages in strict layers. Each package only imports from layers below it
 | `0-types/` | `@paragraf/types` | Zero-dep shared interfaces: `Font`, `ComposedLine`, `FontRegistry`, `TextSpan` | both |
 | `0-color/` | `@paragraf/color` | ICC colour profiles, sRGB/Lab/CMYK spaces, LUT interpolation | both |
 | `1a-linebreak/` | `@paragraf/linebreak` | Knuth-Plass algorithm, 22-language hyphenation, traceback, node builder | both |
-| `1b-font-engine/` | `@paragraf/font-engine` | FontEngine interface, fontkit adapter, measurer factory | Node² |
+| `1b-font-engine/` | `@paragraf/font-engine` | FontEngine interface, fontkit adapter, measurer factory | Node⁵ |
 | `1c-layout/` | `@paragraf/layout` | Page geometry, unit converters (mm/in/cm), named page sizes (A4, Letter…) | both |
 | `1d-style/` | `@paragraf/style` | Paragraph and character style definitions with cascading inheritance | both |
 | `2a-shaping-wasm/` | `@paragraf/shaping-wasm` | Rust/WASM OpenType shaper (rustybuzz): GSUB ligatures, GPOS kerning, sups/subs | Node |
@@ -86,6 +85,8 @@ Twelve packages in strict layers. Each package only imports from layers below it
 | `3b-render-pdf/` | `@paragraf/render-pdf` | PDF output via pdfkit, selectable text overlay | Node |
 | `4a-template/` | `@paragraf/template` | Document schema: named content slots, style bindings, page size declarations | Node |
 | `4b-compile/` | `@paragraf/compile` | Full pipeline: template + data + fonts → PDF / SVG / RenderedDocument | Node |
+
+⁵ The `FontEngine` interface is environment-agnostic, but the bundled fontkit adapter (`createMeasurer`, `FontkitEngine`) reads font files from disk via Node's `fs.openSync` and is Node-only. In a browser you must supply your own `FontEngine` implementation backed by `fetch`/`ArrayBuffer`.
 
 ---
 
@@ -164,7 +165,7 @@ For custom rendering pipelines or when you need direct access to composed lines 
 npm install @paragraf/typography @paragraf/render-pdf
 ```
 
-`@paragraf/types`, `@paragraf/linebreak`, `@paragraf/font-engine`, `@paragraf/render-core`, and `@paragraf/shaping-wasm` (whose npm package includes the compiled WASM shaper) are all declared as direct dependencies of `@paragraf/typography` and install automatically.
+`@paragraf/types`, `@paragraf/linebreak`, `@paragraf/font-engine`, `@paragraf/render-core`, and `@paragraf/shaping-wasm` (whose npm package is set up to carry the compiled WASM shaper) are all declared as direct dependencies of `@paragraf/typography` and install automatically.
 
 ```ts
 import { createParagraphComposer, createDefaultFontEngine } from '@paragraf/typography';
@@ -299,7 +300,7 @@ These are intentional gaps for the current release, not bugs:
 
 - **PDF output is vector-path, not PDF/X-conformant.** Text is rendered as filled glyph outlines. PDF/X and PDF/A require embedded fonts with `TJ` operators and ToUnicode CMaps. This is planned but not yet implemented.
 - **`runtPenalty` / `singleLinePenalty` are single-line runt penalties**, not frame-level widow/orphan control. True widow/orphan handling (preventing the first or last line of a paragraph from being isolated on a different page) requires frame-level composition, which is not yet implemented. The penalty is best-effort and may not change the layout when no feasible alternative exists.
-- **`adjDemerits`** is available via the paragraph input parameter; the default is `0`, which preserves backwards-compatible Knuth-Plass behaviour. Set to `10000` for TeX-equivalent quality (penalises jarring transitions between very tight and very loose consecutive lines).
+- **`adjDemerits`** is an option of `@paragraf/linebreak` (`Paragraph.adjDemerits`). It is not yet exposed through `ParagraphInput` in `@paragraf/typography`, so `compose()` always uses the default. The default is `0`, which preserves backwards-compatible Knuth-Plass behaviour. Set to `10000` for TeX-equivalent quality (penalises jarring transitions between very tight and very loose consecutive lines).
 - **`nestedStyles` / `grepStyles`** are accepted by the style registry but not yet applied. Character-style rules based on regex or run-length patterns require the inline-markup pipeline (F027) to be wired end-to-end.
 
 ---
@@ -312,7 +313,7 @@ npm test      # unit tests across all packages
 npm run build # build all packages to dist/
 ```
 
-The compiled WASM shaper is **not committed to this repository**. It is built in CI and included in the `@paragraf/shaping-wasm` npm package (`wasm/pkg/`). In a fresh clone the shaper is absent, so composition runs on the TypeScript fontkit path until you build it. The Rust source is at `2a-shaping-wasm/wasm/src/lib.rs`. To build it (requires Rust and `wasm-pack`), or to rebuild after modifying the Rust layer:
+The compiled WASM shaper is **not committed to this repository**. CI builds it for every test run, and the `@paragraf/shaping-wasm` package lists `wasm/pkg/` in its `files`, so a release built with the shaper present will include it. In a fresh clone the shaper is absent, so composition runs on the TypeScript fontkit path until you build it. The Rust source is at `2a-shaping-wasm/wasm/src/lib.rs`. To build it (requires Rust and `wasm-pack`), or to rebuild after modifying the Rust layer:
 
 ```bash
 cd 2a-shaping-wasm/wasm
