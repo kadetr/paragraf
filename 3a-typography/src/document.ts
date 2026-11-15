@@ -346,7 +346,7 @@ export function layoutDocument(
         cursorY += frames[frameIdx].paragraphSpacing ?? 0;
         if (spaceAfter) cursorY += spaceAfter;
       }
-      // (TODO v0.12: per-paragraph override via ParagraphInput.paragraphSpacing)
+      // (TODO: per-paragraph override via ParagraphInput.paragraphSpacing)
 
       // If the paragraph continues, advance to the next column or frame.
       if (paragraphContinues) {

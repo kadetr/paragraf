@@ -86,7 +86,7 @@ export function wasmStatus(): {
 //   WASM path  — calls analyze_bidi (full UBA, run-level)
 //   TS fallback — P2/P3 scan: first strong directional character wins
 //
-// For v0.8 scope (one paragraph = one direction), the TS fallback is sufficient.
+// Current scope is one direction per paragraph, for which the TS fallback is sufficient.
 // A one-time console.warn is emitted when RTL text is encountered without WASM.
 
 let _rtlFallbackWarnIssued = false;
@@ -375,7 +375,7 @@ const resolveFeatureSetId = (
   if (options?.featureSetId && options.featureSetId.trim().length > 0) {
     return options.featureSetId;
   }
-  // TODO(v2): add script + direction to cache key for non-LTR support
+  // TODO: add script + direction to the cache key for non-LTR support.
   return '__default-feature-set__';
 };
 
@@ -744,7 +744,7 @@ export const createParagraphComposer = async (
         : lineWidths;
 
     // Detect paragraph direction.
-    // RTL paragraphs bypass language loading and hyphenation for v0.8.
+    // RTL paragraphs currently bypass language loading and hyphenation.
     if (spans && text) {
       console.warn(
         '[paragraf] compose(): both `text` and `spans` provided — `spans` takes precedence and `text` is ignored.',
@@ -801,7 +801,7 @@ export const createParagraphComposer = async (
     let withFonts: HyphenatedWordWithFont[];
 
     if (direction === 'rtl') {
-      // Spans not supported in RTL for v0.8 — only one-direction paragraphs with a single font.
+      // Spans are not yet supported in RTL — only one-direction paragraphs with a single font.
       if (hasSpans) {
         throw new Error(
           '[paragraf] RTL paragraphs do not support span input yet. ' +

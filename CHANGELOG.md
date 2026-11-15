@@ -21,6 +21,12 @@ Studio passed its own `'error'` / `'truncate'` values straight to `@paragraf/com
 ### Tests
 
 - **Golden-output baseline.** `tests/golden/` composes 40 paragraphs (the parameters of manual scripts MT-01 … MT-22) with both the WASM engine and the TypeScript fallback and compares line breaks, adjustment ratios, word spacing and segment positions with committed snapshots. It runs as part of `npm run test:e2e`. `npm run golden:update` rewrites the snapshots; `npm run golden:preview` also writes an SVG per case to the git-ignored `tests/golden/outputs/`. Any change to line breaking now shows up as a reviewable snapshot diff. The suite also checks that each snapshot belongs to a case and that cases meant to differ (for example runt penalty on and off) really produce different output.
+### Documentation
+
+- **README accuracy.** Removed "the only" / "no other library" claims; react-pdf and Typst are now in the comparison (both do whole-paragraph line breaking). Stated plainly that the compiled WASM shaper is not committed to the repository (CI builds it; the npm package is set up to carry it), and that the `@paragraf/*` packages are not on the npm registry yet.
+- **README:** `adjDemerits` is described as what it is: an option of `@paragraf/linebreak` that `ParagraphInput` does not expose yet. The Puppeteer shaping entry is corrected (Chromium uses HarfBuzz).
+- **AI-PRIMER.md** document index now lists files that exist in the repository instead of a `docs/` folder that does not.
+- Removed stale version references (`v0.8`, `v0.12`, `v2`) from source comments in `@paragraf/typography`. No code change.
 
 ---
 
