@@ -8,7 +8,7 @@ All notable changes to this project will be documented in this file.
 
 ### Tests
 
-- **Golden-output baseline.** `tests/golden/` composes 42 paragraphs (the parameters of manual scripts MT-01 … MT-22) with both the WASM engine and the TypeScript fallback and compares line breaks, adjustment ratios, word spacing and segment positions with committed snapshots. It runs as part of `npm run test:e2e`. `npm run golden:update` rewrites the snapshots; `npm run golden:preview` also writes an SVG per case to the git-ignored `tests/golden/outputs/`. Any change to line breaking now shows up as a reviewable snapshot diff.
+- **Golden-output baseline.** `tests/golden/` composes 40 paragraphs (the parameters of manual scripts MT-01 … MT-22) with both the WASM engine and the TypeScript fallback and compares line breaks, adjustment ratios, word spacing and segment positions with committed snapshots. It runs as part of `npm run test:e2e`. `npm run golden:update` rewrites the snapshots; `npm run golden:preview` also writes an SVG per case to the git-ignored `tests/golden/outputs/`. Any change to line breaking now shows up as a reviewable snapshot diff. The suite also checks that each snapshot belongs to a case and that cases meant to differ (for example runt penalty on and off) really produce different output.
 
 ---
 

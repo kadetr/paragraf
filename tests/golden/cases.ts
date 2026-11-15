@@ -59,26 +59,28 @@ const en = (
     lineWidth: CONTENT_W,
     tolerance: 3,
     ...overrides,
-  } as ParagraphInput,
+  },
 });
 
 export const CASES: GoldenCase[] = [
   // ── Baseline justified paragraph ───────────────────────────────────────────
   en('en-body-451-t3', 'MT-01', {}),
-  en('en-body-451-t3-runt150', 'MT-01', {
-    runtPenalty: 150,
-    singleLinePenalty: 150,
-  }),
 
   // ── Column width sweep (MT-19) ─────────────────────────────────────────────
   ...[200, 300, 400, 500, 600].map((w) =>
     en(`en-body-w${w}`, 'MT-19', { lineWidth: w }),
   ),
 
-  // ── Tolerance sweep in a narrow column (MT-20) ─────────────────────────────
-  ...[1, 2, 3, 5, 10].map((t) =>
-    en(`en-body-w250-t${t}`, 'MT-20', { lineWidth: 250, tolerance: t }),
-  ),
+  // ── Tolerance threshold in a narrow column (MT-20) ─────────────────────────
+  // Tolerance decides whether a paragraph can be set at all; once it can, the
+  // optimum normally stays the same. At 250 pt the threshold lies between 1
+  // (throws) and 1.5 (sets). The pair at 160 pt has its threshold between 2
+  // and 3. DISTINCT_PAIRS below asserts that each pair really differs.
+  en('en-body-w250-t1', 'MT-20', { lineWidth: 250, tolerance: 1 }),
+  en('en-body-w250-t1_5', 'MT-20', { lineWidth: 250, tolerance: 1.5 }),
+  en('en-body-w250-t10', 'MT-20', { lineWidth: 250, tolerance: 10 }),
+  en('en-body-w160-t2', 'MT-20', { lineWidth: 160, tolerance: 2 }),
+  en('en-body-w160-t3', 'MT-20', { lineWidth: 160, tolerance: 3 }),
 
   // ── Looseness sweep (MT-21) ────────────────────────────────────────────────
   ...[-2, -1, 0, 1, 2].map((l) =>
@@ -118,13 +120,15 @@ export const CASES: GoldenCase[] = [
   }),
 
   // ── Runt penalty (MT-07) ───────────────────────────────────────────────────
-  en('en-body-w223-runt0', 'MT-07', {
-    lineWidth: 223,
+  // 320 pt is a width where the penalty changes the breaks (MT-07 uses 223 pt,
+  // where it does not).
+  en('en-body-w320-runt0', 'MT-07', {
+    lineWidth: 320,
     runtPenalty: 0,
     singleLinePenalty: 0,
   }),
-  en('en-body-w223-runt8000', 'MT-07', {
-    lineWidth: 223,
+  en('en-body-w320-runt8000', 'MT-07', {
+    lineWidth: 320,
     runtPenalty: 8000,
     singleLinePenalty: 8000,
   }),
@@ -151,11 +155,9 @@ export const CASES: GoldenCase[] = [
   // ── Optical margin alignment (MT-15) ───────────────────────────────────────
   en('en-body-451-oma', 'MT-15', { opticalMarginAlignment: true }),
 
-  // ── Adjacent-line demerits (TeX-equivalent setting) ────────────────────────
-  en('en-body-w300-adjdemerits', 'CHANGELOG v0.6.0', {
-    lineWidth: 300,
-    adjDemerits: 10000,
-  }),
+  // Adjacent-line demerits (`adjDemerits`) have no case: the option exists in
+  // @paragraf/linebreak but ParagraphInput does not expose it, so it cannot be
+  // set through compose(). Add a case when it is wired through.
 
   // ── Short narrow text ──────────────────────────────────────────────────────
   en('en-narrow-w200', 'MT-01', { text: EN_NARROW, lineWidth: 200 }),
@@ -233,4 +235,30 @@ export const CASES: GoldenCase[] = [
       tolerance: 3,
     } as ParagraphInput,
   },
+];
+
+/**
+ * Pairs of cases whose parameters are meant to change the result. The test
+ * fails if a pair produces identical output, because then one of the two
+ * cases is not testing the parameter it is named after.
+ *
+ * Looseness -2 is not listed: at 280 pt the paragraph cannot lose two lines,
+ * and the composer then returns the looseness-0 result. That is recorded
+ * behaviour, not coverage of the parameter.
+ */
+export const DISTINCT_PAIRS: [string, string][] = [
+  ['en-body-w250-t1', 'en-body-w250-t1_5'],
+  ['en-body-w160-t2', 'en-body-w160-t3'],
+  ['en-body-w320-runt0', 'en-body-w320-runt8000'],
+  ['en-body-w280-loosep0', 'en-body-w280-loosem1'],
+  ['en-body-w280-loosep0', 'en-body-w280-loosep1'],
+  ['en-body-w280-loosep1', 'en-body-w280-loosep2'],
+  ['en-body-w130-t6-hyphens-unlimited', 'en-body-w130-t6-hyphens-limit2'],
+  ['long-url-w200-t2-es0', 'long-url-w200-t2-es50'],
+  ['en-body-451-t3', 'en-body-451-oma'],
+  ['en-body-451-t3', 'en-body-linewidths-3x200'],
+  ['en-body-451-left', 'en-body-451-right'],
+  ['en-body-451-left', 'en-body-451-center'],
+  ['en-body-451-tracking0', 'en-body-451-tracking1'],
+  ['en-body-451-tracking1', 'en-body-451-tracking2'],
 ];

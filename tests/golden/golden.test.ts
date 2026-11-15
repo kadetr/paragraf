@@ -40,7 +40,12 @@ import {
   PAGE_W,
   PAGE_H,
 } from '../manual/fixtures/documents.js';
-import { CASES, type GoldenCase, type RegistryName } from './cases.js';
+import {
+  CASES,
+  DISTINCT_PAIRS,
+  type GoldenCase,
+  type RegistryName,
+} from './cases.js';
 import { serializeLine, toJson, type GoldenSnapshot } from './serialize.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -48,6 +53,11 @@ const SNAPSHOT_DIR = path.join(__dirname, 'snapshots');
 const PREVIEW_DIR = path.join(__dirname, 'outputs');
 const UPDATE = process.env.UPDATE_GOLDEN === '1';
 const PREVIEW = process.env.GOLDEN_PREVIEW === '1';
+
+// Update mode makes every comparison pass, so it must never run in CI.
+if (UPDATE && process.env.CI) {
+  throw new Error('UPDATE_GOLDEN must not be set in CI.');
+}
 
 type Engine = 'wasm' | 'ts';
 
@@ -137,9 +147,39 @@ const runEngine = (engine: Engine): void => {
     };
   };
 
+  const results = new Map<string, GoldenSnapshot>();
+
   for (const c of CASES) {
     it(`${c.id} (${c.mirrors})`, () => {
-      check(path.join(SNAPSHOT_DIR, engine, `${c.id}.json`), toJson(run(c)));
+      const snapshot = run(c);
+      results.set(c.id, snapshot);
+      check(path.join(SNAPSHOT_DIR, engine, `${c.id}.json`), toJson(snapshot));
+    });
+  }
+
+  // A case that was renamed or removed would otherwise leave its old snapshot
+  // behind, where nothing reads it.
+  it('has exactly one snapshot file per case', () => {
+    const dir = path.join(SNAPSHOT_DIR, engine);
+    const expected = CASES.map((c) => `${c.id}.json`).sort();
+    if (UPDATE) {
+      for (const f of fs.readdirSync(dir)) {
+        if (!expected.includes(f)) fs.unlinkSync(path.join(dir, f));
+      }
+    }
+    expect(fs.readdirSync(dir).sort()).toEqual(expected);
+  });
+
+  // Two cases that differ in one parameter must differ in their result;
+  // otherwise that parameter is not being exercised.
+  const body = (id: string): string => {
+    const s = results.get(id);
+    if (!s) throw new Error(`No result for case "${id}"`);
+    return JSON.stringify({ error: s.error, lines: s.lines });
+  };
+  for (const [a, b] of DISTINCT_PAIRS) {
+    it(`${a} differs from ${b}`, () => {
+      expect(body(a)).not.toBe(body(b));
     });
   }
 };
@@ -150,12 +190,13 @@ describe('golden output — TypeScript engine', () => runEngine('ts'));
 // present; locally a missing build skips this half with a visible reason
 // instead of silently passing on the TypeScript path.
 const wasmLoaded = wasmStatus().status === 'loaded';
-if (!wasmLoaded && process.env.CI) {
+if (!wasmLoaded && (process.env.CI || UPDATE)) {
   describe('golden output — WASM engine', () => {
     it('requires the WASM shaper to be built', () => {
       throw new Error(
         `WASM shaper not loaded (${wasmStatus().status}). ` +
-          'Build it with wasm-pack before running the golden tests.',
+          'Build it with wasm-pack before running or updating the golden tests; ' +
+          'an update without it would refresh only the TypeScript snapshots.',
       );
     });
   });
