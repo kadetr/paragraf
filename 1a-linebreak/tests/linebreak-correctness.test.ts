@@ -262,7 +262,7 @@ describe('line measure excludes the glue at the previous break', () => {
     expect(breaks[0].flagged).toBe(true);
   });
 
-  it('gives a forced break directly after a glue break an empty, feasible line', () => {
+  it('starts a new line correctly after a forced break in mid-paragraph', () => {
     const forced: Node = {
       type: 'penalty',
       width: 0,
@@ -373,5 +373,141 @@ describe('composeParagraph renders the spacing the ratio describes', () => {
       });
     }
     expect(checked).toBeGreaterThan(50); // not vacuous: 99 lines at the time of writing
+  });
+});
+
+// ─── 4. Longer paragraphs: fitness classes and hyphen runs ───────────────────
+//
+// Enumerating every set of breaks is only possible for short paragraphs, and
+// short paragraphs rarely need more than one candidate per line. These tests
+// use an independent dynamic programme whose state is everything the cost of
+// later lines can depend on: the break, the fitness class of the line that
+// ends there, and the length of the current run of hyphenated lines.
+
+const referenceDp = (
+  nodes: Node[],
+  lineWidth: number,
+  tolerance: number,
+  adjDemerits: number,
+  hyphenLimit: number,
+): number | null => {
+  const breaks = legalBreaks(nodes);
+  const last = nodes.length - 1;
+  // state key: `${breakIndex}/${fitness}/${run}` → best demerits
+  const best = new Map<string, number>();
+  best.set('-1/1/0', 0);
+  const order = [-1, ...breaks];
+
+  for (const to of breaks) {
+    const node = nodes[to];
+    const penalty = node.type === 'penalty' ? node.penalty : 0;
+    const flagged = node.type === 'penalty' && node.flagged;
+
+    for (const from of order) {
+      if (from >= to) break;
+      const { ratio } = measureLine(nodes, from, to, lineWidth);
+      if (ratio < -1 || ratio > tolerance) continue;
+      const badness = Math.min(10000, Math.round(100 * Math.abs(ratio) ** 3));
+      let d: number;
+      if (penalty === FORCED_BREAK) d = (1 + badness) ** 2;
+      else if (penalty >= 0) d = (1 + badness + penalty) ** 2;
+      else d = (1 + badness) ** 2 - penalty ** 2;
+      const fc = fitness(ratio);
+      const prevFlagged =
+        from >= 0 &&
+        nodes[from].type === 'penalty' &&
+        (nodes[from] as { flagged: boolean }).flagged;
+      if (prevFlagged && flagged) d += DOUBLE_HYPHEN_PENALTY;
+
+      for (let pf = 0; pf < 4; pf++) {
+        for (let run = 0; run <= 12; run++) {
+          const prev = best.get(`${from}/${pf}/${run}`);
+          if (prev === undefined) continue;
+          const newRun = flagged ? run + 1 : 0;
+          if (hyphenLimit > 0 && newRun > hyphenLimit) continue;
+          const total =
+            prev + d + (adjDemerits > 0 && Math.abs(fc - pf) > 1 ? adjDemerits : 0);
+          const key = `${to}/${fc}/${Math.min(newRun, 12)}`;
+          const cur = best.get(key);
+          if (cur === undefined || total < cur) best.set(key, total);
+        }
+      }
+    }
+  }
+
+  let result: number | null = null;
+  for (const [key, value] of best) {
+    if (key.startsWith(`${last}/`) && (result === null || value < result))
+      result = value;
+  }
+  return result;
+};
+
+const longParagraph = (seed: number, words: number, hyphenRate: number) => {
+  const r = rng(seed);
+  const nodes: Node[] = [];
+  for (let w = 0; w < words; w++) {
+    if (w > 0) nodes.push(glue(4 + r() * 1.2, 2.2 + r() * 1.8, 1 + r()));
+    const width = 16 + r() * 22;
+    if (r() < hyphenRate) {
+      nodes.push(box(width * 0.45), hyphen(3, 50), box(width * 0.55));
+    } else {
+      nodes.push(box(width));
+    }
+  }
+  return [...nodes, ...END];
+};
+
+describe('longer paragraphs equal an independent dynamic programme', () => {
+  it('the reference agrees with brute force on short paragraphs', () => {
+    for (let seed = 1; seed <= 30; seed++) {
+      const nodes = randomParagraph(seed);
+      const lineWidth = 60 + (seed % 6) * 10;
+      const bf = bruteForce(nodes, lineWidth, 4, 10000);
+      const dp = referenceDp(nodes, lineWidth, 4, 10000, 0);
+      if (bf === null) expect(dp, `seed ${seed}`).toBeNull();
+      else expect(dp!, `seed ${seed}`).toBeCloseTo(bf, 6);
+    }
+  });
+
+  it('adjDemerits = 10000 on 40- and 80-word paragraphs', () => {
+    let feasible = 0;
+    for (let seed = 1; seed <= 120; seed++) {
+      const nodes = longParagraph(seed, seed % 2 ? 40 : 80, 0.3);
+      const lineWidth = 150 + (seed % 5) * 20;
+      const expected = referenceDp(nodes, lineWidth, 4, 10000, 0);
+      const actual = solve({ nodes, lineWidth, tolerance: 4, adjDemerits: 10000 });
+      if (expected === null) {
+        expect(actual, `seed ${seed}`).toBeNull();
+      } else {
+        feasible++;
+        expect(actual, `seed ${seed}`).not.toBeNull();
+        expect(actual!, `seed ${seed}`).toBeCloseTo(expected, 4);
+      }
+    }
+    expect(feasible).toBeGreaterThan(60);
+  });
+
+  it('consecutiveHyphenLimit = 2 on hyphen-heavy paragraphs', () => {
+    let feasible = 0;
+    for (let seed = 1; seed <= 200; seed++) {
+      const nodes = longParagraph(seed, 14, 0.75);
+      const lineWidth = 62;
+      const expected = referenceDp(nodes, lineWidth, 5, 0, 2);
+      const actual = solve({
+        nodes,
+        lineWidth,
+        tolerance: 5,
+        consecutiveHyphenLimit: 2,
+      });
+      if (expected === null) {
+        expect(actual, `seed ${seed}`).toBeNull();
+      } else {
+        feasible++;
+        expect(actual, `seed ${seed}`).not.toBeNull();
+        expect(actual!, `seed ${seed}`).toBeCloseTo(expected, 4);
+      }
+    }
+    expect(feasible).toBeGreaterThan(50);
   });
 });

@@ -432,10 +432,18 @@ fn forward_pass(
                 arena.push(cand);
                 let cand_idx = arena.len() - 1;
 
-                let key = if adj_demerits > 0.0 {
+                let line_and_class = if adj_demerits > 0.0 {
                     cand_line * 4 + arena[cand_idx].fitness_class as usize
                 } else {
                     cand_line * 4
+                };
+                // With a consecutive-hyphen limit, the current hyphen run is
+                // part of the key (see linebreak.ts).
+                let key = if consecutive_hyphen_limit > 0 {
+                    let limit = consecutive_hyphen_limit as usize;
+                    line_and_class * (limit + 1) + (consec as usize).min(limit)
+                } else {
+                    line_and_class
                 };
                 match best_at_i.get(&key) {
                     None => {

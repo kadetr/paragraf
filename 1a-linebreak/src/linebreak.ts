@@ -123,8 +123,10 @@ const computeRatio = (
  *
  * The node that was broken at belongs to neither line, and the glue and
  * optional penalties that follow it are discarded, exactly as TeX discards
- * them after a line break. The next line therefore starts at the first box,
- * or at a forced break (which then produces an empty line).
+ * them after a line break. The next line therefore starts at the first box.
+ * The scan also stops at a forced break, so that a forced break is never
+ * skipped; a line consisting of nothing but that forced break has no content
+ * and no stretch, and is only feasible if fill glue precedes it.
  *
  * Position 0 is the start of the paragraph, where nothing is discarded.
  *
@@ -227,6 +229,8 @@ const forwardPass = (
     // must be kept (Knuth & Plass 1981, §4; TeX keeps one active node per
     // line number and fitness class). With adjDemerits = 0 the class cannot
     // affect later costs, so one candidate per line number is enough.
+    // With a consecutive-hyphen limit, the length of the current hyphen run
+    // is part of the key too (see below).
     const bestAtI = new Map<number, BreakpointNode>();
 
     for (const a of active) {
@@ -297,10 +301,18 @@ const forwardPass = (
           fitnessClass: fitnessClassOf(ratio),
         };
 
-        const key =
+        // A consecutive-hyphen limit adds one more piece of state: a candidate
+        // that has used fewer hyphens in a row may be the only one that can
+        // still continue, even if it has more demerits so far.
+        const lineAndClass =
           adjDemerits > 0
             ? candidate.line * 4 + candidate.fitnessClass
             : candidate.line * 4;
+        const key =
+          consecutiveHyphenLimit > 0
+            ? lineAndClass * (consecutiveHyphenLimit + 1) +
+              Math.min(consecutiveHyphens, consecutiveHyphenLimit)
+            : lineAndClass;
         const existing = bestAtI.get(key);
         if (!existing || candidate.totalDemerits < existing.totalDemerits) {
           bestAtI.set(key, candidate);

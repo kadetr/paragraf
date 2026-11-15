@@ -60,7 +60,7 @@ const randomParagraph = (seed: number): Node[] => {
   return nodes;
 };
 
-const compare = (adjDemerits: number, looseness: number) => {
+const compare = (adjDemerits: number, looseness: number, hyphenLimit = 0) => {
   let compared = 0;
   for (let seed = 1; seed <= 80; seed++) {
     const nodes = randomParagraph(seed);
@@ -76,6 +76,7 @@ const compare = (adjDemerits: number, looseness: number) => {
           tolerance,
           adjDemerits,
           looseness,
+          consecutiveHyphenLimit: hyphenLimit,
         }).node,
       );
     } catch {
@@ -89,7 +90,7 @@ const compare = (adjDemerits: number, looseness: number) => {
       tolerance,
       0,
       looseness,
-      0,
+      hyphenLimit,
       [],
       0,
       0,
@@ -122,4 +123,7 @@ describe('Rust and TypeScript line breakers agree', () => {
   it('with adjDemerits = 10000', () => compare(10000, 0));
   it('with looseness = 1', () => compare(0, 1));
   it('with adjDemerits = 10000 and looseness = -1', () => compare(10000, -1));
+  it('with consecutiveHyphenLimit = 1', () => compare(0, 0, 1));
+  it('with consecutiveHyphenLimit = 2 and adjDemerits = 10000', () =>
+    compare(10000, 0, 2));
 });
