@@ -4,6 +4,14 @@ All notable changes to this project will be documented in this file.
 
 ---
 
+## Unreleased
+
+### Tests
+
+- **Golden-output baseline.** `tests/golden/` composes 42 paragraphs (the parameters of manual scripts MT-01 … MT-22) with both the WASM engine and the TypeScript fallback and compares line breaks, adjustment ratios, word spacing and segment positions with committed snapshots. It runs as part of `npm run test:e2e`. `npm run golden:update` rewrites the snapshots; `npm run golden:preview` also writes an SVG per case to the git-ignored `tests/golden/outputs/`. Any change to line breaking now shows up as a reviewable snapshot diff.
+
+---
+
 ## v0.6.0 — 2026-04-23
 
 ### ⚠️ Breaking changes

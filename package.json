@@ -6,6 +6,8 @@
     "build": "npm run build --workspaces --if-present",
     "test": "npm test --workspaces --if-present",
     "test:e2e": "vitest run --config tests/vitest.config.ts",
+    "golden:update": "UPDATE_GOLDEN=1 vitest run --config tests/vitest.config.ts tests/golden",
+    "golden:preview": "GOLDEN_PREVIEW=1 vitest run --config tests/vitest.config.ts tests/golden",
     "manual": "tsx tests/manual/run-all.ts",
     "verify-fonts": "tsx scripts/setup-fonts.ts"
   },

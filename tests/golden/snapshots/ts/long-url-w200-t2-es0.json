@@ -1,0 +1,9 @@
+{
+  "id": "long-url-w200-t2-es0",
+  "mirrors": "MT-06",
+  "engine": "ts",
+  "error": "Paragraph could not be set within tolerance. Consider increasing tolerance or adding emergencyStretch.",
+  "lineCount": 0,
+  "usedEmergency": false,
+  "lines": []
+}
