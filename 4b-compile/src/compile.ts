@@ -53,7 +53,11 @@ import { renderDocumentToPdf } from '@paragraf/render-pdf';
 // tsc to fail for consumers installing with --no-optional.
 type ColorTransform = { apply(input: number[]): number[] };
 
-import type { CompileOptions, CompileResult } from './types.js';
+import type {
+  CompileOptions,
+  CompileResult,
+  OverfullLine,
+} from './types.js';
 import {
   buildFontRegistry,
   selectVariant,
@@ -82,6 +86,7 @@ export async function compile<T = unknown>(
     output = 'pdf',
     basePath = process.cwd(),
     onOverflow = 'throw',
+    onInfeasible = 'overfull',
     shaping = 'auto',
     title,
     lang,
@@ -240,10 +245,39 @@ export async function compile<T = unknown>(
 
   // ── 9. Compose document ───────────────────────────────────────────────────
   const doc: Document = {
-    paragraphs: deriveLineWidths(paragraphs, frames, frameAssignments),
+    paragraphs: deriveLineWidths(paragraphs, frames, frameAssignments).map(
+      (p) => ({ ...p, onInfeasible }),
+    ),
     frames,
   };
   const composedDoc = composeDocument(doc, composer);
+
+  // Paragraphs that could not be set within tolerance, and the lines that
+  // stick out as a result. Reported, never silent.
+  const overfullLines: OverfullLine[] = [];
+  const fallbackParagraphs: number[] = [];
+  composedDoc.paragraphs.forEach((p, paragraph) => {
+    if (p.output.usedFallback) fallbackParagraphs.push(paragraph);
+    p.output.lines.forEach((l, line) => {
+      if (l.overfull) {
+        overfullLines.push({
+          paragraph,
+          line,
+          overflow: l.overflow ?? 0,
+          text: l.words.join(' '),
+        });
+      }
+    });
+  });
+  if (verbose && overfullLines.length > 0) {
+    const first = overfullLines[0];
+    console.warn(
+      `[paragraf/compile] ${overfullLines.length} overfull line(s): content wider than the frame. ` +
+        `First: paragraph ${first.paragraph}, line ${first.line}, ` +
+        `${first.overflow.toFixed(1)}pt too wide ("${first.text.slice(0, 60)}"). ` +
+        `See metadata.overfullLines.`,
+    );
+  }
 
   // ── 10. Layout document ──────────────────────────────────────────────────
   // Reuse the measurer the composer already holds when available — both hit
@@ -267,7 +301,13 @@ export async function compile<T = unknown>(
   if (output === 'rendered') {
     return {
       data: renderedDoc,
-      metadata: { pageCount, overflowLines, shapingEngine },
+      metadata: {
+      pageCount,
+      overflowLines,
+      overfullLines,
+      fallbackParagraphs,
+      shapingEngine,
+    },
     };
   }
 
@@ -287,7 +327,13 @@ export async function compile<T = unknown>(
     });
     return {
       data: svgPages.join('\n'),
-      metadata: { pageCount, overflowLines, shapingEngine },
+      metadata: {
+      pageCount,
+      overflowLines,
+      overfullLines,
+      fallbackParagraphs,
+      shapingEngine,
+    },
     };
   }
 
@@ -330,7 +376,13 @@ export async function compile<T = unknown>(
 
   return {
     data: pdfBuf,
-    metadata: { pageCount, overflowLines, shapingEngine },
+    metadata: {
+      pageCount,
+      overflowLines,
+      overfullLines,
+      fallbackParagraphs,
+      shapingEngine,
+    },
   };
 }
 
@@ -622,7 +674,13 @@ async function emptyResult(
   title?: string,
   lang?: string,
 ): Promise<CompileResult> {
-  const metadata = { pageCount: 0, overflowLines: 0, shapingEngine };
+  const metadata = {
+    pageCount: 0,
+    overflowLines: 0,
+    overfullLines: [],
+    fallbackParagraphs: [],
+    shapingEngine,
+  };
   const renderedDoc: RenderedDocument = { pages: [] };
 
   if (output === 'rendered') return { data: renderedDoc, metadata };

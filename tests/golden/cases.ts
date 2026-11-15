@@ -74,13 +74,22 @@ export const CASES: GoldenCase[] = [
   // ── Tolerance threshold in a narrow column (MT-20) ─────────────────────────
   // Tolerance decides whether a paragraph can be set at all; once it can, the
   // optimum normally stays the same. At 250 pt the threshold lies between 1
-  // (throws) and 1.5 (sets). The pair at 160 pt has its threshold between 2
-  // and 3. DISTINCT_PAIRS below asserts that each pair really differs.
+  // (infeasible: set by the overfull fallback) and 1.5 (sets normally). The
+  // pair at 160 pt has its threshold between 2 and 3. The fallback accepts
+  // any line that fits, so it finds the same lines a higher tolerance finds;
+  // the cases of a pair then differ only in `usedFallback`. DISTINCT_PAIRS
+  // below asserts that each pair really differs.
   en('en-body-w250-t1', 'MT-20', { lineWidth: 250, tolerance: 1 }),
   en('en-body-w250-t1_5', 'MT-20', { lineWidth: 250, tolerance: 1.5 }),
   en('en-body-w250-t10', 'MT-20', { lineWidth: 250, tolerance: 10 }),
   en('en-body-w160-t2', 'MT-20', { lineWidth: 160, tolerance: 2 }),
   en('en-body-w160-t3', 'MT-20', { lineWidth: 160, tolerance: 3 }),
+  // Strict mode: the same infeasible paragraph must still throw.
+  en('en-body-w160-t2-strict', 'MT-20', {
+    lineWidth: 160,
+    tolerance: 2,
+    onInfeasible: 'throw',
+  }),
 
   // ── Looseness sweep (MT-21) ────────────────────────────────────────────────
   ...[-2, -1, 0, 1, 2].map((l) =>
@@ -144,6 +153,13 @@ export const CASES: GoldenCase[] = [
     lineWidth: 200,
     tolerance: 2,
     emergencyStretch: 0,
+  }),
+  en('long-url-w200-t2-es0-strict', 'MT-06', {
+    text: LONG_URL_TEXT,
+    lineWidth: 200,
+    tolerance: 2,
+    emergencyStretch: 0,
+    onInfeasible: 'throw',
   }),
   en('long-url-w200-t2-es50', 'MT-06', {
     text: LONG_URL_TEXT,
@@ -263,6 +279,8 @@ export const DISTINCT_PAIRS: [string, string][] = [
   ['en-body-w280-loosep1', 'en-body-w280-loosep2'],
   ['en-body-w130-t6-hyphens-unlimited', 'en-body-w130-t6-hyphens-limit2'],
   ['long-url-w200-t2-es0', 'long-url-w200-t2-es50'],
+  ['long-url-w200-t2-es0', 'long-url-w200-t2-es0-strict'],
+  ['en-body-w160-t2', 'en-body-w160-t2-strict'],
   ['en-body-451-t3', 'en-body-451-oma'],
   ['en-body-451-t3', 'en-body-linewidths-3x200'],
   ['en-body-451-left', 'en-body-451-right'],

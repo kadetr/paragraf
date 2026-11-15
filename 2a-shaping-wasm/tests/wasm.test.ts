@@ -337,13 +337,27 @@ describe('Phase 2 — compute_breakpoints_wasm result shape', () => {
     }
   });
 
-  it('returns error object when paragraph cannot be set', () => {
-    const impossible = { ...MOCK_PARA_2LINE, lineWidth: 10, tolerance: 0.1 };
+  it("returns error object when paragraph cannot be set and onInfeasible is 'throw'", () => {
+    const impossible = {
+      ...MOCK_PARA_2LINE,
+      lineWidth: 10,
+      tolerance: 0.1,
+      onInfeasible: 'throw',
+    };
     const result = JSON.parse(
       wasm.compute_breakpoints_wasm(toWasmJson(impossible)),
     );
     expect(result.error).toBeDefined();
     expect(result.ok).toBeUndefined();
+  });
+
+  it('falls back by default when paragraph cannot be set', () => {
+    const impossible = { ...MOCK_PARA_2LINE, lineWidth: 10, tolerance: 0.1 };
+    const result = JSON.parse(
+      wasm.compute_breakpoints_wasm(toWasmJson(impossible)),
+    );
+    expect(result.error).toBeUndefined();
+    expect(result.ok.usedFallback).toBe(true);
   });
 });
 
@@ -458,11 +472,24 @@ describe('Phase 3 — traceback_wasm result shape', () => {
     expect(result.ok.breaks[1].line).toBe(2);
   });
 
-  it('returns error for impossible paragraph', () => {
-    const impossible = { ...MOCK_PARA_2LINE, lineWidth: 10, tolerance: 0.1 };
+  it("returns error for impossible paragraph when onInfeasible is 'throw'", () => {
+    const impossible = {
+      ...MOCK_PARA_2LINE,
+      lineWidth: 10,
+      tolerance: 0.1,
+      onInfeasible: 'throw',
+    };
     const result = JSON.parse(wasm.traceback_wasm(toWasmJson(impossible)));
     expect(result.error).toBeDefined();
     expect(result.ok).toBeUndefined();
+  });
+
+  it('returns fallback breaks by default for impossible paragraph', () => {
+    const impossible = { ...MOCK_PARA_2LINE, lineWidth: 10, tolerance: 0.1 };
+    const result = JSON.parse(wasm.traceback_wasm(toWasmJson(impossible)));
+    expect(result.error).toBeUndefined();
+    expect(result.ok.usedFallback).toBe(true);
+    expect(result.ok.breaks.some((b: any) => b.overfull === true)).toBe(true);
   });
 });
 

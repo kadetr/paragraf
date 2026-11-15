@@ -198,6 +198,7 @@ const forwardPass = (
   singleLinePenalty: number = 0,
   lineWidths: number[] = [],
   adjDemerits: number = 0,
+  fallback: boolean = false,
 ): BreakpointNode[] => {
   const startNode: BreakpointNode = {
     position: 0,
@@ -258,7 +259,8 @@ const forwardPass = (
 
       if (ratio >= -1 && !isForcedBreak) nextActive.push(a);
 
-      if (isFeasible(ratio, tolerance)) {
+      // In the fallback pass every line that fits is accepted, however loose.
+      if (fallback ? ratio >= -1 : isFeasible(ratio, tolerance)) {
         const consecutiveHyphens = isFlagged ? a.consecutiveHyphens + 1 : 0;
 
         if (
@@ -294,7 +296,9 @@ const forwardPass = (
           position: i,
           line: a.line + 1,
           totalDemerits: a.totalDemerits + demerits,
-          ratio,
+          // A line with nothing to stretch has an infinite ratio; it is set
+          // at its natural width, so record 0 (only reachable in fallback).
+          ratio: Number.isFinite(ratio) ? ratio : 0,
           previous: a,
           flagged: isFlagged,
           consecutiveHyphens,
@@ -326,6 +330,36 @@ const forwardPass = (
       nextActive.push(bestAtI.get(key)!);
     }
 
+    // Fallback pass only: nothing survives this breakpoint, because every
+    // line that could end here is too long even fully shrunk and no shorter
+    // line is left to try. Break here anyway and mark the line overfull, as
+    // TeX does on its final pass. Of the lines that could end here the
+    // shortest is taken (the latest start), then the one with fewest demerits.
+    if (fallback && nextActive.length === 0 && active.length > 0) {
+      let a = active[0];
+      for (const c of active) {
+        if (
+          c.position > a.position ||
+          (c.position === a.position && c.totalDemerits < a.totalDemerits)
+        ) {
+          a = c;
+        }
+      }
+      nextActive.push({
+        position: i,
+        line: a.line + 1,
+        totalDemerits:
+          a.totalDemerits +
+          computeDemerits(10000, penaltyValue, a.flagged, isFlagged),
+        ratio: -1,
+        previous: a,
+        flagged: isFlagged,
+        consecutiveHyphens: isFlagged ? a.consecutiveHyphens + 1 : 0,
+        fitnessClass: 0,
+        overfull: true,
+      });
+    }
+
     active = nextActive;
   }
 
@@ -337,6 +371,13 @@ const forwardPass = (
 export interface BreakpointResult {
   node: BreakpointNode;
   usedEmergency: boolean;
+  /**
+   * True when the paragraph could not be set within tolerance and the
+   * fallback pass produced the breaks. Lines may then be looser than the
+   * tolerance allows, and some may be marked `overfull`.
+   * @since v0.7
+   */
+  usedFallback: boolean;
 }
 
 // ─── Core ─────────────────────────────────────────────────────────────────────
@@ -355,6 +396,7 @@ export const computeBreakpoints = (paragraph: Paragraph): BreakpointResult => {
   const runtPenalty = paragraph.runtPenalty ?? 0;
   const singleLinePenalty = paragraph.singleLinePenalty ?? 0;
   const adjDemerits = paragraph.adjDemerits ?? 0;
+  const onInfeasible = paragraph.onInfeasible ?? 'overfull';
 
   const sums = buildPrefixSums(nodes);
   const lineStarts = buildLineStarts(nodes);
@@ -374,6 +416,7 @@ export const computeBreakpoints = (paragraph: Paragraph): BreakpointResult => {
   );
 
   let usedEmergency = false;
+  let usedFallback = false;
 
   if (active.length === 0) {
     if (emergencyStretch > 0) {
@@ -394,10 +437,27 @@ export const computeBreakpoints = (paragraph: Paragraph): BreakpointResult => {
     }
 
     if (active.length === 0) {
-      throw new Error(
-        'Paragraph could not be set within tolerance. ' +
-          'Consider increasing tolerance or adding emergencyStretch.',
+      if (onInfeasible === 'throw') {
+        throw new Error(
+          'Paragraph could not be set within tolerance. ' +
+            'Consider increasing tolerance or adding emergencyStretch.',
+        );
+      }
+      active = forwardPass(
+        nodes,
+        lineWidth,
+        tolerance,
+        sums,
+        lineStarts,
+        emergencyStretch,
+        consecutiveHyphenLimit,
+        runtPenalty,
+        singleLinePenalty,
+        lineWidths,
+        adjDemerits,
+        true,
       );
+      usedFallback = true;
     }
   }
 
@@ -405,16 +465,17 @@ export const computeBreakpoints = (paragraph: Paragraph): BreakpointResult => {
     curr.totalDemerits < prev.totalDemerits ? curr : prev,
   );
 
-  if (looseness === 0) return { node: optimal, usedEmergency };
+  if (looseness === 0) return { node: optimal, usedEmergency, usedFallback };
 
   const targetLine = optimal.line + looseness;
   const candidates = active.filter((n) => n.line === targetLine);
-  if (candidates.length === 0) return { node: optimal, usedEmergency };
+  if (candidates.length === 0) return { node: optimal, usedEmergency, usedFallback };
 
   return {
     node: candidates.reduce((prev, curr) =>
       curr.totalDemerits < prev.totalDemerits ? curr : prev,
     ),
     usedEmergency,
+    usedFallback,
   };
 };

@@ -230,7 +230,7 @@ describe('ParagraphInput — configuration', () => {
     expect(withIndent.lineCount).toBeGreaterThanOrEqual(noIndent.lineCount);
   });
 
-  it('throws without emergencyStretch when tolerance is impossible', () => {
+  it("throws without emergencyStretch when tolerance is impossible and onInfeasible is 'throw'", () => {
     // tolerance=0 is impossible — no paragraph can have ratio exactly 0 on every line
     expect(() =>
       composer.compose({
@@ -238,8 +238,27 @@ describe('ParagraphInput — configuration', () => {
         font: FONT_REGULAR,
         lineWidth: 250,
         tolerance: 0,
+        onInfeasible: 'throw',
       }),
-    ).toThrow();
+    ).toThrow(/could not be set within tolerance/);
+  });
+
+  it('by default sets the paragraph anyway and reports the fallback', () => {
+    const out = composer.compose({
+      text: TEXT,
+      font: FONT_REGULAR,
+      lineWidth: 250,
+      tolerance: 0,
+    });
+    expect(out.usedFallback).toBe(true);
+    expect(out.lineCount).toBeGreaterThan(1);
+    // Every word of the text is still there.
+    const words = out.lines.flatMap((l) => l.words).join(' ');
+    expect(words.replace(/-\s/g, '').replace(/\s+/g, ' ')).toContain(
+      TEXT.split(' ').slice(0, 3).join(' '),
+    );
+    // 250 pt is wide enough for every word, so nothing sticks out.
+    expect(out.lines.some((l) => l.overfull)).toBe(false);
   });
 
   it('emergencyStretch does not affect paragraph that sets normally', () => {

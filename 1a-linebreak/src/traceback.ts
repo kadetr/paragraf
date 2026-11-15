@@ -8,6 +8,8 @@ export interface LineBreak {
   ratio: number; // r value — how much glue was stretched/shrunk on this line
   flagged: boolean; // true if line ends with a hyphen
   line: number; // line number (1-based)
+  /** Present (and true) only when the line cannot fit the measure. @since v0.7 */
+  overfull?: boolean;
 }
 
 // ─── Core ────────────────────────────────────────────────────────────────────
@@ -25,6 +27,7 @@ export const traceback = (finalNode: BreakpointNode): LineBreak[] => {
       ratio: current.ratio,
       flagged: current.flagged,
       line: current.line,
+      ...(current.overfull ? { overfull: true } : {}),
     });
     current = current.previous;
   }

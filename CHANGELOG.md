@@ -6,6 +6,33 @@ All notable changes to this project will be documented in this file.
 
 ## Unreleased
 
+### ⚠️ Breaking: infeasible paragraphs no longer throw by default
+
+#### Overfull fallback (`onInfeasible`)
+A paragraph that cannot be set within `tolerance` (even with `emergencyStretch`) used to throw "Paragraph could not be set within tolerance". One long URL could therefore stop a whole batch. The default is now to return lines anyway:
+
+- The breaker runs a last pass that accepts every line that fits, however loose. This gives the same lines a higher tolerance would give.
+- Where one unbreakable piece is wider than the measure (a long URL, a word that cannot be hyphenated), the line holding it sticks out past the right edge. Its spaces are fully shrunk.
+- Nothing is silent. `ParagraphOutput.usedFallback` is `true`; a line that sticks out has `overfull: true` and `overflow` (points) on its `ComposedLine`; `compile()` lists such lines in `metadata.overfullLines` (paragraph index, line index, overflow, text), lists the affected paragraphs in `metadata.fallbackParagraphs`, and prints one warning unless `verbose: false`.
+- `emergencyStretch` is still tried first. A paragraph it rescues is not a fallback.
+- Paragraphs that could already be set are unchanged: in the golden corpus only the four paragraphs that used to throw have a new snapshot.
+
+**To keep the old behaviour**, pass `onInfeasible: 'throw'` to `compose()`, `computeBreakpoints()` or `compile()`.
+
+New and changed API:
+
+| Where | Change |
+|---|---|
+| `ParagraphInput`, `Paragraph` (`@paragraf/types`), `CompileOptions` | new option `onInfeasible?: 'throw' \| 'overfull'`, default `'overfull'` |
+| `ParagraphOutput`, `BreakpointResult` | new required field `usedFallback: boolean` |
+| `ComposedLine`, `LineBreak` | new optional fields `overfull`, and `overflow` on `ComposedLine`; present only on overfull lines |
+| `CompileResult.metadata` | new required fields `overfullLines`, `fallbackParagraphs` |
+| `tracebackWasmBinary()` | new last argument `onInfeasible`; result carries `usedFallback` |
+
+Code that builds a `ParagraphOutput` or a `CompileResult` by hand (a mock composer in a test, for example) must add the new required fields.
+
+Both engines implement the fallback and are compared on infeasible paragraphs in `2a-shaping-wasm/tests/linebreak-parity.test.ts`.
+
 ### ⚠️ Line breaks change
 
 #### Line measure no longer includes the glue at the previous break

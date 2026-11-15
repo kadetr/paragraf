@@ -28,6 +28,10 @@ export interface GoldenLine {
   isRunt: boolean;
   xOffset?: number;
   rightProtrusion?: number;
+  /** Present only on a line that sticks out of the measure. */
+  overfull?: true;
+  /** How far it sticks out, in points. */
+  overflow?: number;
   /** Where the line lands on the page: baseline, then x and y per segment. */
   baseline: number;
   x: number[];
@@ -42,6 +46,8 @@ export interface GoldenSnapshot {
   error?: string;
   lineCount: number;
   usedEmergency: boolean;
+  /** Present only when the paragraph was set by the overfull fallback. */
+  usedFallback?: true;
   lines: GoldenLine[];
 }
 
@@ -68,6 +74,10 @@ export const serializeLine = (
   };
   if (line.xOffset) out.xOffset = round(line.xOffset);
   if (line.rightProtrusion) out.rightProtrusion = round(line.rightProtrusion);
+  if (line.overfull) {
+    out.overfull = true;
+    out.overflow = round(line.overflow ?? 0);
+  }
   return out;
 };
 

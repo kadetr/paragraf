@@ -99,6 +99,14 @@ pub struct ParagraphInput {
     pub single_line_penalty: Option<f64>,
     #[serde(rename = "adjDemerits", skip_serializing_if = "Option::is_none")]
     pub adj_demerits: Option<f64>,
+    /// "throw" → error when the paragraph cannot be set within tolerance.
+    /// Anything else (default) → overfull fallback pass. Mirrors linebreak.ts.
+    #[serde(
+        rename = "onInfeasible",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub on_infeasible: Option<String>,
 }
 
 /// Internal forward-pass state; stored in a Vec<BreakpointNode> arena.
@@ -113,6 +121,8 @@ pub struct BreakpointNode {
     pub flagged: bool,
     pub consecutive_hyphens: u32,
     pub fitness_class: u8,
+    /// Line ending here is wider than the measure even fully shrunk.
+    pub overfull: bool,
 }
 
 /// One break in the traceback result. Mirrors TypeScript `LineBreak` in traceback.ts.
@@ -123,6 +133,13 @@ pub struct LineBreak {
     pub ratio: f64,
     pub flagged: bool,
     pub line: usize,
+    /// Serialized only when true, like the optional field in traceback.ts.
+    #[serde(default, skip_serializing_if = "is_false")]
+    pub overfull: bool,
+}
+
+fn is_false(b: &bool) -> bool {
+    !*b
 }
 
 // ─── Phase 1 — round-trip boundary functions ─────────────────────────────────
@@ -333,6 +350,7 @@ fn forward_pass(
     single_line_penalty: f64,
     line_widths: &[f64],
     adj_demerits: f64,
+    fallback: bool,
 ) -> (Vec<BreakpointNode>, Vec<usize>) {
     let mut arena: Vec<BreakpointNode> = Vec::new();
     arena.push(BreakpointNode {
@@ -344,6 +362,7 @@ fn forward_pass(
         flagged: false,
         consecutive_hyphens: 0,
         fitness_class: 1, // initial node is treated as normal (ratio 0)
+        overfull: false,
     });
     let mut active: Vec<usize> = vec![0];
 
@@ -393,7 +412,13 @@ fn forward_pass(
                 next_active.push(a_idx);
             }
 
-            if is_feasible(ratio, tolerance) {
+            // In the fallback pass every line that fits is accepted, however loose.
+            let feasible = if fallback {
+                ratio >= -1.0
+            } else {
+                is_feasible(ratio, tolerance)
+            };
+            if feasible {
                 let consec = if is_flagged { a_ch + 1 } else { 0 };
                 if consecutive_hyphen_limit > 0 && consec > consecutive_hyphen_limit {
                     continue;
@@ -423,11 +448,14 @@ fn forward_pass(
                     position: i,
                     line: cand_line,
                     total_demerits: a_td + d,
-                    ratio,
+                    // A line with nothing to stretch has an infinite ratio; it
+                    // is set at natural width, so record 0 (fallback only).
+                    ratio: if ratio.is_finite() { ratio } else { 0.0 },
                     previous: Some(a_idx),
                     flagged: is_flagged,
                     consecutive_hyphens: consec,
                     fitness_class: fitness_class_of(ratio),
+                    overfull: false,
                 };
                 arena.push(cand);
                 let cand_idx = arena.len() - 1;
@@ -461,6 +489,38 @@ fn forward_pass(
         for &w in best_at_i.values() {
             next_active.push(w);
         }
+
+        // Fallback pass only: nothing survives this breakpoint. Break here
+        // anyway and mark the line overfull (see linebreak.ts). The shortest
+        // line is taken (latest start), then the one with fewest demerits.
+        if fallback && next_active.is_empty() && !active.is_empty() {
+            let mut a_idx = active[0];
+            for &c in &active {
+                let (c_pos, c_td) = (arena[c].position, arena[c].total_demerits);
+                let (a_pos, a_td) = (arena[a_idx].position, arena[a_idx].total_demerits);
+                if c_pos > a_pos || (c_pos == a_pos && c_td < a_td) {
+                    a_idx = c;
+                }
+            }
+            let (a_line, a_td, a_flagged, a_ch) = {
+                let a = &arena[a_idx];
+                (a.line, a.total_demerits, a.flagged, a.consecutive_hyphens)
+            };
+            arena.push(BreakpointNode {
+                position: i,
+                line: a_line + 1,
+                total_demerits: a_td
+                    + compute_demerits(10000.0, penalty_value, a_flagged, is_flagged),
+                ratio: -1.0,
+                previous: Some(a_idx),
+                flagged: is_flagged,
+                consecutive_hyphens: if is_flagged { a_ch + 1 } else { 0 },
+                fitness_class: 0,
+                overfull: true,
+            });
+            next_active.push(arena.len() - 1);
+        }
+
         active = next_active;
     }
 
@@ -470,11 +530,11 @@ fn forward_pass(
 // ─── Phase 2 — WASM entry point ──────────────────────────────────────────────
 
 /// Parse a `ParagraphInput` and run the forward pass (with emergency-stretch retry).
-/// Returns `(arena, active, used_emergency)` or an error string.
+/// Returns `(arena, active, used_emergency, used_fallback)` or an error string.
 /// Shared by `compute_breakpoints_wasm` and `traceback_wasm`.
 fn run_forward_pass(
     para: &ParagraphInput,
-) -> Result<(Vec<BreakpointNode>, Vec<usize>, bool), String> {
+) -> Result<(Vec<BreakpointNode>, Vec<usize>, bool, bool), String> {
     let nodes = &para.nodes;
     let line_widths = para.line_widths.as_deref().unwrap_or(&[]);
     let emergency_stretch = para.emergency_stretch.unwrap_or(0.0);
@@ -498,8 +558,10 @@ fn run_forward_pass(
         single_line_p,
         line_widths,
         adj_demerits,
+        false,
     );
     let mut used_emergency = false;
+    let mut used_fallback = false;
 
     if active.is_empty() {
         if emergency_stretch > 0.0 {
@@ -515,17 +577,37 @@ fn run_forward_pass(
                 single_line_p,
                 line_widths,
                 adj_demerits,
+                false,
             );
             arena = a2;
             active = act2;
             used_emergency = true;
         }
         if active.is_empty() {
-            return Err("Paragraph could not be set within tolerance.".to_string());
+            if para.on_infeasible.as_deref() == Some("throw") {
+                return Err("Paragraph could not be set within tolerance.".to_string());
+            }
+            let (a3, act3) = forward_pass(
+                nodes,
+                para.line_width,
+                para.tolerance,
+                &sums,
+                &line_starts,
+                emergency_stretch,
+                consec_limit,
+                runt_p,
+                single_line_p,
+                line_widths,
+                adj_demerits,
+                true,
+            );
+            arena = a3;
+            active = act3;
+            used_fallback = true;
         }
     }
 
-    Ok((arena, active, used_emergency))
+    Ok((arena, active, used_emergency, used_fallback))
 }
 
 /// Run the full Knuth-Plass forward pass (with multi-pass tolerance ladder) on
@@ -548,7 +630,7 @@ pub fn compute_breakpoints_wasm(input_json: &str) -> String {
 
     let looseness = para.looseness.unwrap_or(0);
 
-    let (arena, active, used_emergency) = match run_forward_pass(&para) {
+    let (arena, active, used_emergency, used_fallback) = match run_forward_pass(&para) {
         Ok(r) => r,
         Err(e) => return serde_json::to_string(&serde_json::json!({ "error": e })).unwrap(),
     };
@@ -580,6 +662,7 @@ pub fn compute_breakpoints_wasm(input_json: &str) -> String {
         "ok": {
             "active":        active_json,
             "usedEmergency": used_emergency,
+            "usedFallback":  used_fallback,
             "optimalIndex":  final_pos,
         }
     }))
@@ -603,6 +686,7 @@ fn traceback_arena(arena: &[BreakpointNode], final_idx: usize) -> Vec<LineBreak>
                     ratio: node.ratio,
                     flagged: node.flagged,
                     line: node.line,
+                    overfull: node.overfull,
                 });
                 current_idx = prev_idx;
             }
@@ -717,7 +801,8 @@ fn deserialize_nodes_binary(f64s: &[f64], u8s: &[u8]) -> Result<Vec<Node>, Strin
 }
 
 /// Run the forward pass and traceback using binary node format.
-/// Returns `{ ok: { breaks: [...], usedEmergency: bool } }` or `{ error: "..." }`.
+/// Returns `{ ok: { breaks: [...], usedEmergency: bool, usedFallback: bool } }`
+/// or `{ error: "..." }`.
 ///
 /// f64s: [width, p1, p2, p3, ...] (4 f64 per node)
 /// u8s: [type_and_flags, ...] (type in lower 4 bits, flags in upper 4 bits)
@@ -734,6 +819,7 @@ pub fn traceback_wasm_binary(
     single_line_penalty: f64,
     consecutive_hyphen_limit: u32,
     adj_demerits: f64,
+    throw_on_infeasible: bool,
 ) -> String {
     let nodes = match deserialize_nodes_binary(f64s, u8s) {
         Ok(n) => n,
@@ -783,9 +869,15 @@ pub fn traceback_wasm_binary(
         } else {
             None
         },
+        // A caller that omits the argument passes false: the overfull fallback.
+        on_infeasible: if throw_on_infeasible {
+            Some("throw".to_string())
+        } else {
+            None
+        },
     };
 
-    let (arena, active, used_emergency) = match run_forward_pass(&para) {
+    let (arena, active, used_emergency, used_fallback) = match run_forward_pass(&para) {
         Ok(r) => r,
         Err(e) => return serde_json::to_string(&serde_json::json!({ "error": e })).unwrap(),
     };
@@ -809,7 +901,11 @@ pub fn traceback_wasm_binary(
     }
 
     serde_json::to_string(
-        &serde_json::json!({ "ok": { "breaks": breaks, "usedEmergency": used_emergency } }),
+        &serde_json::json!({ "ok": {
+            "breaks": breaks,
+            "usedEmergency": used_emergency,
+            "usedFallback": used_fallback,
+        } }),
     )
     .unwrap()
 }
@@ -829,7 +925,7 @@ pub fn traceback_wasm(input_json: &str) -> String {
 
     let looseness = para.looseness.unwrap_or(0);
 
-    let (arena, active, used_emergency) = match run_forward_pass(&para) {
+    let (arena, active, used_emergency, used_fallback) = match run_forward_pass(&para) {
         Ok(r) => r,
         Err(e) => return serde_json::to_string(&serde_json::json!({ "error": e })).unwrap(),
     };
@@ -838,7 +934,11 @@ pub fn traceback_wasm(input_json: &str) -> String {
     let breaks = traceback_arena(&arena, final_arena_idx);
 
     serde_json::to_string(
-        &serde_json::json!({ "ok": { "breaks": breaks, "usedEmergency": used_emergency } }),
+        &serde_json::json!({ "ok": {
+            "breaks": breaks,
+            "usedEmergency": used_emergency,
+            "usedFallback": used_fallback,
+        } }),
     )
     .unwrap()
 }

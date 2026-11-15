@@ -205,6 +205,17 @@ export interface ParagraphInput {
    * `0` (default) disables the check; TeX's default is `10000`. @since v0.7
    */
   adjDemerits?: number;
+  /**
+   * What to do when the paragraph cannot be set within `tolerance`, even with
+   * `emergencyStretch`.
+   * - `'overfull'` (default) — still return lines. Lines that fit are set
+   *   however loose they are; a line holding one piece wider than the measure
+   *   (a long URL, for example) sticks out and is marked `overfull`.
+   *   `ParagraphOutput.usedFallback` is then `true`.
+   * - `'throw'` — throw an Error, as before v0.7.
+   * @since v0.7
+   */
+  onInfeasible?: 'throw' | 'overfull';
   preserveSoftHyphens?: boolean;
   /** When set, overrides the font-metric-derived line height on every composed
    *  line. Use this to enforce exact leading (e.g. 16pt) independent of the
@@ -242,6 +253,12 @@ export interface ParagraphOutput {
   lines: ComposedParagraph;
   lineCount: number;
   usedEmergency: boolean;
+  /**
+   * True when the paragraph could not be set within tolerance and fallback
+   * breaks were used (see `ParagraphInput.onInfeasible`). Overfull lines carry
+   * `overfull: true` and `overflow` in points. @since v0.7
+   */
+  usedFallback: boolean;
 }
 
 export interface ParagraphComposer {
@@ -719,6 +736,7 @@ export const createParagraphComposer = async (
       runtPenalty = 0,
       singleLinePenalty = 0,
       adjDemerits = 0,
+      onInfeasible = 'overfull',
       preserveSoftHyphens = true,
     } = input;
 
@@ -863,6 +881,7 @@ export const createParagraphComposer = async (
 
     let breaks: LineBreak[];
     let usedEmergency: boolean;
+    let usedFallback: boolean;
 
     if (useWasm) {
       const tbResult = tracebackWasmBinary(
@@ -877,10 +896,12 @@ export const createParagraphComposer = async (
         runtPenalty,
         singleLinePenalty,
         adjDemerits,
+        onInfeasible,
       );
       if ('error' in tbResult) throw new Error(tbResult.error);
       breaks = tbResult.ok.breaks as LineBreak[];
       usedEmergency = tbResult.ok.usedEmergency as boolean;
+      usedFallback = tbResult.ok.usedFallback === true;
     } else {
       const result = computeBreakpoints({
         nodes,
@@ -892,10 +913,12 @@ export const createParagraphComposer = async (
         runtPenalty,
         singleLinePenalty,
         adjDemerits,
+        onInfeasible,
         looseness: looseInt,
       });
       breaks = traceback(result.node);
       usedEmergency = result.usedEmergency;
+      usedFallback = result.usedFallback;
     }
 
     let lines = composeParagraph(
@@ -979,6 +1002,7 @@ export const createParagraphComposer = async (
       lines,
       lineCount: lines.length,
       usedEmergency,
+      usedFallback,
     };
   };
 

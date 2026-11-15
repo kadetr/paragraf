@@ -1,7 +1,8 @@
 #!/usr/bin/env tsx
 // manual/scripts/mt-06-long-url.ts
 // MT-06 — Long URL / No-Break Word.
-// Tests: overflow with default tolerance, emergency stretch fix.
+// Tests: a paragraph that cannot be set within tolerance (overfull fallback),
+// the emergency-stretch fix, and a URL wider than the column (overfull line).
 //
 // Run:  tsx tests/manual/scripts/mt-06-long-url.ts
 
@@ -66,6 +67,22 @@ const outEmerg = composer.compose({
 });
 const msEmerg = performance.now() - t1;
 
+// ─── A URL wider than the column ──────────────────────────────────────────────
+// No setting can make this fit: the line holding the URL sticks out and is
+// marked overfull.
+
+const WIDE_URL =
+  'https://example.com/a/very/long/path/that/cannot/be/hyphenated/index.html';
+const outWide = composer.compose({
+  text: `The report is published at ${WIDE_URL} and is updated every week.`,
+  font: F12,
+  lineWidth: LINE_W,
+  tolerance: 2,
+});
+const overfullLines = outWide.lines
+  .map((l, idx) => ({ idx, text: l.words.join(' '), overflow: l.overflow }))
+  .filter((_, idx) => outWide.lines[idx].overfull);
+
 // ─── Checks ───────────────────────────────────────────────────────────────────
 
 if (noEmergencyThrew) {
@@ -74,7 +91,15 @@ if (noEmergencyThrew) {
   );
 } else {
   console.log(
-    `\n  No-emergency: ${outNoEmerg!.lines.length} lines, usedEmergency=${outNoEmerg!.usedEmergency}`,
+    `\n  No-emergency: ${outNoEmerg!.lines.length} lines, usedEmergency=${outNoEmerg!.usedEmergency}, usedFallback=${outNoEmerg!.usedFallback}`,
+  );
+}
+console.log(
+  `  Wide URL:     ${outWide.lines.length} lines, usedFallback=${outWide.usedFallback}, overfull lines=${overfullLines.length}`,
+);
+for (const l of overfullLines) {
+  console.log(
+    `    line ${l.idx}: ${l.overflow!.toFixed(1)}pt too wide — "${l.text}"`,
   );
 }
 console.log(
@@ -111,6 +136,29 @@ const pdf = await renderToPdf(rendered, fontEngine, {
 });
 writePdf('mt-06-long-url.pdf', pdf);
 
+// The same paragraph without emergency stretch (set by the fallback), and the
+// paragraph with the URL wider than the column.
+const extraOutputs: [string, typeof outEmerg | null, string][] = [
+  ['mt-06-long-url-fallback', outNoEmerg, 'MT-06 fallback'],
+  ['mt-06-long-url-overfull', outWide, 'MT-06 overfull'],
+];
+for (const [name, out, label] of extraOutputs) {
+  if (!out) continue;
+  const r = layoutParagraph(out.lines, measurer, { x: MARGIN_X, y: MARGIN_TOP });
+  writeSvg(
+    `${name}.svg`,
+    renderToSvg(r, fontEngine, { width: PAGE_W, height: PAGE_H }),
+  );
+  writePdf(
+    `${name}.pdf`,
+    await renderToPdf(r, fontEngine, {
+      width: PAGE_W,
+      height: PAGE_H,
+      preDraw: (doc) => drawTestHeader(doc, label),
+    }),
+  );
+}
+
 // ─── Metrics JSON ─────────────────────────────────────────────────────────────
 
 const lineMetrics: LineMetrics[] = outEmerg.lines.map((l, idx) => ({
@@ -140,11 +188,21 @@ const metrics: TestMetrics = {
     noEmergencyThrew,
     noEmergencyMaxRatio: maxRatioNoEmerg,
     noEmergencyUsedEmergency: outNoEmerg?.usedEmergency ?? null,
+    noEmergencyUsedFallback: outNoEmerg?.usedFallback ?? null,
+    wideUrlUsedFallback: outWide.usedFallback,
+    wideUrlOverfullLines: overfullLines,
   },
 };
 
 writeJson('mt-06-long-url.metrics.json', metrics);
 
-// Pass: emergency stretch produced a result without crash
-console.log('\nPASS');
-process.exit(0);
+// Pass: nothing threw, emergency stretch rescued the first paragraph, and the
+// wide URL is reported as exactly one overfull line.
+const ok =
+  !noEmergencyThrew &&
+  outEmerg.usedEmergency &&
+  !outEmerg.usedFallback &&
+  overfullLines.length === 1 &&
+  overfullLines[0].text === WIDE_URL;
+console.log(ok ? '\nPASS' : '\nFAIL');
+process.exit(ok ? 0 : 1);

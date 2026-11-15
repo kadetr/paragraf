@@ -11,7 +11,7 @@
 //      found by brute force — with and without adjacent-line demerits.
 
 import { describe, it, expect } from 'vitest';
-import { computeBreakpoints } from '../src/linebreak';
+import { computeBreakpoints as computeBreakpointsDefault } from '../src/linebreak';
 import { traceback } from '../src/traceback';
 import {
   Node,
@@ -20,6 +20,13 @@ import {
   FORCED_BREAK,
   DOUBLE_HYPHEN_PENALTY,
 } from '@paragraf/types';
+
+// These tests describe the breaker within tolerance. Since v0.7 the default
+// for an infeasible paragraph is the overfull fallback (covered in
+// overfull-fallback.test.ts); here the strict mode is kept so that
+// "infeasible" still means "throws".
+const computeBreakpoints = (p: Paragraph) =>
+  computeBreakpointsDefault({ onInfeasible: 'throw', ...p });
 
 // ─── Node builders ───────────────────────────────────────────────────────────
 
