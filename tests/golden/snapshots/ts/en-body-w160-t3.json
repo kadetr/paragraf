@@ -21,7 +21,7 @@
     {
       "text": "the globally optimal set of line",
       "hyphenated": false,
-      "ratio": 0.8358,
+      "ratio": 1.3029,
       "wordSpacing": 5.6059,
       "lineWidth": 160,
       "alignment": "justified",
@@ -32,35 +32,35 @@
       "y": [93.0293, 93.0293, 93.0293, 93.0293, 93.0293, 93.0293, 93.0293, 93.0293, 93.0293]
     },
     {
-      "text": "breaks for a paragraph, min-",
+      "text": "breaks for a paragraph, minimis-",
       "hyphenated": true,
-      "ratio": 2.0729,
-      "wordSpacing": 8.9321,
+      "ratio": 0.3821,
+      "wordSpacing": 3.7642,
       "lineWidth": 160,
       "alignment": "justified",
       "direction": "ltr",
       "isRunt": false,
       "baseline": 105.7383,
-      "x": [72, 112.2505, 135.1748, 149.4331, 170.0815, 209.3359],
-      "y": [105.7383, 105.7383, 105.7383, 105.7383, 105.7383, 105.7383]
+      "x": [72, 107.0825, 124.8389, 133.9292, 154.5776, 188.6641, 207.332],
+      "y": [105.7383, 105.7383, 105.7383, 105.7383, 105.7383, 105.7383, 105.7383]
     },
     {
-      "text": "imising a cost function based on",
+      "text": "ing a cost function based on",
       "hyphenated": false,
-      "ratio": 0.5025,
-      "wordSpacing": 4.0051,
+      "ratio": 2.5697,
+      "wordSpacing": 8.1395,
       "lineWidth": 160,
       "alignment": "justified",
       "direction": "ltr",
       "isRunt": false,
       "baseline": 118.4473,
-      "x": [72, 92.6719, 112.0109, 121.3422, 144.6773, 165.9996, 188.6727, 220],
-      "y": [118.4473, 118.4473, 118.4473, 118.4473, 118.4473, 118.4473, 118.4473, 118.4473]
+      "x": [72, 95.4734, 108.9391, 136.4086, 157.7309, 184.5383, 220],
+      "y": [118.4473, 118.4473, 118.4473, 118.4473, 118.4473, 118.4473, 118.4473]
     },
     {
       "text": "how tightly or loosely each line",
       "hyphenated": false,
-      "ratio": 0.4471,
+      "ratio": 0.8365,
       "wordSpacing": 4.673,
       "lineWidth": 160,
       "alignment": "justified",
@@ -73,7 +73,7 @@
     {
       "text": "is fitted. Unlike first-fit greedy",
       "hyphenated": false,
-      "ratio": 0.9373,
+      "ratio": 1.5466,
       "wordSpacing": 6.0933,
       "lineWidth": 160,
       "alignment": "justified",
@@ -86,7 +86,7 @@
     {
       "text": "algorithms, it considers all fea-",
       "hyphenated": true,
-      "ratio": 0.8043,
+      "ratio": 1.3804,
       "wordSpacing": 5.7607,
       "lineWidth": 160,
       "alignment": "justified",
@@ -123,48 +123,48 @@
       "y": [181.9922, 181.9922, 181.9922, 181.9922, 181.9922, 181.9922, 181.9922, 181.9922]
     },
     {
-      "text": "\"colour\" across the paragraph",
+      "text": "\"colour\" across the paragraph —",
       "hyphenated": false,
-      "ratio": 1.866,
-      "wordSpacing": 8.9759,
+      "ratio": 0.366,
+      "wordSpacing": 3.7319,
       "lineWidth": 160,
       "alignment": "justified",
       "direction": "ltr",
       "isRunt": false,
       "baseline": 194.7012,
-      "x": [72, 121.429, 160.3932, 184.0293, 204.6777],
-      "y": [194.7012, 194.7012, 194.7012, 194.7012, 194.7012]
+      "x": [72, 116.1851, 149.9053, 168.2974, 188.9458, 220],
+      "y": [194.7012, 194.7012, 194.7012, 194.7012, 194.7012, 194.7012]
     },
     {
-      "text": "— no very loose lines followed",
+      "text": "no very loose lines followed by",
       "hyphenated": false,
-      "ratio": 0.5023,
+      "ratio": 0.9027,
       "wordSpacing": 4.8055,
       "lineWidth": 160,
       "alignment": "justified",
       "direction": "ltr",
       "isRunt": false,
       "baseline": 207.4102,
-      "x": [72, 88.8055, 105.6109, 131.7387, 161.8742, 189.3437, 202.6738],
+      "x": [72, 88.8055, 114.9332, 145.0688, 172.5383, 185.8684, 220],
       "y": [207.4102, 207.4102, 207.4102, 207.4102, 207.4102, 207.4102, 207.4102]
     },
     {
-      "text": "by very tight ones, no unsightly",
+      "text": "very tight ones, no unsightly",
       "hyphenated": false,
-      "ratio": 0.4173,
-      "wordSpacing": 4.6016,
+      "ratio": 2.876,
+      "wordSpacing": 8.752,
       "lineWidth": 160,
       "alignment": "justified",
       "direction": "ltr",
       "isRunt": false,
       "baseline": 220.1191,
-      "x": [72, 88.6016, 114.5254, 141.1289, 170.7266, 187.3281, 199.3281],
-      "y": [220.1191, 220.1191, 220.1191, 220.1191, 220.1191, 220.1191, 220.1191]
+      "x": [72, 102.0742, 132.8281, 166.5762, 187.3281, 199.3281],
+      "y": [220.1191, 220.1191, 220.1191, 220.1191, 220.1191, 220.1191]
     },
     {
       "text": "rivers of white space running",
       "hyphenated": false,
-      "ratio": 1.7043,
+      "ratio": 2.5054,
       "wordSpacing": 8.0107,
       "lineWidth": 160,
       "alignment": "justified",
@@ -177,7 +177,7 @@
     {
       "text": "through the justified text. Diffi-",
       "hyphenated": true,
-      "ratio": 0.5365,
+      "ratio": 1.0457,
       "wordSpacing": 5.0913,
       "lineWidth": 160,
       "alignment": "justified",
@@ -203,7 +203,7 @@
     {
       "text": "\"ffi\" are resolved automatically",
       "hyphenated": false,
-      "ratio": 0.8105,
+      "ratio": 1.5807,
       "wordSpacing": 6.1615,
       "lineWidth": 160,
       "alignment": "justified",
@@ -214,30 +214,30 @@
       "y": [270.9551, 270.9551, 270.9551, 270.9551, 270.9551, 270.9551, 270.9551, 270.9551, 270.9551]
     },
     {
-      "text": "through GSUB lookup tables.",
-      "hyphenated": false,
-      "ratio": 1.792,
-      "wordSpacing": 8.7786,
+      "text": "through GSUB lookup tables. Hy-",
+      "hyphenated": true,
+      "ratio": -0.8112,
+      "wordSpacing": 1.9185,
       "lineWidth": 160,
       "alignment": "justified",
       "direction": "ltr",
       "isRunt": false,
       "baseline": 283.6641,
-      "x": [72, 118.1087, 158.8971, 201.0098, 209.6699],
-      "y": [283.6641, 283.6641, 283.6641, 283.6641, 283.6641]
+      "x": [72, 111.2485, 145.1768, 180.4292, 189.0894, 213.3379],
+      "y": [283.6641, 283.6641, 283.6641, 283.6641, 283.6641, 283.6641]
     },
     {
-      "text": "Hyphenation is applied using lan-",
+      "text": "phenation is applied using lan-",
       "hyphenated": true,
-      "ratio": -0.7456,
-      "wordSpacing": 2.5073,
+      "ratio": 1.5869,
+      "wordSpacing": 6.1738,
       "lineWidth": 160,
       "alignment": "justified",
       "direction": "ltr",
       "isRunt": false,
       "baseline": 296.373,
-      "x": [72, 86.666, 109.9922, 136.4937, 147.0049, 158.3311, 184.8325, 195.5024, 213.3438],
-      "y": [296.373, 296.373, 296.373, 296.373, 296.373, 296.373, 296.373, 296.373, 296.373]
+      "x": [72, 95.3262, 125.4941, 139.6719, 150.998, 181.166, 191.8359, 213.3438],
+      "y": [296.373, 296.373, 296.373, 296.373, 296.373, 296.373, 296.373, 296.373]
     },
     {
       "text": "guage-specific dictionaries, and",
@@ -255,7 +255,7 @@
     {
       "text": "consecutive hyphenated lines are",
       "hyphenated": false,
-      "ratio": -0.2377,
+      "ratio": 0.2887,
       "wordSpacing": 3.5775,
       "lineWidth": 160,
       "alignment": "justified",
@@ -268,7 +268,7 @@
     {
       "text": "limited to avoid a distracting lad-",
       "hyphenated": true,
-      "ratio": -0.3284,
+      "ratio": 0.0373,
       "wordSpacing": 3.0746,
       "lineWidth": 160,
       "alignment": "justified",
@@ -307,7 +307,7 @@
     {
       "text": "ensures that a single short word",
       "hyphenated": false,
-      "ratio": 0.4471,
+      "ratio": 0.8365,
       "wordSpacing": 4.673,
       "lineWidth": 160,
       "alignment": "justified",
@@ -320,7 +320,7 @@
     {
       "text": "never appears alone on the last",
       "hyphenated": false,
-      "ratio": 0.783,
+      "ratio": 1.2396,
       "wordSpacing": 5.4793,
       "lineWidth": 160,
       "alignment": "justified",
@@ -333,7 +333,7 @@
     {
       "text": "line of a paragraph, and a single",
       "hyphenated": false,
-      "ratio": 0.2426,
+      "ratio": 0.533,
       "wordSpacing": 4.0661,
       "lineWidth": 160,
       "alignment": "justified",
@@ -346,7 +346,7 @@
     {
       "text": "line never stands isolated at the",
       "hyphenated": false,
-      "ratio": 0.5594,
+      "ratio": 0.9713,
       "wordSpacing": 4.9426,
       "lineWidth": 160,
       "alignment": "justified",
@@ -359,7 +359,7 @@
     {
       "text": "top of a column. The algorithm",
       "hyphenated": false,
-      "ratio": 0.5863,
+      "ratio": 1.0035,
       "wordSpacing": 5.007,
       "lineWidth": 160,
       "alignment": "justified",
@@ -372,7 +372,7 @@
     {
       "text": "was described by Donald Knuth",
       "hyphenated": false,
-      "ratio": 0.3033,
+      "ratio": 0.7542,
       "wordSpacing": 4.5083,
       "lineWidth": 160,
       "alignment": "justified",
@@ -385,7 +385,7 @@
     {
       "text": "and Michael Plass in their 1981",
       "hyphenated": false,
-      "ratio": 0.4466,
+      "ratio": 0.8359,
       "wordSpacing": 4.6719,
       "lineWidth": 160,
       "alignment": "justified",
@@ -398,7 +398,7 @@
     {
       "text": "paper \"Breaking Paragraphs into",
       "hyphenated": false,
-      "ratio": 0.0605,
+      "ratio": 0.5807,
       "wordSpacing": 4.1615,
       "lineWidth": 160,
       "alignment": "justified",

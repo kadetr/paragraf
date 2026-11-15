@@ -120,15 +120,15 @@ export const CASES: GoldenCase[] = [
   }),
 
   // ── Runt penalty (MT-07) ───────────────────────────────────────────────────
-  // 320 pt is a width where the penalty changes the breaks (MT-07 uses 223 pt,
+  // 316 pt is a width where the penalty changes the breaks (MT-07 uses 223 pt,
   // where it does not).
-  en('en-body-w320-runt0', 'MT-07', {
-    lineWidth: 320,
+  en('en-body-w316-runt0', 'MT-07', {
+    lineWidth: 316,
     runtPenalty: 0,
     singleLinePenalty: 0,
   }),
-  en('en-body-w320-runt8000', 'MT-07', {
-    lineWidth: 320,
+  en('en-body-w316-runt8000', 'MT-07', {
+    lineWidth: 316,
     runtPenalty: 8000,
     singleLinePenalty: 8000,
   }),
@@ -155,9 +155,14 @@ export const CASES: GoldenCase[] = [
   // ── Optical margin alignment (MT-15) ───────────────────────────────────────
   en('en-body-451-oma', 'MT-15', { opticalMarginAlignment: true }),
 
-  // Adjacent-line demerits (`adjDemerits`) have no case: the option exists in
-  // @paragraf/linebreak but ParagraphInput does not expose it, so it cannot be
-  // set through compose(). Add a case when it is wired through.
+  // ── Adjacent-line demerits (TeX-equivalent setting) ────────────────────────
+  // 300 and 400 pt are widths where the setting changes the breaks.
+  ...[300, 400].map((w) =>
+    en(`en-body-w${w}-adjdemerits`, 'adjDemerits', {
+      lineWidth: w,
+      adjDemerits: 10000,
+    }),
+  ),
 
   // ── Short narrow text ──────────────────────────────────────────────────────
   en('en-narrow-w200', 'MT-01', { text: EN_NARROW, lineWidth: 200 }),
@@ -242,14 +247,17 @@ export const CASES: GoldenCase[] = [
  * fails if a pair produces identical output, because then one of the two
  * cases is not testing the parameter it is named after.
  *
- * Looseness -2 is not listed: at 280 pt the paragraph cannot lose two lines,
- * and the composer then returns the looseness-0 result. That is recorded
- * behaviour, not coverage of the parameter.
+ * Looseness -2 and +2 against 0 are not listed: at 280 pt the paragraph can
+ * neither lose nor gain two lines, and the composer then returns the
+ * looseness-0 result. That is recorded behaviour, not coverage of the
+ * parameter.
  */
 export const DISTINCT_PAIRS: [string, string][] = [
   ['en-body-w250-t1', 'en-body-w250-t1_5'],
   ['en-body-w160-t2', 'en-body-w160-t3'],
-  ['en-body-w320-runt0', 'en-body-w320-runt8000'],
+  ['en-body-w316-runt0', 'en-body-w316-runt8000'],
+  ['en-body-w300', 'en-body-w300-adjdemerits'],
+  ['en-body-w400', 'en-body-w400-adjdemerits'],
   ['en-body-w280-loosep0', 'en-body-w280-loosem1'],
   ['en-body-w280-loosep0', 'en-body-w280-loosep1'],
   ['en-body-w280-loosep1', 'en-body-w280-loosep2'],

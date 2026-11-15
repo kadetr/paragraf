@@ -199,6 +199,12 @@ export interface ParagraphInput {
    * breaks). Applied regardless of word count on that line. @since v0.6
    */
   singleLinePenalty?: number;
+  /**
+   * Demerits added when two consecutive lines differ by more than one fitness
+   * class (for example a tight line directly followed by a very loose one).
+   * `0` (default) disables the check; TeX's default is `10000`. @since v0.7
+   */
+  adjDemerits?: number;
   preserveSoftHyphens?: boolean;
   /** When set, overrides the font-metric-derived line height on every composed
    *  line. Use this to enforce exact leading (e.g. 16pt) independent of the
@@ -712,6 +718,7 @@ export const createParagraphComposer = async (
       consecutiveHyphenLimit = 0,
       runtPenalty = 0,
       singleLinePenalty = 0,
+      adjDemerits = 0,
       preserveSoftHyphens = true,
     } = input;
 
@@ -869,6 +876,7 @@ export const createParagraphComposer = async (
         kpLineWidths,
         runtPenalty,
         singleLinePenalty,
+        adjDemerits,
       );
       if ('error' in tbResult) throw new Error(tbResult.error);
       breaks = tbResult.ok.breaks as LineBreak[];
@@ -883,7 +891,8 @@ export const createParagraphComposer = async (
         consecutiveHyphenLimit,
         runtPenalty,
         singleLinePenalty,
-        looseness,
+        adjDemerits,
+        looseness: looseInt,
       });
       breaks = traceback(result.node);
       usedEmergency = result.usedEmergency;

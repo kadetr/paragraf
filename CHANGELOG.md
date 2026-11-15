@@ -6,6 +6,23 @@ All notable changes to this project will be documented in this file.
 
 ## Unreleased
 
+### ⚠️ Line breaks change
+
+#### Line measure no longer includes the glue at the previous break
+The line breaker measured every line after the first as if it still contained the space it had been broken at. Lines were therefore judged about one word space wider, and one space stretchier, than they are. The breaker chose breaks against those wrong widths, and `compose` corrected the word spacing afterwards so that lines still filled the measure.
+
+Both engines (TypeScript and Rust/WASM) now measure a line from the first box after the previous break. Consequences:
+
+- **Line breaks change in most justified paragraphs.** In the golden corpus, 23 of 38 paragraphs break differently, 9 keep their breaks with corrected ratios, and 6 are unchanged. Several paragraphs lose a line.
+- `ComposedLine.ratio` is now the ratio the line is actually set at: `wordSpacing = space + ratio × stretch` (or `× shrink`) holds for every justified line that is set without emergency stretch.
+- The result is checked against a brute-force search over every legal set of breaks (`1a-linebreak/tests/linebreak-correctness.test.ts`).
+
+There is no option to restore the old breaks; they were not optimal under any setting.
+
+#### `adjDemerits` now works, and is reachable
+- The breaker kept one candidate per line number. With `adjDemerits > 0` the best continuation can depend on the fitness class of the current line, so it now keeps one per line number and fitness class, as TeX does. With `adjDemerits = 0` nothing changes.
+- `ParagraphInput.adjDemerits` exists and is passed to both engines. The v0.6.0 notes announced it, but the field was missing and the value never reached the breaker.
+
 ### Tooling
 
 #### Type check in CI
@@ -24,7 +41,7 @@ Studio passed its own `'error'` / `'truncate'` values straight to `@paragraf/com
 ### Documentation
 
 - **README accuracy.** Removed "the only" / "no other library" claims; react-pdf and Typst are now in the comparison (both do whole-paragraph line breaking). Stated plainly that the compiled WASM shaper is not committed to the repository (CI builds it; the npm package is set up to carry it), and that the `@paragraf/*` packages are not on the npm registry yet.
-- **README:** `adjDemerits` is described as what it is: an option of `@paragraf/linebreak` that `ParagraphInput` does not expose yet. The Puppeteer shaping entry is corrected (Chromium uses HarfBuzz).
+- **README:** the Puppeteer shaping entry is corrected (Chromium uses HarfBuzz).
 - **AI-PRIMER.md** document index now lists files that exist in the repository instead of a `docs/` folder that does not.
 - Removed stale version references (`v0.8`, `v0.12`, `v2`) from source comments in `@paragraf/typography`. No code change.
 

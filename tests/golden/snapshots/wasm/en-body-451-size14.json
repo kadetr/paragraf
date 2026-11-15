@@ -21,7 +21,7 @@
     {
       "text": "paragraph, minimising a cost function based on how tightly or loosely each line",
       "hyphenated": false,
-      "ratio": 0.0601,
+      "ratio": 0.1901,
       "wordSpacing": 3.9437,
       "lineWidth": 451.28,
       "alignment": "justified",
@@ -34,7 +34,7 @@
     {
       "text": "is fitted. Unlike first-fit greedy algorithms, it considers all feasible breakpoints",
       "hyphenated": false,
-      "ratio": 0.2988,
+      "ratio": 0.4787,
       "wordSpacing": 4.6169,
       "lineWidth": 451.28,
       "alignment": "justified",
@@ -47,7 +47,7 @@
     {
       "text": "simultaneously. The result is a more even \"colour\" across the paragraph — no",
       "hyphenated": false,
-      "ratio": 0.3808,
+      "ratio": 0.5376,
       "wordSpacing": 4.7543,
       "lineWidth": 451.28,
       "alignment": "justified",
@@ -60,7 +60,7 @@
     {
       "text": "very loose lines followed by very tight ones, no unsightly rivers of white space",
       "hyphenated": false,
-      "ratio": 0.1864,
+      "ratio": 0.3161,
       "wordSpacing": 4.2377,
       "lineWidth": 451.28,
       "alignment": "justified",
@@ -71,48 +71,48 @@
       "y": [141.0156, 141.0156, 141.0156, 141.0156, 141.0156, 141.0156, 141.0156, 141.0156, 141.0156, 141.0156, 141.0156, 141.0156, 141.0156, 141.0156, 141.0156, 141.0156]
     },
     {
-      "text": "running through the justified text. Difficult ligatures such as \"fi\", \"fl\", and \"ffi\" are",
+      "text": "running through the justified text. Difficult ligatures such as \"fi\", \"fl\", and \"ffi\"",
       "hyphenated": false,
-      "ratio": -0.6749,
-      "wordSpacing": 2.6386,
+      "ratio": 0.3354,
+      "wordSpacing": 4.2826,
       "lineWidth": 451.28,
       "alignment": "justified",
       "direction": "ltr",
       "isRunt": false,
       "baseline": 155.8428,
-      "x": [72, 90.6621, 118.1903, 164.3807, 184.1228, 200.4606, 208.2399, 232.6441, 259.7759, 278.438, 286.9898, 310.6215, 325.4008, 331.6147, 361.4671, 389.7678, 404.0685, 430.1885, 456.3085, 479.161, 506.1902],
-      "y": [155.8428, 155.8428, 155.8428, 155.8428, 155.8428, 155.8428, 155.8428, 155.8428, 155.8428, 155.8428, 155.8428, 155.8428, 155.8428, 155.8428, 155.8428, 155.8428, 155.8428, 155.8428, 155.8428, 155.8428, 155.8428]
+      "x": [72, 90.6621, 119.8344, 167.6687, 189.0549, 205.3928, 213.1721, 239.2203, 267.9961, 286.6582, 295.2099, 320.4857, 335.265, 341.4789, 372.9753, 402.9201, 418.8648, 446.6288, 474.3929, 498.8894],
+      "y": [155.8428, 155.8428, 155.8428, 155.8428, 155.8428, 155.8428, 155.8428, 155.8428, 155.8428, 155.8428, 155.8428, 155.8428, 155.8428, 155.8428, 155.8428, 155.8428, 155.8428, 155.8428, 155.8428, 155.8428]
     },
     {
-      "text": "resolved automatically through GSUB lookup tables. Hyphenation is applied us-",
-      "hyphenated": true,
-      "ratio": -0.2093,
-      "wordSpacing": 3.5272,
+      "text": "are resolved automatically through GSUB lookup tables. Hyphenation is applied",
+      "hyphenated": false,
+      "ratio": 0.0126,
+      "wordSpacing": 3.5295,
       "lineWidth": 451.28,
       "alignment": "justified",
       "direction": "ltr",
       "isRunt": false,
       "baseline": 170.6699,
-      "x": [72, 82.876, 122.9549, 136.1688, 147.0585, 168.0516, 171.9413, 202.6755, 249.7545, 290.6264, 333.0433, 343.1468, 372.7257, 389.8361, 417.0499, 448.5703, 461.4354, 474.6493, 506.1696],
+      "x": [72, 92.6193, 103.4953, 143.5765, 156.7904, 167.6801, 188.6732, 192.5629, 223.2994, 270.3806, 311.2548, 353.674, 363.7775, 393.3587, 410.4691, 437.6829, 469.2056, 482.073, 495.2868],
       "y": [170.6699, 170.6699, 170.6699, 170.6699, 170.6699, 170.6699, 170.6699, 170.6699, 170.6699, 170.6699, 170.6699, 170.6699, 170.6699, 170.6699, 170.6699, 170.6699, 170.6699, 170.6699, 170.6699]
     },
     {
-      "text": "ing language-specific dictionaries, and consecutive hyphenated lines are limited",
+      "text": "using language-specific dictionaries, and consecutive hyphenated lines are limited",
       "hyphenated": false,
-      "ratio": 0.2054,
-      "wordSpacing": 3.9792,
+      "ratio": -0.6922,
+      "wordSpacing": 2.4232,
       "lineWidth": 451.28,
       "alignment": "justified",
       "direction": "ltr",
       "isRunt": false,
       "baseline": 185.4971,
-      "x": [72, 93.8689, 110.9724, 167.7243, 196.5727, 213.6762, 228.4555, 246.3315, 269.3624, 293.5555, 313.7694, 331.6454, 338.6454, 363.6177, 377.6177, 404.8316, 432.1282, 462.5488, 483.6179, 502.2868],
-      "y": [185.4971, 185.4971, 185.4971, 185.4971, 185.4971, 185.4971, 185.4971, 185.4971, 185.4971, 185.4971, 185.4971, 185.4971, 185.4971, 185.4971, 185.4971, 185.4971, 185.4971, 185.4971, 185.4971, 185.4971]
+      "x": [72, 84.4482, 104.7611, 121.8646, 178.6165, 205.9089, 223.0124, 237.7917, 255.6677, 277.1426, 299.7796, 319.9935, 337.8695, 344.8695, 368.2858, 382.2858, 409.4997, 435.2403, 464.1049, 483.6179, 502.2868],
+      "y": [185.4971, 185.4971, 185.4971, 185.4971, 185.4971, 185.4971, 185.4971, 185.4971, 185.4971, 185.4971, 185.4971, 185.4971, 185.4971, 185.4971, 185.4971, 185.4971, 185.4971, 185.4971, 185.4971, 185.4971, 185.4971]
     },
     {
       "text": "to avoid a distracting ladder effect at the right-hand margin. Widow and orphan",
       "hyphenated": false,
-      "ratio": 0.1061,
+      "ratio": 0.2399,
       "wordSpacing": 4.0599,
       "lineWidth": 451.28,
       "alignment": "justified",
@@ -125,7 +125,7 @@
     {
       "text": "control ensures that a single short word never appears alone on the last line of",
       "hyphenated": false,
-      "ratio": 0.3531,
+      "ratio": 0.4855,
       "wordSpacing": 4.6327,
       "lineWidth": 451.28,
       "alignment": "justified",
@@ -138,7 +138,7 @@
     {
       "text": "a paragraph, and a single line never stands isolated at the top of a column. The",
       "hyphenated": false,
-      "ratio": 0.2376,
+      "ratio": 0.3535,
       "wordSpacing": 4.3248,
       "lineWidth": 451.28,
       "alignment": "justified",
@@ -151,7 +151,7 @@
     {
       "text": "algorithm was described by Donald Knuth and Michael Plass in their 1981 paper",
       "hyphenated": false,
-      "ratio": -0.2367,
+      "ratio": -0.0689,
       "wordSpacing": 3.3928,
       "lineWidth": 451.28,
       "alignment": "justified",

@@ -21,7 +21,7 @@
     {
       "text": "block appear flush. A long URL like",
       "hyphenated": false,
-      "ratio": 0.3339,
+      "ratio": 0.3931,
       "wordSpacing": 7.0618,
       "lineWidth": 200,
       "alignment": "justified",
@@ -34,7 +34,7 @@
     {
       "text": "https://example.com/path?q=1 causes",
       "hyphenated": false,
-      "ratio": 0.3138,
+      "ratio": 0.3836,
       "wordSpacing": 22.9473,
       "lineWidth": 200,
       "alignment": "justified",
@@ -47,7 +47,7 @@
     {
       "text": "overflow in a narrow column unless",
       "hyphenated": false,
-      "ratio": 0.3878,
+      "ratio": 0.4507,
       "wordSpacing": 8.4086,
       "lineWidth": 200,
       "alignment": "justified",

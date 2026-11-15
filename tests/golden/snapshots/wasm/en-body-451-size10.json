@@ -21,7 +21,7 @@
     {
       "text": "based on how tightly or loosely each line is fitted. Unlike first-fit greedy algorithms, it considers all feasible",
       "hyphenated": false,
-      "ratio": 0.5646,
+      "ratio": 0.6861,
       "wordSpacing": 3.6435,
       "lineWidth": 451.28,
       "alignment": "justified",
@@ -34,7 +34,7 @@
     {
       "text": "breakpoints simultaneously. The result is a more even \"colour\" across the paragraph — no very loose lines followed",
       "hyphenated": false,
-      "ratio": -0.7639,
+      "ratio": -0.6765,
       "wordSpacing": 1.7484,
       "lineWidth": 451.28,
       "alignment": "justified",
@@ -47,7 +47,7 @@
     {
       "text": "by very tight ones, no unsightly rivers of white space running through the justified text. Difficult ligatures such",
       "hyphenated": false,
-      "ratio": 0.1566,
+      "ratio": 0.254,
       "wordSpacing": 2.9234,
       "lineWidth": 451.28,
       "alignment": "justified",
@@ -60,7 +60,7 @@
     {
       "text": "as \"fi\", \"fl\", and \"ffi\" are resolved automatically through GSUB lookup tables. Hyphenation is applied using",
       "hyphenated": false,
-      "ratio": 0.6083,
+      "ratio": 0.7489,
       "wordSpacing": 3.7481,
       "lineWidth": 451.28,
       "alignment": "justified",
@@ -73,7 +73,7 @@
     {
       "text": "language-specific dictionaries, and consecutive hyphenated lines are limited to avoid a distracting ladder effect at",
       "hyphenated": false,
-      "ratio": -0.2789,
+      "ratio": -0.1381,
       "wordSpacing": 2.3466,
       "lineWidth": 451.28,
       "alignment": "justified",
@@ -86,7 +86,7 @@
     {
       "text": "the right-hand margin. Widow and orphan control ensures that a single short word never appears alone on the last",
       "hyphenated": false,
-      "ratio": -0.2299,
+      "ratio": -0.1176,
       "wordSpacing": 2.3693,
       "lineWidth": 451.28,
       "alignment": "justified",
@@ -97,20 +97,20 @@
       "y": [142.4785, 142.4785, 142.4785, 142.4785, 142.4785, 142.4785, 142.4785, 142.4785, 142.4785, 142.4785, 142.4785, 142.4785, 142.4785, 142.4785, 142.4785, 142.4785, 142.4785, 142.4785, 142.4785, 142.4785, 142.4785, 142.4785, 142.4785, 142.4785, 142.4785]
     },
     {
-      "text": "line of a paragraph, and a single line never stands isolated at the top of a column. The algorithm was described",
+      "text": "line of a paragraph, and a single line never stands isolated at the top of a column. The algorithm was described by",
       "hyphenated": false,
-      "ratio": 0.1914,
-      "wordSpacing": 2.96,
+      "ratio": -0.1414,
+      "wordSpacing": 2.3429,
       "lineWidth": 451.28,
       "alignment": "justified",
       "direction": "ltr",
       "isRunt": false,
       "baseline": 153.0693,
-      "x": [72, 89.9551, 101.2452, 108.6437, 125.8507, 154.0792, 171.4777, 178.8762, 190.5461, 205.7229, 223.678, 248.845, 276.805, 288.475, 310.8686, 321.0453, 336.2221, 351.9605, 363.2505, 370.649, 382.8658, 406.1041, 424.611, 431.8278, 441.8278, 466.4528, 484.9646, 494.403],
-      "y": [153.0693, 153.0693, 153.0693, 153.0693, 153.0693, 153.0693, 153.0693, 153.0693, 153.0693, 153.0693, 153.0693, 153.0693, 153.0693, 153.0693, 153.0693, 153.0693, 153.0693, 153.0693, 153.0693, 153.0693, 153.0693, 153.0693, 153.0693, 153.0693, 153.0693, 153.0693, 153.0693, 153.0693]
+      "x": [72, 89.338, 100.0109, 106.7922, 123.9993, 151.6107, 168.392, 175.1733, 186.8433, 201.4029, 218.7409, 243.2908, 270.6336, 282.3035, 304.08, 313.6396, 328.1993, 343.3205, 353.9934, 360.7747, 372.9915, 395.6127, 413.5024, 420.7192, 430.7192, 454.7271, 472.6217, 482.0602, 513.28],
+      "y": [153.0693, 153.0693, 153.0693, 153.0693, 153.0693, 153.0693, 153.0693, 153.0693, 153.0693, 153.0693, 153.0693, 153.0693, 153.0693, 153.0693, 153.0693, 153.0693, 153.0693, 153.0693, 153.0693, 153.0693, 153.0693, 153.0693, 153.0693, 153.0693, 153.0693, 153.0693, 153.0693, 153.0693, 153.0693]
     },
     {
-      "text": "by Donald Knuth and Michael Plass in their 1981 paper \"Breaking Paragraphs into Lines\".",
+      "text": "Donald Knuth and Michael Plass in their 1981 paper \"Breaking Paragraphs into Lines\".",
       "hyphenated": false,
       "ratio": 0,
       "wordSpacing": 2.5,
@@ -119,8 +119,8 @@
       "direction": "ltr",
       "isRunt": false,
       "baseline": 163.6602,
-      "x": [72, 84.5, 116.4385, 143.9385, 160.877, 196.1406, 219.2021, 229.4805, 250.3057, 272.8057, 282.2441, 297.5127, 325.4717, 340.75, 387.6787, 405.7354],
-      "y": [163.6602, 163.6602, 163.6602, 163.6602, 163.6602, 163.6602, 163.6602, 163.6602, 163.6602, 163.6602, 163.6602, 163.6602, 163.6602, 163.6602, 163.6602, 163.6602]
+      "x": [72, 103.9385, 131.4385, 148.377, 183.6406, 206.7021, 216.9805, 237.8057, 260.3057, 269.7441, 285.0127, 312.9717, 328.25, 375.1787, 393.2354],
+      "y": [163.6602, 163.6602, 163.6602, 163.6602, 163.6602, 163.6602, 163.6602, 163.6602, 163.6602, 163.6602, 163.6602, 163.6602, 163.6602, 163.6602, 163.6602]
     }
   ]
 }
