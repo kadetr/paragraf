@@ -6,10 +6,10 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { renderHook, act } from '@testing-library/react';
 import { useCompileWorker } from '../../src/hooks/useCompileWorker.js';
-import type { CompileWorkerResult } from '../../src/ipc-types.js';
+import type { CompileResult } from '../../src/ipc-types.js';
 
 // Captured callbacks from window.studio stubs
-let capturedOnCompileResult: ((result: CompileWorkerResult) => void) | null =
+let capturedOnCompileResult: ((result: CompileResult) => void) | null =
   null;
 let capturedOnFileChanged: (() => void) | null = null;
 
@@ -20,7 +20,7 @@ function setupStudio(): void {
   Object.defineProperty(window, 'studio', {
     configurable: true,
     value: {
-      onCompileResult: vi.fn((cb: (result: CompileWorkerResult) => void) => {
+      onCompileResult: vi.fn((cb: (result: CompileResult) => void) => {
         capturedOnCompileResult = cb;
       }),
       onFileChanged: vi.fn((cb: () => void) => {
@@ -63,7 +63,7 @@ describe('RT14 — after onCompileResult fires with svg result → result update
     expect(result.current.isCompiling).toBe(true);
 
     // Simulate compile result arriving
-    const svgResult: CompileWorkerResult = {
+    const svgResult: CompileResult = {
       type: 'svg',
       svgPages: ['<svg/>'],
     };
@@ -86,7 +86,7 @@ describe('RT15 — after onCompileResult fires with error result → lastError i
     const { result } = renderHook(() => useCompileWorker());
 
     // Give it a prior svg result
-    const svgResult: CompileWorkerResult = {
+    const svgResult: CompileResult = {
       type: 'svg',
       svgPages: ['<svg/>'],
     };
@@ -96,7 +96,7 @@ describe('RT15 — after onCompileResult fires with error result → lastError i
     expect(result.current.result).toEqual(svgResult);
 
     // Now fire a compile-error
-    const errorResult: CompileWorkerResult = {
+    const errorResult: CompileResult = {
       type: 'compile-error',
       message: 'font missing',
     };
@@ -112,7 +112,7 @@ describe('RT15 — after onCompileResult fires with error result → lastError i
   it('sets lastError from validation errors', async () => {
     const { result } = renderHook(() => useCompileWorker());
 
-    const errorResult: CompileWorkerResult = {
+    const errorResult: CompileResult = {
       type: 'error',
       errors: [{ field: 'layout', message: 'layout missing' }],
     };

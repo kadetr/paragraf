@@ -46,6 +46,11 @@ jobs:
       - name: Build packages
         run: npm run build
 
+      # Vitest strips types, so a passing test run does not prove the code
+      # type-checks. This step runs tsc --noEmit in every workspace.
+      - name: Type check (all workspaces)
+        run: npm run typecheck
+
       - name: Run unit tests (all workspaces)
         run: npm test --workspaces --if-present
 

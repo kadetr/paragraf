@@ -8,8 +8,9 @@ import { CompileButton } from '../../src/components/CompileButton.js';
 describe('CompileButton (RT12–RT14)', () => {
   beforeEach(() => {
     // Provide a window.studio mock
+    // Partial mock: only the method the component calls is provided.
     (
-      window as Window & {
+      window as unknown as {
         studio?: { triggerPdfCompile: ReturnType<typeof vi.fn> };
       }
     ).studio = {

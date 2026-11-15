@@ -283,7 +283,7 @@ describe('tr hyphenation regression', () => {
 describe('cross-language: minLeft/minRight enforcement', () => {
   it('no fragment shorter than minLeft=2 at the left boundary', () => {
     const languages: Language[] = ['en-us', 'de', 'tr'];
-    const corpus: Record<Language, string[]> = {
+    const corpus: Partial<Record<Language, string[]>> = {
       'en-us': [
         'hyphenation',
         'algorithm',
@@ -295,7 +295,7 @@ describe('cross-language: minLeft/minRight enforcement', () => {
       tr: ['hipotez', 'matematik', 'bilgisayar'],
     };
     for (const lang of languages) {
-      for (const word of corpus[lang]) {
+      for (const word of corpus[lang] ?? []) {
         const frags = frag(word, opts(lang));
         if (frags.length > 1) {
           expect(frags[0].length).toBeGreaterThanOrEqual(2);
@@ -306,7 +306,7 @@ describe('cross-language: minLeft/minRight enforcement', () => {
 
   it('no fragment shorter than minRight=3 at the right boundary', () => {
     const languages: Language[] = ['en-us', 'de', 'tr'];
-    const corpus: Record<Language, string[]> = {
+    const corpus: Partial<Record<Language, string[]>> = {
       'en-us': [
         'hyphenation',
         'algorithm',
@@ -318,7 +318,7 @@ describe('cross-language: minLeft/minRight enforcement', () => {
       tr: ['hipotez', 'matematik', 'bilgisayar'],
     };
     for (const lang of languages) {
-      for (const word of corpus[lang]) {
+      for (const word of corpus[lang] ?? []) {
         const frags = frag(word, opts(lang));
         if (frags.length > 1) {
           expect(frags[frags.length - 1].length).toBeGreaterThanOrEqual(3);

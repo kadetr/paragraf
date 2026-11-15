@@ -1,5 +1,10 @@
 // hyphenate.ts
 
+// Makes the ambient `hyphen` declarations visible to packages that type-check
+// this file through the source export (the .d.ts is otherwise only picked up
+// by this package's own tsconfig include).
+/// <reference path="./hyphen.d.ts" />
+
 import createHyphenator from 'hyphen';
 import { Language } from '@paragraf/types';
 

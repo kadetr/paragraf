@@ -4,6 +4,23 @@ All notable changes to this project will be documented in this file.
 
 ---
 
+## Unreleased
+
+### Tooling
+
+#### Type check in CI
+`npm run typecheck` runs `tsc --noEmit` in every workspace, and CI runs it before the tests. Vitest strips types, so type errors had accumulated unnoticed; all are fixed.
+
+### Fixes
+
+#### Studio: `onOverflow: "error"` now raises an error
+Studio passed its own `'error'` / `'truncate'` values straight to `@paragraf/compile`, which expects `'throw'` / `'silent'`. `'error'` was not recognised and text was truncated silently. The values are now mapped.
+
+#### Studio: separate worker and renderer result types
+`CompileWorkerResult` (worker → main, PDF as bytes) and `CompileResult` (main → renderer, PDF as a file path) replace one shared type that described neither hop correctly.
+
+---
+
 ## v0.6.0 — 2026-04-23
 
 ### ⚠️ Breaking changes

@@ -5,6 +5,7 @@
   "scripts": {
     "build": "npm run build --workspaces --if-present",
     "test": "npm test --workspaces --if-present",
+    "typecheck": "npm run typecheck --workspaces --if-present",
     "test:e2e": "vitest run --config tests/vitest.config.ts",
     "manual": "tsx tests/manual/run-all.ts",
     "verify-fonts": "tsx scripts/setup-fonts.ts"

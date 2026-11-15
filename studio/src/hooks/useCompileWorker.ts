@@ -4,10 +4,10 @@
 // track the in-flight compile) and returns a snapshot of the current compile state.
 
 import { useState, useEffect } from 'react';
-import type { CompileWorkerResult } from '../ipc-types.js';
+import type { CompileResult } from '../ipc-types.js';
 
 export interface CompileWorkerState {
-  result: CompileWorkerResult | null;
+  result: CompileResult | null;
   isCompiling: boolean;
   lastError: string | null;
   /** Absolute path to the last successfully compiled PDF, or null. */
@@ -15,7 +15,7 @@ export interface CompileWorkerState {
 }
 
 export function useCompileWorker(): CompileWorkerState {
-  const [result, setResult] = useState<CompileWorkerResult | null>(null);
+  const [result, setResult] = useState<CompileResult | null>(null);
   const [isCompiling, setIsCompiling] = useState(false);
   const [lastError, setLastError] = useState<string | null>(null);
   const [pdfFilePath, setPdfFilePath] = useState<string | null>(null);
@@ -31,7 +31,7 @@ export function useCompileWorker(): CompileWorkerState {
     });
 
     // Receive compile result
-    studio.onCompileResult((r: CompileWorkerResult) => {
+    studio.onCompileResult((r: CompileResult) => {
       setIsCompiling(false);
       if (r.type === 'compile-error') {
         setLastError(r.message);

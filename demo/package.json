@@ -8,6 +8,7 @@
     "build:svgs": "tsx scripts/bake-svgs.ts",
     "preview": "vite preview",
     "test": "vitest run --passWithNoTests",
+    "typecheck": "tsc --noEmit",
     "test:watch": "vitest"
   },
   "dependencies": {

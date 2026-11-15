@@ -199,9 +199,8 @@ describe('Binary serialization path debug', () => {
 
     expect(jsonBreaks.length).toBe(binBreaks.length);
     for (let i = 0; i < jsonBreaks.length; i++) {
-      expect(jsonBreaks[i].position).toBe(
+      expect(jsonBreaks[i].position, `Line ${i} position mismatch`).toBe(
         binBreaks[i].position,
-        `Line ${i} position mismatch`,
       );
       expect(Math.abs(jsonBreaks[i].ratio - binBreaks[i].ratio)).toBeLessThan(
         1e-6,
