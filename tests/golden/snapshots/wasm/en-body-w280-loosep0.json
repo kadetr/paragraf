@@ -21,7 +21,7 @@
     {
       "text": "of line breaks for a paragraph, minimising a cost function",
       "hyphenated": false,
-      "ratio": 0.0541,
+      "ratio": 0.2268,
       "wordSpacing": 3.4536,
       "lineWidth": 280,
       "alignment": "justified",
@@ -34,7 +34,7 @@
     {
       "text": "based on how tightly or loosely each line is fitted. Unlike",
       "hyphenated": false,
-      "ratio": 0.0934,
+      "ratio": 0.2527,
       "wordSpacing": 3.5055,
       "lineWidth": 280,
       "alignment": "justified",
@@ -47,7 +47,7 @@
     {
       "text": "first-fit greedy algorithms, it considers all feasible break-",
       "hyphenated": true,
-      "ratio": 0.1932,
+      "ratio": 0.4351,
       "wordSpacing": 3.8703,
       "lineWidth": 280,
       "alignment": "justified",
@@ -73,7 +73,7 @@
     {
       "text": "across the paragraph — no very loose lines followed by",
       "hyphenated": false,
-      "ratio": 0.4704,
+      "ratio": 0.6893,
       "wordSpacing": 4.3787,
       "lineWidth": 280,
       "alignment": "justified",
@@ -86,7 +86,7 @@
     {
       "text": "very tight ones, no unsightly rivers of white space running",
       "hyphenated": false,
-      "ratio": -0.2212,
+      "ratio": 0.0028,
       "wordSpacing": 3.0056,
       "lineWidth": 280,
       "alignment": "justified",
@@ -99,7 +99,7 @@
     {
       "text": "through the justified text. Difficult ligatures such as \"fi\",",
       "hyphenated": false,
-      "ratio": 0.3293,
+      "ratio": 0.558,
       "wordSpacing": 4.116,
       "lineWidth": 280,
       "alignment": "justified",
@@ -112,7 +112,7 @@
     {
       "text": "\"fl\", and \"ffi\" are resolved automatically through GSUB",
       "hyphenated": false,
-      "ratio": 0.4807,
+      "ratio": 0.7637,
       "wordSpacing": 4.5273,
       "lineWidth": 280,
       "alignment": "justified",
@@ -125,7 +125,7 @@
     {
       "text": "lookup tables. Hyphenation is applied using language-spe-",
       "hyphenated": true,
-      "ratio": -0.4221,
+      "ratio": -0.1174,
       "wordSpacing": 2.8434,
       "lineWidth": 280,
       "alignment": "justified",
@@ -164,7 +164,7 @@
     {
       "text": "margin. Widow and orphan control ensures that a single",
       "hyphenated": false,
-      "ratio": 0.4752,
+      "ratio": 0.722,
       "wordSpacing": 4.4441,
       "lineWidth": 280,
       "alignment": "justified",
@@ -177,7 +177,7 @@
     {
       "text": "short word never appears alone on the last line of a para-",
       "hyphenated": true,
-      "ratio": 0.1989,
+      "ratio": 0.3533,
       "wordSpacing": 3.7067,
       "lineWidth": 280,
       "alignment": "justified",
@@ -203,7 +203,7 @@
     {
       "text": "column. The algorithm was described by Donald Knuth and",
       "hyphenated": false,
-      "ratio": -0.8835,
+      "ratio": -0.7126,
       "wordSpacing": 2.0498,
       "lineWidth": 280,
       "alignment": "justified",
@@ -216,7 +216,7 @@
     {
       "text": "Michael Plass in their 1981 paper \"Breaking Paragraphs",
       "hyphenated": false,
-      "ratio": 0.4899,
+      "ratio": 0.7741,
       "wordSpacing": 4.5483,
       "lineWidth": 280,
       "alignment": "justified",

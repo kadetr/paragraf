@@ -21,7 +21,7 @@
     {
       "text": "finds the globally opti-",
       "hyphenated": true,
-      "ratio": 2.1685,
+      "ratio": 3.3913,
       "wordSpacing": 9.7826,
       "lineWidth": 130,
       "alignment": "justified",
@@ -32,61 +32,61 @@
       "y": [93.0293, 93.0293, 93.0293, 93.0293, 93.0293, 93.0293]
     },
     {
-      "text": "mal set of line breaks for",
+      "text": "mal set of line breaks",
       "hyphenated": false,
-      "ratio": 1.0375,
-      "wordSpacing": 5.075,
+      "ratio": 3.4209,
+      "wordSpacing": 9.8418,
       "lineWidth": 130,
       "alignment": "justified",
       "direction": "ltr",
       "isRunt": false,
       "baseline": 105.7383,
-      "x": [72, 95.0691, 113.4742, 128.5453, 151.6145, 188.0078],
-      "y": [105.7383, 105.7383, 105.7383, 105.7383, 105.7383, 105.7383]
+      "x": [72, 99.8359, 123.0078, 142.8457, 170.6816],
+      "y": [105.7383, 105.7383, 105.7383, 105.7383, 105.7383]
     },
     {
-      "text": "a paragraph, minimising",
-      "hyphenated": false,
-      "ratio": 1.6715,
-      "wordSpacing": 9.5146,
+      "text": "for a paragraph, minimis-",
+      "hyphenated": true,
+      "ratio": 1.2292,
+      "wordSpacing": 5.4583,
       "lineWidth": 130,
       "alignment": "justified",
       "direction": "ltr",
       "isRunt": false,
       "baseline": 118.4473,
-      "x": [72, 86.8408, 107.4893, 147.3262, 165.9941, 186.666],
+      "x": [72, 91.4505, 102.235, 122.8835, 158.6641, 177.332],
       "y": [118.4473, 118.4473, 118.4473, 118.4473, 118.4473, 118.4473]
     },
     {
-      "text": "a cost function based on",
+      "text": "ing a cost function based",
       "hyphenated": false,
-      "ratio": 1.1031,
-      "wordSpacing": 6.5078,
+      "ratio": 1.3372,
+      "wordSpacing": 5.6743,
       "lineWidth": 130,
       "alignment": "justified",
       "direction": "ltr",
       "isRunt": false,
       "baseline": 131.1563,
-      "x": [72, 83.834, 109.6719, 130.9941, 156.1699, 190],
+      "x": [72, 93.0083, 104.0088, 129.0132, 150.3354, 174.6777],
       "y": [131.1563, 131.1563, 131.1563, 131.1563, 131.1563, 131.1563]
     },
     {
-      "text": "how tightly or loosely",
+      "text": "on how tightly or loosely",
       "hyphenated": false,
-      "ratio": 2.6672,
-      "wordSpacing": 11.1126,
+      "ratio": 1.1672,
+      "wordSpacing": 5.3345,
       "lineWidth": 130,
       "alignment": "justified",
       "direction": "ltr",
       "isRunt": false,
       "baseline": 143.8652,
-      "x": [72, 103.7786, 146.2272, 167.3359],
-      "y": [143.8652, 143.8652, 143.8652, 143.8652]
+      "x": [72, 89.3345, 115.335, 152.0054, 167.3359],
+      "y": [143.8652, 143.8652, 143.8652, 143.8652, 143.8652]
     },
     {
       "text": "each line is fitted. Un-",
       "hyphenated": true,
-      "ratio": 2.0037,
+      "ratio": 2.8796,
       "wordSpacing": 8.7593,
       "lineWidth": 130,
       "alignment": "justified",
@@ -151,7 +151,7 @@
     {
       "text": "more even \"colour\" across",
       "hyphenated": false,
-      "ratio": 0.0313,
+      "ratio": 0.5417,
       "wordSpacing": 4.0833,
       "lineWidth": 130,
       "alignment": "justified",
@@ -164,7 +164,7 @@
     {
       "text": "the paragraph — no very",
       "hyphenated": false,
-      "ratio": 0.7047,
+      "ratio": 1.2559,
       "wordSpacing": 5.5117,
       "lineWidth": 130,
       "alignment": "justified",
@@ -177,7 +177,7 @@
     {
       "text": "loose lines followed by",
       "hyphenated": false,
-      "ratio": 1.9187,
+      "ratio": 3.0583,
       "wordSpacing": 9.1165,
       "lineWidth": 130,
       "alignment": "justified",
@@ -190,7 +190,7 @@
     {
       "text": "very tight ones, no un-",
       "hyphenated": true,
-      "ratio": 1.8684,
+      "ratio": 2.7104,
       "wordSpacing": 8.4209,
       "lineWidth": 130,
       "alignment": "justified",
@@ -216,7 +216,7 @@
     {
       "text": "running through the justi-",
       "hyphenated": true,
-      "ratio": 0.5015,
+      "ratio": 1.1686,
       "wordSpacing": 5.3372,
       "lineWidth": 130,
       "alignment": "justified",
@@ -242,7 +242,7 @@
     {
       "text": "such as \"fi\", \"fl\", and \"ffi\"",
       "hyphenated": false,
-      "ratio": 0.1268,
+      "ratio": 0.4521,
       "wordSpacing": 3.9043,
       "lineWidth": 130,
       "alignment": "justified",
@@ -255,7 +255,7 @@
     {
       "text": "are resolved automatically",
       "hyphenated": false,
-      "ratio": 0.0651,
+      "ratio": 0.8477,
       "wordSpacing": 4.6953,
       "lineWidth": 130,
       "alignment": "justified",
@@ -268,7 +268,7 @@
     {
       "text": "through GSUB lookup ta-",
       "hyphenated": true,
-      "ratio": 0.3337,
+      "ratio": 0.945,
       "wordSpacing": 4.89,
       "lineWidth": 130,
       "alignment": "justified",
@@ -333,7 +333,7 @@
     {
       "text": "are limited to avoid a dis-",
       "hyphenated": true,
-      "ratio": 0.3363,
+      "ratio": 0.7035,
       "wordSpacing": 4.407,
       "lineWidth": 130,
       "alignment": "justified",
@@ -359,7 +359,7 @@
     {
       "text": "right-hand margin. Widow",
       "hyphenated": false,
-      "ratio": -0.2056,
+      "ratio": 0.5444,
       "wordSpacing": 4.0889,
       "lineWidth": 130,
       "alignment": "justified",
@@ -372,7 +372,7 @@
     {
       "text": "and orphan control ensures",
       "hyphenated": false,
-      "ratio": -0.4926,
+      "ratio": 0.0622,
       "wordSpacing": 3.1243,
       "lineWidth": 130,
       "alignment": "justified",
@@ -385,7 +385,7 @@
     {
       "text": "that a single short word",
       "hyphenated": false,
-      "ratio": 1.4354,
+      "ratio": 2.1692,
       "wordSpacing": 7.3384,
       "lineWidth": 130,
       "alignment": "justified",
@@ -398,7 +398,7 @@
     {
       "text": "never appears alone on the",
       "hyphenated": false,
-      "ratio": -0.1409,
+      "ratio": 0.2576,
       "wordSpacing": 3.5151,
       "lineWidth": 130,
       "alignment": "justified",
@@ -411,7 +411,7 @@
     {
       "text": "last line of a paragraph,",
       "hyphenated": false,
-      "ratio": 1.4049,
+      "ratio": 2.1311,
       "wordSpacing": 7.2622,
       "lineWidth": 130,
       "alignment": "justified",
@@ -424,7 +424,7 @@
     {
       "text": "and a single line never",
       "hyphenated": false,
-      "ratio": 1.9041,
+      "ratio": 2.7551,
       "wordSpacing": 8.5103,
       "lineWidth": 130,
       "alignment": "justified",
@@ -437,7 +437,7 @@
     {
       "text": "stands isolated at the top",
       "hyphenated": false,
-      "ratio": 0.9021,
+      "ratio": 1.5027,
       "wordSpacing": 6.0054,
       "lineWidth": 130,
       "alignment": "justified",
@@ -450,7 +450,7 @@
     {
       "text": "of a column. The algorithm",
       "hyphenated": false,
-      "ratio": -0.6946,
+      "ratio": -0.3058,
       "wordSpacing": 2.5923,
       "lineWidth": 130,
       "alignment": "justified",
@@ -463,7 +463,7 @@
     {
       "text": "was described by Donald",
       "hyphenated": false,
-      "ratio": 0.7542,
+      "ratio": 1.5055,
       "wordSpacing": 6.0111,
       "lineWidth": 130,
       "alignment": "justified",
@@ -476,7 +476,7 @@
     {
       "text": "Knuth and Michael Plass in",
       "hyphenated": false,
-      "ratio": -0.8476,
+      "ratio": -0.4969,
       "wordSpacing": 2.3374,
       "lineWidth": 130,
       "alignment": "justified",
@@ -489,7 +489,7 @@
     {
       "text": "their 1981 paper \"Breaking",
       "hyphenated": false,
-      "ratio": -0.6606,
+      "ratio": -0.1309,
       "wordSpacing": 2.8255,
       "lineWidth": 130,
       "alignment": "justified",

@@ -34,7 +34,7 @@
     {
       "text": "fitted. Unlike first-fit greedy algorithms, it considers all feasible breakpoints si-",
       "hyphenated": true,
-      "ratio": 0.1021,
+      "ratio": 0.2623,
       "wordSpacing": 3.5246,
       "lineWidth": 451.28,
       "alignment": "justified",
@@ -60,7 +60,7 @@
     {
       "text": "loose lines followed by very tight ones, no unsightly rivers of white space run-",
       "hyphenated": true,
-      "ratio": 0.3935,
+      "ratio": 0.5392,
       "wordSpacing": 4.0783,
       "lineWidth": 451.28,
       "alignment": "justified",
@@ -86,7 +86,7 @@
     {
       "text": "resolved automatically through GSUB lookup tables. Hyphenation is applied us-",
       "hyphenated": true,
-      "ratio": 0.2039,
+      "ratio": 0.3932,
       "wordSpacing": 3.7865,
       "lineWidth": 451.28,
       "alignment": "justified",
@@ -112,7 +112,7 @@
     {
       "text": "to avoid a distracting ladder effect at the right-hand margin. Widow and orphan",
       "hyphenated": false,
-      "ratio": 0.3703,
+      "ratio": 0.5261,
       "wordSpacing": 4.0523,
       "lineWidth": 451.28,
       "alignment": "justified",
@@ -125,7 +125,7 @@
     {
       "text": "control ensures that a single short word never appears alone on the last line of",
       "hyphenated": false,
-      "ratio": 0.622,
+      "ratio": 0.7736,
       "wordSpacing": 4.5472,
       "lineWidth": 451.28,
       "alignment": "justified",
@@ -138,7 +138,7 @@
     {
       "text": "a paragraph, and a single line never stands isolated at the top of a column. The",
       "hyphenated": false,
-      "ratio": 0.5648,
+      "ratio": 0.7024,
       "wordSpacing": 4.4049,
       "lineWidth": 451.28,
       "alignment": "justified",
@@ -151,7 +151,7 @@
     {
       "text": "algorithm was described by Donald Knuth and Michael Plass in their 1981 paper",
       "hyphenated": false,
-      "ratio": 0.1064,
+      "ratio": 0.2402,
       "wordSpacing": 3.4805,
       "lineWidth": 451.28,
       "alignment": "justified",

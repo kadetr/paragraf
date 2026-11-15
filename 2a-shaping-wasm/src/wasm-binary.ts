@@ -84,6 +84,7 @@ export function tracebackWasmBinary(
   lineWidths: number[] = [],
   runtPenalty: number = 0,
   singleLinePenalty: number = 0,
+  adjDemerits: number = 0,
 ): any {
   const [f64s, u8s] = serializeNodesToBinary(nodes);
   const result = JSON.parse(
@@ -98,6 +99,7 @@ export function tracebackWasmBinary(
       runtPenalty,
       singleLinePenalty,
       consecutiveHyphenLimit,
+      adjDemerits,
     ),
   );
   return result;

@@ -115,11 +115,68 @@ const computeRatio = (
   return 0;
 };
 
+// ─── Line start ───────────────────────────────────────────────────────────────
+
+/**
+ * Index of the first node of the line that follows a break at `breakPosition`
+ * and ends at `to`.
+ *
+ * The node that was broken at belongs to neither line, and the glue and
+ * optional penalties that follow it are discarded, exactly as TeX discards
+ * them after a line break. The next line therefore starts at the first box.
+ * The scan also stops at a forced break, so that a forced break is never
+ * skipped; a line consisting of nothing but that forced break has no content
+ * and no stretch, and is only feasible if fill glue precedes it.
+ *
+ * Position 0 is the start of the paragraph, where nothing is discarded.
+ *
+ * Exported so that composeParagraph extracts exactly the nodes the breaker
+ * measured.
+ */
+export const lineStartAfter = (
+  nodes: Node[],
+  breakPosition: number,
+  to: number,
+): number => {
+  if (breakPosition === 0) return 0;
+  let start = breakPosition + 1;
+  while (start < to) {
+    const node = nodes[start];
+    if (node.type === 'box') break;
+    if (node.type === 'penalty' && isForced(node.penalty)) break;
+    start++;
+  }
+  return Math.min(start, to);
+};
+
+/**
+ * lineStart[p] for every p: the first box or forced break after node p
+ * (nodes.length if there is none). Computed once so the forward pass can look
+ * up a line's start in O(1).
+ */
+const buildLineStarts = (nodes: Node[]): number[] => {
+  const starts = new Array<number>(nodes.length + 1);
+  let next = nodes.length;
+  starts[nodes.length] = next;
+  for (let i = nodes.length - 1; i >= 0; i--) {
+    starts[i] = next; // first line-starting node strictly after i
+    const node = nodes[i];
+    if (
+      node.type === 'box' ||
+      (node.type === 'penalty' && isForced(node.penalty))
+    ) {
+      next = i;
+    }
+  }
+  starts[0] = 0; // paragraph start: nothing is discarded
+  return starts;
+};
+
 // ─── Widow detection ──────────────────────────────────────────────────────────
 
 const countContentBoxes = (nodes: Node[], from: number, to: number): number => {
   let count = 0;
-  const start = from === 0 ? 0 : from + 1;
+  const start = lineStartAfter(nodes, from, to);
   for (let i = start; i <= to; i++) {
     const node = nodes[i];
     if (node.type === 'box' && (node as Box).content !== '') count++;
@@ -134,6 +191,7 @@ const forwardPass = (
   lineWidth: number,
   tolerance: number,
   sums: PrefixSums,
+  lineStarts: number[],
   emergencyStretch: number = 0,
   consecutiveHyphenLimit: number = 0,
   runtPenalty: number = 0,
@@ -164,6 +222,15 @@ const forwardPass = (
     const isForcedBreak = isForced(penaltyValue);
 
     const nextActive: BreakpointNode[] = [];
+    // Best candidate ending at i, per line number — and per fitness class when
+    // adjacent-line demerits are in use. With adjDemerits > 0 the cost of the
+    // *next* line depends on this line's fitness class, so a candidate with
+    // more demerits but a different class can still lead to the optimum and
+    // must be kept (Knuth & Plass 1981, §4; TeX keeps one active node per
+    // line number and fitness class). With adjDemerits = 0 the class cannot
+    // affect later costs, so one candidate per line number is enough.
+    // With a consecutive-hyphen limit, the length of the current hyphen run
+    // is part of the key too (see below).
     const bestAtI = new Map<number, BreakpointNode>();
 
     for (const a of active) {
@@ -173,9 +240,12 @@ const forwardPass = (
       // lineWidths is 0-indexed so lineWidths[a.line] is the width for line a.line+1
       const effectiveLineWidth = lineWidths[a.line] ?? lineWidth;
 
-      const sumWidth = sums.widths[i] - sums.widths[a.position];
-      const sumStretch = sums.stretches[i] - sums.stretches[a.position];
-      const sumShrink = sums.shrinks[i] - sums.shrinks[a.position];
+      // The line starts at the first box after the previous break, not at
+      // the break itself: the glue that was broken at is not part of it.
+      const start = Math.min(lineStarts[a.position], i);
+      const sumWidth = sums.widths[i] - sums.widths[start];
+      const sumStretch = sums.stretches[i] - sums.stretches[start];
+      const sumShrink = sums.shrinks[i] - sums.shrinks[start];
 
       const ratio = computeRatio(
         effectiveLineWidth,
@@ -231,15 +301,29 @@ const forwardPass = (
           fitnessClass: fitnessClassOf(ratio),
         };
 
-        const existing = bestAtI.get(candidate.line);
+        // A consecutive-hyphen limit adds one more piece of state: a candidate
+        // that has used fewer hyphens in a row may be the only one that can
+        // still continue, even if it has more demerits so far.
+        const lineAndClass =
+          adjDemerits > 0
+            ? candidate.line * 4 + candidate.fitnessClass
+            : candidate.line * 4;
+        const key =
+          consecutiveHyphenLimit > 0
+            ? lineAndClass * (consecutiveHyphenLimit + 1) +
+              Math.min(consecutiveHyphens, consecutiveHyphenLimit)
+            : lineAndClass;
+        const existing = bestAtI.get(key);
         if (!existing || candidate.totalDemerits < existing.totalDemerits) {
-          bestAtI.set(candidate.line, candidate);
+          bestAtI.set(key, candidate);
         }
       }
     }
 
-    for (const winner of bestAtI.values()) {
-      nextActive.push(winner);
+    // Ascending key order, so that ties are resolved the same way here and
+    // in the Rust port.
+    for (const key of [...bestAtI.keys()].sort((x, y) => x - y)) {
+      nextActive.push(bestAtI.get(key)!);
     }
 
     active = nextActive;
@@ -273,12 +357,14 @@ export const computeBreakpoints = (paragraph: Paragraph): BreakpointResult => {
   const adjDemerits = paragraph.adjDemerits ?? 0;
 
   const sums = buildPrefixSums(nodes);
+  const lineStarts = buildLineStarts(nodes);
 
   let active = forwardPass(
     nodes,
     lineWidth,
     tolerance,
     sums,
+    lineStarts,
     0,
     consecutiveHyphenLimit,
     runtPenalty,
@@ -296,6 +382,7 @@ export const computeBreakpoints = (paragraph: Paragraph): BreakpointResult => {
         lineWidth,
         tolerance,
         sums,
+        lineStarts,
         emergencyStretch,
         consecutiveHyphenLimit,
         runtPenalty,

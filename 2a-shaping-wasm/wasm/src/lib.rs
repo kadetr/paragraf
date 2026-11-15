@@ -1,5 +1,5 @@
 use std::cell::{Cell, RefCell};
-use std::collections::HashMap;
+use std::collections::{BTreeMap, HashMap};
 
 use serde::{Deserialize, Serialize};
 use unicode_bidi::BidiInfo;
@@ -268,8 +268,51 @@ fn compute_ratio(
     }
 }
 
+/// Index of the first node of the line that follows a break at `break_position`
+/// and ends at `to`. Mirrors `lineStartAfter` in 1a-linebreak/src/linebreak.ts.
+///
+/// The node that was broken at belongs to neither line, and the glue and
+/// optional penalties after it are discarded. The next line starts at the
+/// first box, or at a forced break. Position 0 is the paragraph start, where
+/// nothing is discarded.
+fn line_start_after(nodes: &[Node], break_position: usize, to: usize) -> usize {
+    if break_position == 0 {
+        return 0;
+    }
+    let mut start = break_position + 1;
+    while start < to {
+        match &nodes[start] {
+            Node::Box(_) => break,
+            Node::Penalty(p) if p.penalty <= FORCED_BREAK => break,
+            _ => start += 1,
+        }
+    }
+    start.min(to)
+}
+
+/// line_starts[p] for every p: the first box or forced break strictly after
+/// node p (nodes.len() if none). Mirrors `buildLineStarts` in linebreak.ts.
+fn build_line_starts(nodes: &[Node]) -> Vec<usize> {
+    let n = nodes.len();
+    let mut starts = vec![n; n + 1];
+    let mut next = n;
+    for i in (0..n).rev() {
+        starts[i] = next;
+        let begins_line = match &nodes[i] {
+            Node::Box(_) => true,
+            Node::Penalty(p) => p.penalty <= FORCED_BREAK,
+            Node::Glue(_) => false,
+        };
+        if begins_line {
+            next = i;
+        }
+    }
+    starts[0] = 0;
+    starts
+}
+
 fn count_content_boxes(nodes: &[Node], from: usize, to: usize) -> usize {
-    let start = if from == 0 { 0 } else { from + 1 };
+    let start = line_start_after(nodes, from, to);
     (start..=to)
         .filter(|&i| i < nodes.len())
         .filter(|&i| matches!(&nodes[i], Node::Box(b) if !b.content.is_empty()))
@@ -283,6 +326,7 @@ fn forward_pass(
     line_width: f64,
     tolerance: f64,
     sums: &PrefixSums,
+    line_starts: &[usize],
     emergency_stretch: f64,
     consecutive_hyphen_limit: u32,
     runt_penalty: f64,
@@ -315,7 +359,11 @@ fn forward_pass(
         let is_forced = penalty_value <= FORCED_BREAK;
 
         let mut next_active: Vec<usize> = Vec::new();
-        let mut best_at_i: HashMap<usize, usize> = HashMap::new();
+        // Best candidate ending at i per line number — and per fitness class
+        // when adjacent-line demerits are in use (see linebreak.ts for why).
+        // BTreeMap: winners are pushed in ascending key order, the same order
+        // the TypeScript implementation uses, so ties resolve identically.
+        let mut best_at_i: BTreeMap<usize, usize> = BTreeMap::new();
 
         for &a_idx in &active {
             // Copy fields before arena.push to satisfy the borrow checker
@@ -333,9 +381,12 @@ fn forward_pass(
             };
 
             let eff_lw = line_widths.get(a_line).copied().unwrap_or(line_width);
-            let sw = sums.widths[i] - sums.widths[a_pos];
-            let ss = sums.stretches[i] - sums.stretches[a_pos];
-            let sk = sums.shrinks[i] - sums.shrinks[a_pos];
+            // The line starts at the first box after the previous break, not
+            // at the break itself.
+            let start = line_starts[a_pos].min(i);
+            let sw = sums.widths[i] - sums.widths[start];
+            let ss = sums.stretches[i] - sums.stretches[start];
+            let sk = sums.shrinks[i] - sums.shrinks[start];
             let ratio = compute_ratio(eff_lw, penalty_width, sw, ss, sk, emergency_stretch);
 
             if ratio >= -1.0 && !is_forced {
@@ -381,13 +432,26 @@ fn forward_pass(
                 arena.push(cand);
                 let cand_idx = arena.len() - 1;
 
-                match best_at_i.get(&cand_line) {
+                let line_and_class = if adj_demerits > 0.0 {
+                    cand_line * 4 + arena[cand_idx].fitness_class as usize
+                } else {
+                    cand_line * 4
+                };
+                // With a consecutive-hyphen limit, the current hyphen run is
+                // part of the key (see linebreak.ts).
+                let key = if consecutive_hyphen_limit > 0 {
+                    let limit = consecutive_hyphen_limit as usize;
+                    line_and_class * (limit + 1) + (consec as usize).min(limit)
+                } else {
+                    line_and_class
+                };
+                match best_at_i.get(&key) {
                     None => {
-                        best_at_i.insert(cand_line, cand_idx);
+                        best_at_i.insert(key, cand_idx);
                     }
                     Some(&ex) => {
                         if arena[cand_idx].total_demerits < arena[ex].total_demerits {
-                            best_at_i.insert(cand_line, cand_idx);
+                            best_at_i.insert(key, cand_idx);
                         }
                     }
                 }
@@ -419,6 +483,7 @@ fn run_forward_pass(
     let single_line_p = para.single_line_penalty.unwrap_or(0.0);
 
     let sums = build_prefix_sums(nodes);
+    let line_starts = build_line_starts(nodes);
     let adj_demerits = para.adj_demerits.unwrap_or(0.0);
 
     let (mut arena, mut active) = forward_pass(
@@ -426,6 +491,7 @@ fn run_forward_pass(
         para.line_width,
         para.tolerance,
         &sums,
+        &line_starts,
         0.0,
         consec_limit,
         runt_p,
@@ -442,6 +508,7 @@ fn run_forward_pass(
                 para.line_width,
                 para.tolerance,
                 &sums,
+                &line_starts,
                 emergency_stretch,
                 consec_limit,
                 runt_p,
@@ -666,6 +733,7 @@ pub fn traceback_wasm_binary(
     runt_penalty: f64,
     single_line_penalty: f64,
     consecutive_hyphen_limit: u32,
+    adj_demerits: f64,
 ) -> String {
     let nodes = match deserialize_nodes_binary(f64s, u8s) {
         Ok(n) => n,
@@ -709,7 +777,12 @@ pub fn traceback_wasm_binary(
         } else {
             None
         },
-        adj_demerits: None,
+        // A caller that omits the argument passes NaN; `> 0.0` is then false.
+        adj_demerits: if adj_demerits > 0.0 {
+            Some(adj_demerits)
+        } else {
+            None
+        },
     };
 
     let (arena, active, used_emergency) = match run_forward_pass(&para) {

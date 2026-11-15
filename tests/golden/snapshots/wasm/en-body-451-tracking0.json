@@ -21,7 +21,7 @@
     {
       "text": "a cost function based on how tightly or loosely each line is fitted. Unlike first-fit greedy algorithms,",
       "hyphenated": false,
-      "ratio": -0.637,
+      "ratio": -0.5362,
       "wordSpacing": 2.2851,
       "lineWidth": 451.28,
       "alignment": "justified",
@@ -34,7 +34,7 @@
     {
       "text": "it considers all feasible breakpoints simultaneously. The result is a more even \"colour\" across",
       "hyphenated": false,
-      "ratio": 0.5142,
+      "ratio": 0.6691,
       "wordSpacing": 4.3383,
       "lineWidth": 451.28,
       "alignment": "justified",
@@ -47,7 +47,7 @@
     {
       "text": "the paragraph — no very loose lines followed by very tight ones, no unsightly rivers of white",
       "hyphenated": false,
-      "ratio": 0.4231,
+      "ratio": 0.5433,
       "wordSpacing": 4.0866,
       "lineWidth": 451.28,
       "alignment": "justified",
@@ -60,7 +60,7 @@
     {
       "text": "space running through the justified text. Difficult ligatures such as \"fi\", \"fl\", and \"ffi\" are resolved",
       "hyphenated": false,
-      "ratio": -0.2733,
+      "ratio": -0.1415,
       "wordSpacing": 2.8113,
       "lineWidth": 451.28,
       "alignment": "justified",
@@ -73,7 +73,7 @@
     {
       "text": "automatically through GSUB lookup tables. Hyphenation is applied using language-specific dic-",
       "hyphenated": true,
-      "ratio": -0.0603,
+      "ratio": 0.1058,
       "wordSpacing": 3.2116,
       "lineWidth": 451.28,
       "alignment": "justified",
@@ -97,35 +97,35 @@
       "y": [156.5742, 156.5742, 156.5742, 156.5742, 156.5742, 156.5742, 156.5742, 156.5742, 156.5742, 156.5742, 156.5742, 156.5742, 156.5742, 156.5742, 156.5742, 156.5742, 156.5742, 156.5742, 156.5742, 156.5742, 156.5742, 156.5742, 156.5742, 156.5742, 156.5742, 156.5742, 156.5742]
     },
     {
-      "text": "right-hand margin. Widow and orphan control ensures that a single short word never appears",
+      "text": "right-hand margin. Widow and orphan control ensures that a single short word never appears alone",
       "hyphenated": false,
-      "ratio": 0.5918,
-      "wordSpacing": 4.5055,
+      "ratio": -0.4529,
+      "wordSpacing": 2.3961,
       "lineWidth": 451.28,
       "alignment": "justified",
       "direction": "ltr",
       "isRunt": false,
       "baseline": 169.2832,
-      "x": [72, 124.3318, 142.5081, 164.6275, 203.0187, 224.3704, 234.1265, 261.2381, 278.0843, 298.5339, 309.62, 337.8276, 359.6073, 369.4389, 382.9628, 401.6485, 429.1939, 457.6415, 487.8355, 498.9216],
-      "y": [169.2832, 169.2832, 169.2832, 169.2832, 169.2832, 169.2832, 169.2832, 169.2832, 169.2832, 169.2832, 169.2832, 169.2832, 169.2832, 169.2832, 169.2832, 169.2832, 169.2832, 169.2832, 169.2832, 169.2832]
+      "x": [72, 122.2224, 140.3986, 160.4087, 196.6905, 215.9327, 225.6888, 250.6911, 267.5372, 285.8774, 296.9635, 323.0617, 342.7319, 350.4542, 363.9781, 380.5543, 405.9904, 432.3286, 460.4131, 471.4992, 498.2537],
+      "y": [169.2832, 169.2832, 169.2832, 169.2832, 169.2832, 169.2832, 169.2832, 169.2832, 169.2832, 169.2832, 169.2832, 169.2832, 169.2832, 169.2832, 169.2832, 169.2832, 169.2832, 169.2832, 169.2832, 169.2832, 169.2832]
     },
     {
-      "text": "alone on the last line of a paragraph, and a single line never stands isolated at the top of a column.",
+      "text": "on the last line of a paragraph, and a single line never stands isolated at the top of a column.",
       "hyphenated": false,
-      "ratio": -0.2818,
-      "wordSpacing": 2.7554,
+      "ratio": 0.6088,
+      "wordSpacing": 4.2176,
       "lineWidth": 451.28,
       "alignment": "justified",
       "direction": "ltr",
       "isRunt": false,
       "baseline": 181.9922,
-      "x": [72, 99.7817, 114.2972, 131.2327, 149.9322, 169.9618, 182.4733, 190.5549, 210.4833, 242.361, 261.9626, 270.0442, 283.5681, 300.5037, 320.5333, 348.9771, 380.5325, 394.0565, 419.1722, 430.3478, 447.2833, 464.8928, 477.4043, 485.4859, 499.666],
-      "y": [181.9922, 181.9922, 181.9922, 181.9922, 181.9922, 181.9922, 181.9922, 181.9922, 181.9922, 181.9922, 181.9922, 181.9922, 181.9922, 181.9922, 181.9922, 181.9922, 181.9922, 181.9922, 181.9922, 181.9922, 181.9922, 181.9922, 181.9922, 181.9922, 181.9922]
+      "x": [72, 87.9776, 106.3754, 126.5371, 148.0288, 162.0025, 171.5463, 191.4748, 224.8147, 245.8785, 255.4222, 268.9462, 287.3439, 308.8357, 338.7417, 371.7594, 385.2833, 411.8612, 424.499, 442.8968, 461.9684, 475.9421, 485.4859, 499.666],
+      "y": [181.9922, 181.9922, 181.9922, 181.9922, 181.9922, 181.9922, 181.9922, 181.9922, 181.9922, 181.9922, 181.9922, 181.9922, 181.9922, 181.9922, 181.9922, 181.9922, 181.9922, 181.9922, 181.9922, 181.9922, 181.9922, 181.9922, 181.9922, 181.9922]
     },
     {
       "text": "The algorithm was described by Donald Knuth and Michael Plass in their 1981 paper \"Breaking",
       "hyphenated": false,
-      "ratio": 0.0168,
+      "ratio": 0.1252,
       "wordSpacing": 3.2504,
       "lineWidth": 451.28,
       "alignment": "justified",
