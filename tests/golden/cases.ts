@@ -130,8 +130,8 @@ export const CASES: GoldenCase[] = [
   }),
 
   // ── Runt penalty (MT-07) ───────────────────────────────────────────────────
-  // 316 pt is a width where the penalty changes the breaks (MT-07 uses 223 pt,
-  // where it does not).
+  // 316 pt is a width where the penalty changes the breaks of EN_BODY (MT-07
+  // itself sets its own text at 384 pt).
   en('en-body-w316-runt0', 'MT-07', {
     lineWidth: 316,
     runtPenalty: 0,
