@@ -151,6 +151,69 @@ describe('German: capitalised words are hyphenated by default', () => {
   });
 });
 
+// ─── Words in capitals ───────────────────────────────────────────────────────
+
+describe('words in capitals are never hyphenated', () => {
+  const whole = (word: string, opts: HyphenateOptions, first = false) => {
+    const r = hyphenateWord(word, opts, first);
+    expect(r.fragments, word).toEqual([word]);
+    expect(r.hyphenable, word).toBe(false);
+  };
+
+  it('German: with punctuation attached', () => {
+    for (const w of [
+      'BUNDESREPUBLIK,',
+      'BUNDESWEHR.',
+      'GROSSBUCHSTABEN;',
+      '(NATO)',
+      '(UNESCO).',
+    ]) {
+      whole(w, de);
+    }
+  });
+
+  it('German: with letters outside A–Z', () => {
+    for (const w of ['GRÖSSE', '„ACHTUNG“', 'ÜBERWACHUNG', 'ÄNDERUNGEN']) {
+      whole(w, de);
+    }
+  });
+
+  it('other languages: also at the start of a paragraph or sentence', () => {
+    whole('INTERNATIONAL,', en, true);
+    whole('"UNBELIEVABLE"', en, true);
+    whole('ÉLECTRICITÉ', { ...en, language: 'fr' }, true);
+  });
+
+  it('a capitalised word is not a word in capitals', () => {
+    expect(hyphenateWord('Überwachung', de, false).hyphenable).toBe(true);
+    expect(hyphenateWord('Bundesrepublik,', de, false).hyphenable).toBe(true);
+    // One capital with punctuation is not "at least two upper-case letters".
+    expect(hyphenateWord('beautiful', en, false).hyphenable).toBe(true);
+  });
+});
+
+// ─── E-mail addresses ────────────────────────────────────────────────────────
+
+describe('e-mail addresses are never hyphenated', () => {
+  it('an address stays in one piece, in any language', () => {
+    for (const opts of [en, de]) {
+      for (const w of [
+        'firstname.lastname@university.example.org',
+        'redaktion@zeitungsverlag.example',
+        '(support@example.org).',
+      ]) {
+        const r = hyphenateWord(w, opts, false);
+        expect(r.fragments, w).toEqual([w]);
+        expect(r.hyphenable, w).toBe(false);
+      }
+    }
+  });
+
+  it('an "@" at the start or end of a token does not make an address', () => {
+    expect(hyphenateWord('@beautiful', en, false).hyphenable).toBe(true);
+  });
+});
+
 // ─── URL break points ────────────────────────────────────────────────────────
 
 describe('URLs: break points without a hyphen', () => {
@@ -210,7 +273,12 @@ describe('URLs: break points without a hyphen', () => {
     expect(r.hasSoftHyphen).toBe(false);
     // "documentation" would be split by the pattern hyphenator; inside a URL
     // it stays whole.
-    expect(r.fragments).toEqual(['https://', 'example', '.com/', 'documentation']);
+    expect(r.fragments).toEqual([
+      'https://',
+      'example',
+      '.com/',
+      'documentation',
+    ]);
   });
 
   it('a URL that contains digits still gets break points', () => {
@@ -278,10 +346,68 @@ describe('URLs: break points without a hyphen', () => {
       'Mr.Smith',
       '3.5/4.5',
       'a=b',
+      // A dot and a slash do not make a URL: the bare-host rule needs
+      // lower-case labels and a top-level domain from a short list.
+      'Node.js/Express',
+      'README.md/CHANGELOG.md',
+      'index.html/#top',
+      'Input.Output/Stream',
+      'Mr.Smith/Jones',
+      'St.Gallen/Zürich',
+      'end.Next/thing',
+      'tcp.ip/stack',
+      'usw.usf/etc',
+      'file.txt/',
+      'Example.com/path',
+      'look.at/this',
     ]) {
       const on = hyphenateWord(word, en, false);
       const off = hyphenateWord(word, { ...en, breakUrls: false }, false);
       expect(on, word).toEqual(off);
+    }
+  });
+
+  it('a bare host is detected when its top-level domain is on the list', () => {
+    expect(frags('example.com/path')).toEqual(['example', '.com/', 'path']);
+    expect(frags('example.org/a/b')).toEqual(['example', '.org/', 'a/b']);
+    expect(frags('sub.example.co.uk/xy')).toEqual([
+      'sub',
+      '.example',
+      '.co',
+      '.uk/',
+      'xy',
+    ]);
+    expect(frags('example.de:8080/pfad/seite')).toEqual([
+      'example',
+      '.de:8080/',
+      'pfad/',
+      'seite',
+    ]);
+  });
+
+  it('a very long token is handled in linear time', () => {
+    // Each of these made the first version's trailing-punctuation regex
+    // quadratic: 20,000 dots took 24 seconds.
+    const n = 50_000;
+    for (const token of [
+      '.'.repeat(n),
+      'a' + '.'.repeat(n) + 'b',
+      'https://example.com/' + '.'.repeat(n) + 'x',
+      ')'.repeat(n) + 'x',
+      '('.repeat(n),
+      'a.'.repeat(n / 2),
+      'a-'.repeat(n / 2) + '/',
+      'A'.repeat(n) + ',',
+      '!?'.repeat(n / 2) + 'A',
+    ]) {
+      const t0 = performance.now();
+      const r = hyphenateWord(token, en, false);
+      const ms = performance.now() - t0;
+      expect(r.fragments.join(''), token.slice(0, 12)).toBe(token);
+      expect(
+        ms,
+        `${token.slice(0, 12)}… took ${ms.toFixed(0)} ms`,
+      ).toBeLessThan(500);
     }
   });
 
@@ -315,7 +441,10 @@ describe('URLs: node sequence', () => {
   const URL = 'https://example.com/docs/intro';
 
   it('puts an unflagged zero-width penalty between URL fragments', () => {
-    const words = hyphenateParagraph(URL, en).map((w) => ({ ...w, font: FONT }));
+    const words = hyphenateParagraph(URL, en).map((w) => ({
+      ...w,
+      font: FONT,
+    }));
     const nodes = buildNodeSequence(words, MEASURER);
     // https:// | example | .com/ | docs/ | intro
     // 5 boxes, 4 penalties, then termination glue + forced break

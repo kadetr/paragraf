@@ -169,22 +169,100 @@ const capitalisesAllNouns = (language: Language): boolean =>
 // Punctuation that can surround a URL in running text: "(https://…)." It stays
 // attached to the first or last fragment and never gets a break of its own.
 const URL_LEADING = /^[(\[{<"'“‘«„]+/;
-const URL_TRAILING = /[)\]}>"'”’».,;:!?]+$/;
+const URL_TRAILING_CHARS = new Set(')]}>"\'”’».,;:!?');
+
+// Length of the trailing punctuation of `text`. A loop from the end, not a
+// `[…]+$` regex: the regex is quadratic on a long run of such characters that
+// is not at the end, and this runs on every word of every paragraph.
+const trailingPunctuationLength = (text: string): number => {
+  let end = text.length;
+  while (end > 0 && URL_TRAILING_CHARS.has(text[end - 1])) end--;
+  return text.length - end;
+};
 
 // What counts as a URL (kept narrow on purpose):
 //   1. http://…, https://…, ftp://…
 //   2. www.name.tld…
-//   3. a bare host followed by a slash: name.tld/…  (letters-only TLD,
-//      optional port)
+//   3. a bare host followed by a slash: name.tld/…  — only with lower-case
+//      labels and a top-level domain from BARE_HOST_TLDS (optional port)
 // A bare host WITHOUT a slash ("example.com") is not detected: it cannot be
 // told apart from a missing space after a full stop ("end.Next").
 const URL_WITH_SCHEME = /^(?:https?|ftp):\/\/\S/i;
 const URL_WWW = /^www\.[^\s./]+\.\S/i;
-const URL_BARE_HOST =
-  /^(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z]{2,}(?::\d+)?\//i;
 
-const isUrlLike = (core: string): boolean =>
-  URL_WITH_SCHEME.test(core) || URL_WWW.test(core) || URL_BARE_HOST.test(core);
+// Top-level domains accepted for a bare host. Short on purpose. A dot and a
+// slash also occur in "Node.js/Express", "README.md/CHANGELOG.md" or
+// "index.html/#top", so every top-level domain that is also a common file
+// extension or abbreviation is left out (md, js, ts, py, sh, rs, pl, so, ai,
+// at, it, is, in, to, me, no, be, us, …). A URL under any other domain is
+// detected when it is written with its scheme or with "www.".
+const BARE_HOST_TLDS = new Set([
+  'com',
+  'org',
+  'net',
+  'edu',
+  'gov',
+  'info',
+  'io',
+  'dev',
+  'app',
+  'eu',
+  'de',
+  'uk',
+  'fr',
+  'es',
+  'nl',
+  'ch',
+  'ca',
+  'au',
+  'jp',
+  'se',
+  'dk',
+  'fi',
+  'cz',
+  'br',
+  'cn',
+]);
+
+const isHostLabel = (label: string): boolean => {
+  if (label.length === 0 || label.length > 63) return false;
+  if (label.startsWith('-') || label.endsWith('-')) return false;
+  for (let i = 0; i < label.length; i++) {
+    const c = label.charCodeAt(i);
+    const lower = c >= 97 && c <= 122;
+    const digit = c >= 48 && c <= 57;
+    if (!lower && !digit && c !== 45) return false;
+  }
+  return true;
+};
+
+const isDigits = (text: string): boolean => {
+  if (text.length === 0) return false;
+  for (let i = 0; i < text.length; i++) {
+    const c = text.charCodeAt(i);
+    if (c < 48 || c > 57) return false;
+  }
+  return true;
+};
+
+// name.tld/… — parsed by hand so that the cost is linear in the host length.
+const isBareHostUrl = (text: string): boolean => {
+  const slash = text.indexOf('/');
+  if (slash < 4 || slash > 260) return false;
+  let host = text.slice(0, slash);
+  const colon = host.indexOf(':');
+  if (colon >= 0) {
+    if (!isDigits(host.slice(colon + 1))) return false;
+    host = host.slice(0, colon);
+  }
+  const labels = host.split('.');
+  if (labels.length < 2) return false;
+  if (!labels.every(isHostLabel)) return false;
+  return BARE_HOST_TLDS.has(labels[labels.length - 1]);
+};
+
+const isUrlLike = (text: string): boolean =>
+  URL_WITH_SCHEME.test(text) || URL_WWW.test(text) || isBareHostUrl(text);
 
 // A break is allowed AFTER each of these …
 const URL_BREAK_AFTER = new Set(['/', '?', '&', '=', '#', '_', '-']);
@@ -215,8 +293,12 @@ const isAsciiAlnum = (ch: string | undefined): boolean =>
 const splitUrl = (word: string): string[] | null => {
   const lead = word.match(URL_LEADING)?.[0] ?? '';
   const rest = word.slice(lead.length);
-  const trail = rest.match(URL_TRAILING)?.[0] ?? '';
-  const core = rest.slice(0, rest.length - trail.length);
+  // All three tests look at the start only, so a token that is not a URL
+  // leaves here before anything else is done with it.
+  if (!isUrlLike(rest)) return null;
+  const trailLength = trailingPunctuationLength(rest);
+  const trail = rest.slice(rest.length - trailLength);
+  const core = rest.slice(0, rest.length - trailLength);
   if (!isUrlLike(core)) return null;
 
   // First position at which a break may occur: right after "://".
@@ -251,6 +333,18 @@ const splitUrl = (word: string): string[] | null => {
 
 // ─── Guards ──────────────────────────────────────────────────────────────────
 
+// A word set in capitals: no lower-case letter and at least two upper-case
+// letters, in any script. Punctuation around or inside it does not matter
+// ("NATO", "(NATO)", "BUNDESREPUBLIK,", "GRÖSSE", "U.S.A.").
+const isInCapitals = (word: string): boolean => {
+  if (/\p{Ll}/u.test(word)) return false;
+  const upper = word.match(/\p{Lu}/gu);
+  return upper !== null && upper.length >= 2;
+};
+
+// An e-mail address: an "@" with a letter or digit on both sides.
+const EMAIL_ADDRESS = /[\p{L}\p{N}]@[\p{L}\p{N}]/u;
+
 const shouldSkip = (
   word: string,
   opts: HyphenateOptionsInternal,
@@ -261,7 +355,8 @@ const shouldSkip = (
   if (clean.length < opts.minWordLength) return true;
   if (/\d/.test(clean)) return true;
   if (/^https?:\/\//.test(clean)) return true;
-  if (/^[A-Z][A-Z]+$/.test(clean)) return true;
+  if (isInCapitals(clean)) return true;
+  if (EMAIL_ADDRESS.test(clean)) return true;
   // An explicit processCapitalized wins; otherwise the language decides.
   const processCapitalized =
     opts.processCapitalized ?? capitalisesAllNouns(opts.language);
