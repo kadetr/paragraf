@@ -14,6 +14,7 @@ export type {
   ParagraphOutput,
   ParagraphComposer,
   ComposerOptions,
+  ShapingMode,
   MeasureCacheOptions,
   MeasureCacheStats,
   FeatureConfig,

@@ -8,15 +8,19 @@ import type { ShapingMode } from './types.js';
  * Convert a ShapingMode option to ComposerOptions understood by
  * createParagraphComposer / createDefaultFontEngine.
  *
- * 'auto' maps to `undefined`, which triggers the default auto-detect behaviour
- * inside the typography package.
+ * `'wasm'` is strict: the typography package throws when the binary is not
+ * usable. `'auto'` falls back to fontkit with one warning per process; when
+ * `verbose` is false the fallback is chosen here instead, so nothing is
+ * printed.
  */
 export function resolveComposerOptions(
   shaping: ShapingMode,
-): ComposerOptions | undefined {
-  if (shaping === 'fontkit') return { useWasm: false };
-  if (shaping === 'wasm') return { useWasm: true };
-  return undefined; // auto
+  verbose = true,
+): ComposerOptions {
+  if (shaping === 'auto' && !verbose && wasmStatus().status !== 'loaded') {
+    return { shaping: 'fontkit' };
+  }
+  return { shaping };
 }
 
 /**
@@ -27,7 +31,8 @@ export function resolveComposerOptions(
 export function detectActualShaping(
   options: ComposerOptions | undefined,
 ): 'wasm' | 'fontkit' {
-  if (options?.useWasm === false) return 'fontkit';
-  const status = wasmStatus();
-  return status.status === 'loaded' ? 'wasm' : 'fontkit';
+  if (options?.shaping === 'fontkit' || options?.useWasm === false) {
+    return 'fontkit';
+  }
+  return wasmStatus().status === 'loaded' ? 'wasm' : 'fontkit';
 }

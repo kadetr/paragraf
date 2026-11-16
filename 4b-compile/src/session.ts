@@ -32,7 +32,9 @@ export interface SessionOptions {
    */
   basePath?: string;
   /**
-   * Font shaping engine.
+   * Font shaping engine. `'wasm'` throws when the binary is not built or
+   * failed to load; `'auto'` falls back to fontkit with one warning per
+   * process.
    * @default 'auto'
    */
   shaping?: ShapingMode;

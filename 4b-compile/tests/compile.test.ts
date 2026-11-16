@@ -87,6 +87,17 @@ describe('compile() — rendered output', () => {
     expect(result.metadata.overflowLines).toBe(0);
   });
 
+  it('honours the wasm shaping mode when the binary is built', async () => {
+    expect(typography.wasmStatus().status).toBe('loaded');
+    const result = await compile({
+      template: makeTemplate(),
+      data: SAMPLE_DATA,
+      output: 'rendered',
+      shaping: 'wasm',
+    });
+    expect(result.metadata.shapingEngine).toBe('wasm');
+  });
+
   it('honours the fontkit shaping mode', async () => {
     const result = await compile({
       template: makeTemplate(),

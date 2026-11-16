@@ -35,6 +35,17 @@ Code that builds a `ParagraphOutput` or a `CompileResult` by hand (a mock compos
 
 Both engines implement the fallback and are compared on infeasible paragraphs in `2a-shaping-wasm/tests/linebreak-parity.test.ts`.
 
+### ⚠️ Breaking: `shaping: 'wasm'` is now strict
+
+#### Shaping mode (`shaping`)
+`createParagraphComposer` and `createDefaultFontEngine` accept `shaping: 'auto' | 'wasm' | 'fontkit'`, the same values `compile()` already took.
+
+- `'wasm'` throws when the WASM shaper is not built or failed to load. Before, `compile({ shaping: 'wasm' })` fell back to fontkit without saying so. This also applies to `createCompilerSession` and to Studio templates with `compile.shaping: "wasm"`.
+- `'auto'` (default) still falls back to fontkit, and now prints one warning per process when it does. `compile({ verbose: false })` suppresses it.
+- `'fontkit'` never warns.
+- `useWasm` is deprecated. `false` means `'fontkit'`; `true` means `'auto'`, as before (it never was strict).
+- New exported type `ShapingMode` in `@paragraf/typography`.
+
 ### ⚠️ Line breaks change
 
 #### Line measure no longer includes the glue at the previous break

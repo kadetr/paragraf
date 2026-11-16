@@ -138,7 +138,7 @@ export async function compile<T = unknown>(
     shapingEngine = session.shapingEngine;
   } else {
     registry = buildFontRegistry(template.fonts, basePath);
-    const composerOpts = resolveComposerOptions(shaping);
+    const composerOpts = resolveComposerOptions(shaping, verbose);
     shapingEngine = detectActualShaping(composerOpts);
     [composer, fontEngine] = await Promise.all([
       createParagraphComposer(registry, composerOpts),
