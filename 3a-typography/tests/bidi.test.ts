@@ -9,12 +9,14 @@ import { describe, it, expect, beforeAll } from 'vitest';
 // green dot instead. Evaluated once at module load time — WASM status is
 // fixed at startup. In CI a missing shaper is a failure: see the CI guard in
 // shaping-mode.test.ts.
-const wasmLoaded = () => wasmStatus().status === 'loaded';
-const itWasm = it.skipIf(wasmStatus().status !== 'loaded');
-const describeWasm = describe.skipIf(wasmStatus().status !== 'loaded');
-if (!wasmLoaded()) {
+// Skip only when the shaper is not built. A binary that is present but fails
+// to load ('error') must still fail these tests.
+const wasmBuilt = () => wasmStatus().status !== 'absent';
+const itWasm = it.skipIf(wasmStatus().status === 'absent');
+const describeWasm = describe.skipIf(wasmStatus().status === 'absent');
+if (!wasmBuilt()) {
   console.warn(
-    `[bidi.test] WASM shaper not loaded (${wasmStatus().status}): every test ` +
+    `[bidi.test] WASM shaper not built (${wasmStatus().status}): every test ` +
       'in this file needs it and is skipped. Build it with ' +
       '`wasm-pack build --target nodejs --out-dir pkg` in 2a-shaping-wasm/wasm.',
   );
@@ -230,7 +232,7 @@ describe('RTL paragraph composition', () => {
   let composer: ParagraphComposer;
 
   beforeAll(async () => {
-    if (!wasmLoaded()) return;
+    if (!wasmBuilt()) return;
     composer = await createParagraphComposer(REGISTRY);
   });
 
@@ -308,7 +310,7 @@ describe('RTL visual reordering in layoutParagraph', () => {
   let measurer: Measurer;
 
   beforeAll(async () => {
-    if (!wasmLoaded()) return;
+    if (!wasmBuilt()) return;
     const { createMeasurer } = await import('@paragraf/font-engine');
     measurer = createMeasurer(REGISTRY);
     composer = await createParagraphComposer(REGISTRY);

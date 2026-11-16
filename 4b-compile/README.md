@@ -83,7 +83,7 @@ compile<T = unknown>(options: CompileOptions<T>): Promise<CompileResult>
 | `pdfxConformance` | `'PDF/X-3:2002' \| 'PDF/X-3:2003'` | — | Add PDF/X-3 markers to the PDF. Needs `outputIntent`. |
 | `maxPages` | `number` | `100` | Maximum pages to generate. Content beyond it is an overflow: see `onOverflow`. |
 | `session` | `CompilerSession` | — | Reuse fonts, composer and font engine from `createCompilerSession()`. |
-| `verbose` | `boolean` | `true` | `false` suppresses non-critical `console.warn` output, including the fontkit fallback warning and the overfull-line warning. |
+| `verbose` | `boolean` | `true` | `false` suppresses most non-critical `console.warn` output, including the fontkit fallback warning and the overfull-line warning. Two warnings are always printed: an unknown font variant key in the template, and `pdfxConformance` set without `outputIntent`. |
 
 #### `CompileResult`
 
@@ -201,7 +201,7 @@ When no exact weight match is found for a style, `@paragraf/compile` selects the
 
 ## Known limitations
 
-See [Known limitations](https://github.com/kadetr/paragraf#known-limitations) in the repository README.
+See [Known limitations](https://github.com/kadetr/paragraf#known-limitations) in the repository README. One more applies to this package: a style's `features` (OpenType feature tags) is accepted but has no effect yet.
 
 ---
 
