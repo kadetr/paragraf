@@ -4,7 +4,30 @@ All notable changes to this project will be documented in this file.
 
 ---
 
-## Unreleased
+## v0.7.0 — not yet published
+
+First release intended for the npm registry. All thirteen `@paragraf/*` packages are at 0.7.0.
+
+### Packaging and release
+
+#### WASM modules were missing from the packed packages
+`wasm-pack` writes a `.gitignore` containing `*` into its output folder, and `npm pack` honours it. As packed before this release, `@paragraf/color-wasm` contained no WASM module at all and `@paragraf/shaping-wasm` lacked its browser (`pkg-bundler`) build. The pack step now adds an `.npmignore` to those folders, which takes precedence. No version with this defect was published.
+
+#### Pack check and smoke test
+- `npm run pack:check` packs every package and checks the tarball: `dist/`, types, README, licence, WASM files where expected, `exports` pointing at `dist`, internal dependency ranges, no tests or sources.
+- `npm run smoke -- <folder>` installs those tarballs into an empty project outside the repo and compiles the README quick-start with `shaping: 'wasm'`.
+- Both run in CI on every pull request.
+
+#### Release workflow
+`.github/workflows/release.yml` runs on a `vX.Y.Z` tag: build WASM, build, type check, tests, pack check, smoke test, then publishes the tarballs that were checked, with npm provenance. A manual run is a dry run.
+
+#### Versioning
+Changesets in fixed mode keeps all `@paragraf/*` packages on one version (see `.changeset/README.md`). This changelog stays hand-written.
+
+#### Package manifests
+- All library packages declare `publishConfig.access: "public"`.
+- `@paragraf/color` gained the licence, repository and pack scripts it lacked; `@paragraf/color` and `@paragraf/color-wasm` gained `LICENSE` files; `@paragraf/color-wasm` gained a README.
+- Root: `vite` moved from `dependencies` to `devDependencies`.
 
 ### ⚠️ Breaking: infeasible paragraphs no longer throw by default
 

@@ -1,6 +1,6 @@
 {
   "name": "@paragraf/typography",
-  "version": "0.6.0",
+  "version": "0.7.0",
   "description": "Paragraph compositor, optical margin alignment, and document model for the paragraf typesetter.",
   "license": "MIT",
   "repository": {
@@ -25,6 +25,7 @@
     ".": "./src/index.ts"
   },
   "publishConfig": {
+    "access": "public",
     "exports": {
       ".": {
         "import": "./dist/index.js",
@@ -43,11 +44,11 @@
     "postpack": "node ../scripts/publishconfig-swap.mjs restore"
   },
   "dependencies": {
-    "@paragraf/types": "^0.6.0",
-    "@paragraf/linebreak": "^0.6.0",
-    "@paragraf/font-engine": "^0.6.0",
-    "@paragraf/shaping-wasm": "^0.6.0",
-    "@paragraf/render-core": "^0.6.0"
+    "@paragraf/types": "^0.7.0",
+    "@paragraf/linebreak": "^0.7.0",
+    "@paragraf/font-engine": "^0.7.0",
+    "@paragraf/shaping-wasm": "^0.7.0",
+    "@paragraf/render-core": "^0.7.0"
   },
   "devDependencies": {
     "@types/node": "^22.19.15",

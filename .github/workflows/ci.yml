@@ -59,3 +59,12 @@ jobs:
 
       - name: Run WASM/TS parity test (MT-11)
         run: npx tsx tests/manual/scripts/mt-11-wasm-ts-parity.ts
+
+      # What users install is the tarball, not the workspace. These two steps
+      # pack every package, check the contents, install the tarballs into an
+      # empty project outside the repo and compile a PDF from them.
+      - name: Pack check
+        run: node scripts/pack-check.mjs --out "$RUNNER_TEMP/tarballs"
+
+      - name: Smoke test from the packed tarballs
+        run: node scripts/smoke-test.mjs "$RUNNER_TEMP/tarballs"

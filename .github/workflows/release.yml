@@ -1,0 +1,109 @@
+name: Release
+
+# Publishes all @paragraf/* packages to npm.
+#
+# Starts when a tag vX.Y.Z is pushed. It can also be started by hand from the
+# Actions tab; a manual run is a dry run unless "publish" is ticked.
+#
+# Needs the repository secret NPM_TOKEN (an npm automation token with publish
+# rights on the @paragraf scope).
+
+on:
+  push:
+    tags: ['v*.*.*']
+  workflow_dispatch:
+    inputs:
+      publish:
+        description: 'Really publish (unticked = dry run)'
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+  id-token: write # npm provenance
+
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+          registry-url: 'https://registry.npmjs.org'
+
+      - name: Tag must match the package version
+        if: github.event_name == 'push'
+        run: |
+          version=$(node -p "require('./0-types/package.json').version")
+          if [ "v$version" != "$GITHUB_REF_NAME" ]; then
+            echo "Tag $GITHUB_REF_NAME does not match package version $version" >&2
+            exit 1
+          fi
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: wasm32-unknown-unknown
+
+      - name: Install wasm-pack
+        run: cargo install wasm-pack --version 0.14.0 --locked
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Verify fonts
+        run: npm run verify-fonts
+
+      - name: Build WASM (nodejs target)
+        run: wasm-pack build --target nodejs --out-dir pkg --release
+        working-directory: 2a-shaping-wasm/wasm
+
+      - name: Build WASM (bundler target)
+        run: wasm-pack build --target bundler --out-dir pkg-bundler --release
+        working-directory: 2a-shaping-wasm/wasm
+
+      - name: Build packages
+        run: npm run build
+
+      - name: Type check
+        run: npm run typecheck
+
+      - name: Unit tests
+        run: npm test --workspaces --if-present
+
+      - name: End-to-end and golden tests
+        run: npm run test:e2e
+
+      - name: Pack check
+        run: node scripts/pack-check.mjs --out "$RUNNER_TEMP/tarballs"
+
+      - name: Smoke test from the packed tarballs
+        run: node scripts/smoke-test.mjs "$RUNNER_TEMP/tarballs"
+
+      # The tarballs that were checked and smoke-tested are the ones published.
+      - name: Publish (dry run)
+        if: github.event_name == 'workflow_dispatch' && !inputs.publish
+        run: |
+          for t in "$RUNNER_TEMP"/tarballs/*.tgz; do
+            npm publish "$t" --access public --dry-run
+          done
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Publish
+        if: github.event_name == 'push' || inputs.publish
+        run: |
+          for t in "$RUNNER_TEMP"/tarballs/*.tgz; do
+            npm publish "$t" --access public --provenance
+          done
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

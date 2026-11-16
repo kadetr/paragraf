@@ -344,4 +344,4 @@ console.log(wasmStatus()); // { status: 'loaded' | 'absent' | 'error' }
 
 **Pre-release.** The core algorithm and rendering pipeline are stable and well-tested. APIs may change before v1.0. Not yet published to npm — GitHub only at this stage.
 
-All packages are at **v0.6.0**.
+All packages are at **v0.7.0**.

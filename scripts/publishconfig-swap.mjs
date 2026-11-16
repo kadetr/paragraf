@@ -4,6 +4,7 @@
  *
  * prepack  (apply):   moves publishConfig.exports → exports so the tarball
  *                     has the dist/ path that Node will use after install.
+ *                     Also makes npm pack the wasm-pack output folders.
  * postpack (restore): puts the original exports back so the workspace keeps
  *                     using ./src/index.ts resolution during development.
  *
@@ -12,7 +13,7 @@
  *   node ../../scripts/publishconfig-swap.mjs restore
  */
 
-import { readFileSync, writeFileSync } from 'fs';
+import { readFileSync, writeFileSync, existsSync } from 'fs';
 
 const mode = process.argv[2]; // 'apply' | 'restore'
 if (mode !== 'apply' && mode !== 'restore') {
@@ -24,6 +25,21 @@ if (mode !== 'apply' && mode !== 'restore') {
 const path = 'package.json';
 const raw = readFileSync(path, 'utf8');
 const pkg = JSON.parse(raw);
+
+// wasm-pack writes a .gitignore containing "*" into its output folders. npm
+// honours a nested .gitignore and would leave the compiled module out of the
+// tarball. An .npmignore in the same folder takes precedence over it; the
+// file itself is never packed and stays invisible to git (the "*" rule).
+if (mode === 'apply') {
+  for (const dir of ['wasm/pkg', 'wasm/pkg-bundler']) {
+    if (existsSync(dir)) {
+      writeFileSync(
+        `${dir}/.npmignore`,
+        '# Written by scripts/publishconfig-swap.mjs so npm packs this folder.\n',
+      );
+    }
+  }
+}
 
 if (mode === 'apply') {
   if (!pkg.publishConfig?.exports) {

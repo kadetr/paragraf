@@ -1,4 +1,4 @@
-# paragraf-color
+# @paragraf/color
 
 ICC v2/v4 color management for the paragraf typography library.
 
@@ -17,13 +17,13 @@ Pure TypeScript. No native deps. No bundled ICC profile files.
 ## Install
 
 ```sh
-npm install paragraf-color
+npm install @paragraf/color
 ```
 
 ## Quick start
 
 ```typescript
-import { createColorManager } from 'paragraf-color';
+import { createColorManager } from '@paragraf/color';
 
 const mgr = createColorManager();
 const srgb = mgr.loadBuiltinSrgb();
