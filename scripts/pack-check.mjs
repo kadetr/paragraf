@@ -17,6 +17,8 @@ import {
   readdirSync,
   existsSync,
 } from 'fs';
+import { builtinModules } from 'module';
+import { posix } from 'path';
 import { tmpdir } from 'os';
 import { join, resolve, dirname } from 'path';
 import { fileURLToPath } from 'url';
@@ -40,9 +42,6 @@ export const PACKAGES = {
     'wasm/pkg/paragraf_shaping_wasm.js',
     'wasm/pkg/paragraf_shaping_wasm_bg.wasm',
     'wasm/pkg/package.json',
-    'wasm/pkg-bundler/paragraf_shaping_wasm.js',
-    'wasm/pkg-bundler/paragraf_shaping_wasm_bg.wasm',
-    'wasm/pkg-bundler/package.json',
   ],
   '2b-render-core': [],
   '3a-typography': [],
@@ -69,6 +68,11 @@ const FORBIDDEN = [
   /^wasm\/src\//,
   /(^|\/)\.gitignore$/,
   /^node_modules\//,
+  // The browser build is not reachable through `exports` and browser use is
+  // not supported yet, so it is not shipped.
+  /^wasm\/pkg-bundler\//,
+  /(^|\/)\.dev-exports\.json$/,
+  /(^|\/)\.npmignore$/,
 ];
 
 const outArg = process.argv.indexOf('--out');
@@ -136,11 +140,60 @@ for (const [dir, extra] of Object.entries(PACKAGES)) {
   if (!packed.repository) fail(name, 'no repository field');
 
   const exp = packed.exports?.['.'];
-  if (exp?.import !== './dist/index.js' || exp?.types !== './dist/index.d.ts') {
+  // "types" must come first; "default" serves both import and require.
+  if (
+    JSON.stringify(exp) !==
+    JSON.stringify({ types: './dist/index.d.ts', default: './dist/index.js' })
+  ) {
     fail(
       name,
-      `exports do not point at dist (got ${JSON.stringify(packed.exports)})`,
+      `exports are not { types, default } pointing at dist (got ${JSON.stringify(packed.exports)})`,
     );
+  }
+  if (packed._dev_exports) fail(name, '_dev_exports is in the packed manifest');
+  if (!packed.engines?.node) fail(name, 'no engines.node');
+
+  // ── What the built code imports ─────────────────────────────────────────
+  // Unpack and read every dist/*.js: a relative path must stay inside the
+  // tarball (a bundled copy of another package's loader would point outside),
+  // and a package import must be declared, or it only works in this monorepo.
+  const unpacked = mkdtempSync(join(tmpdir(), 'paragraf-unpack-'));
+  execFileSync('tar', ['-xzf', tarball, '-C', unpacked]);
+  const declared = new Set([
+    ...Object.keys(packed.dependencies ?? {}),
+    ...Object.keys(packed.peerDependencies ?? {}),
+    ...Object.keys(packed.optionalDependencies ?? {}),
+  ]);
+  const builtins = new Set(builtinModules);
+  const SPEC =
+    /(?:\bfrom\s*|\bimport\s*\(\s*|\bimport\s+|\brequire\s*\(\s*|\)\s*\(\s*)(["'])([^"'\n]+)\1/g;
+  for (const f of files.filter((x) => /^dist\/.*\.js$/.test(x))) {
+    const code = readFileSync(join(unpacked, 'package', f), 'utf8');
+    // Any quoted relative path to a code or WASM file, however it is loaded
+    // (createRequire results are called under arbitrary names).
+    for (const m of code.matchAll(
+      /(["'])(\.\.?\/[^"'\n]+\.(?:js|mjs|cjs|json|wasm))\1/g,
+    )) {
+      const target = posix.normalize(posix.join(posix.dirname(f), m[2]));
+      if (target.startsWith('..') || !has(target)) {
+        fail(name, `${f} refers to "${m[2]}", which is not in the tarball`);
+      }
+    }
+    for (const m of code.matchAll(SPEC)) {
+      const spec = m[2];
+      if (spec.startsWith('.')) {
+        continue; // relative paths are covered above
+      } else if (spec.startsWith('node:') || builtins.has(spec.split('/')[0])) {
+        // Node built-in
+      } else if (/^(@[a-z0-9-]+\/)?[a-z0-9][a-z0-9._-]*(\/.*)?$/.test(spec)) {
+        const dep = spec.startsWith('@')
+          ? spec.split('/').slice(0, 2).join('/')
+          : spec.split('/')[0];
+        if (!declared.has(dep)) {
+          fail(name, `${f} imports "${dep}", which is not a declared dependency`);
+        }
+      }
+    }
   }
   for (const [k, v] of Object.entries(packed.exports ?? {})) {
     const targets = typeof v === 'string' ? [v] : Object.values(v);
@@ -165,7 +218,9 @@ for (const [dir, extra] of Object.entries(PACKAGES)) {
   // prepack rewrites package.json and postpack must put it back.
   const after = readFileSync(join(cwd, 'package.json'), 'utf8');
   if (after !== before) fail(name, 'package.json was not restored after packing');
-  if (JSON.parse(after)._dev_exports) fail(name, '_dev_exports left behind');
+  if (existsSync(join(cwd, '.dev-exports.json'))) {
+    fail(name, '.dev-exports.json left behind');
+  }
 
   console.log(
     `  ${name}@${packed.version}  ${files.length} files  ${(info.size / 1024).toFixed(0)} kB`,

@@ -17,10 +17,12 @@
     "paragraf"
   ],
   "type": "module",
+  "engines": {
+    "node": ">=22"
+  },
   "files": [
     "dist/",
     "wasm/pkg/",
-    "wasm/pkg-bundler/",
     "README.md"
   ],
   "exports": {
@@ -30,8 +32,8 @@
     "access": "public",
     "exports": {
       ".": {
-        "import": "./dist/index.js",
-        "types": "./dist/index.d.ts"
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.js"
       }
     }
   },

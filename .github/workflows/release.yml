@@ -2,50 +2,61 @@ name: Release
 
 # Publishes all @paragraf/* packages to npm.
 #
-# Starts when a tag vX.Y.Z is pushed. It can also be started by hand from the
-# Actions tab; a manual run is a dry run unless "publish" is ticked.
+# A real publish happens only when a tag vX.Y.Z is pushed, the tag matches the
+# package version, and the tagged commit is on main.
+# Starting the workflow by hand from the Actions tab is always a dry run:
+# everything is built, tested, packed and smoke-tested, and nothing is uploaded.
 #
-# Needs the repository secret NPM_TOKEN (an npm automation token with publish
-# rights on the @paragraf scope).
+# Needs the repository secret NPM_TOKEN: an npm access token that may publish
+# to the @paragraf scope and create new packages in it (a granular token with
+# read and write access; such tokens expire, so check it before a release).
+#
+# The publish job runs in the GitHub environment "npm". Add required reviewers
+# to that environment (Settings → Environments) to get an approval prompt
+# before anything is uploaded.
 
 on:
   push:
     tags: ['v*.*.*']
   workflow_dispatch:
-    inputs:
-      publish:
-        description: 'Really publish (unticked = dry run)'
-        type: boolean
-        default: false
 
 permissions:
   contents: read
-  id-token: write # npm provenance
 
 concurrency:
   group: release
   cancel-in-progress: false
 
 jobs:
-  release:
+  build:
     runs-on: ubuntu-latest
 
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '22'
           cache: 'npm'
-          registry-url: 'https://registry.npmjs.org'
 
-      - name: Tag must match the package version
+      - name: Tag must be a plain version, match the packages, and be on main
         if: github.event_name == 'push'
         run: |
           version=$(node -p "require('./0-types/package.json').version")
+          if ! echo "$GITHUB_REF_NAME" | grep -Eq '^v[0-9]+\.[0-9]+\.[0-9]+$'; then
+            echo "Tag $GITHUB_REF_NAME is not vX.Y.Z; pre-releases are not published by this workflow." >&2
+            exit 1
+          fi
           if [ "v$version" != "$GITHUB_REF_NAME" ]; then
             echo "Tag $GITHUB_REF_NAME does not match package version $version" >&2
+            exit 1
+          fi
+          git fetch origin main
+          if ! git merge-base --is-ancestor "$GITHUB_SHA" origin/main; then
+            echo "Tagged commit $GITHUB_SHA is not on main" >&2
             exit 1
           fi
 
@@ -67,6 +78,7 @@ jobs:
         run: wasm-pack build --target nodejs --out-dir pkg --release
         working-directory: 2a-shaping-wasm/wasm
 
+      # Not shipped; the demo workspace needs it to build.
       - name: Build WASM (bundler target)
         run: wasm-pack build --target bundler --out-dir pkg-bundler --release
         working-directory: 2a-shaping-wasm/wasm
@@ -89,21 +101,43 @@ jobs:
       - name: Smoke test from the packed tarballs
         run: node scripts/smoke-test.mjs "$RUNNER_TEMP/tarballs"
 
-      # The tarballs that were checked and smoke-tested are the ones published.
+      - name: Keep the checked tarballs
+        uses: actions/upload-artifact@v4
+        with:
+          name: tarballs
+          path: ${{ runner.temp }}/tarballs/*.tgz
+          if-no-files-found: error
+
+  # Only this job can sign provenance and sees the npm token. It publishes the
+  # tarballs the build job checked, not a rebuild.
+  publish:
+    needs: build
+    runs-on: ubuntu-latest
+    environment: npm
+    permissions:
+      contents: read
+      id-token: write # npm provenance
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          registry-url: 'https://registry.npmjs.org'
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: tarballs
+          path: tarballs
+
       - name: Publish (dry run)
-        if: github.event_name == 'workflow_dispatch' && !inputs.publish
-        run: |
-          for t in "$RUNNER_TEMP"/tarballs/*.tgz; do
-            npm publish "$t" --access public --dry-run
-          done
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        if: github.event_name != 'push'
+        run: node scripts/publish-tarballs.mjs tarballs --dry-run
 
       - name: Publish
-        if: github.event_name == 'push' || inputs.publish
-        run: |
-          for t in "$RUNNER_TEMP"/tarballs/*.tgz; do
-            npm publish "$t" --access public --provenance
-          done
+        if: github.event_name == 'push'
+        run: node scripts/publish-tarballs.mjs tarballs
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

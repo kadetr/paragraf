@@ -61,7 +61,7 @@ This table reflects our reading of each project's documentation in November 2026
 ³ Paragraph-level direction detection and visual reordering via the first-strong character heuristic. Full Unicode Bidirectional Algorithm (UBA) line-level reordering is not yet implemented.  
 ⁴ Typst is a Rust compiler with its own markup language. It can be called from Node as a command-line tool or through community WebAssembly bindings.
 
-**Browser path.** The packages that run in a browser without modification are: `@paragraf/types`, `@paragraf/color`, `@paragraf/linebreak`, `@paragraf/layout`, `@paragraf/style`, and `@paragraf/render-core`. Pair them with a custom `FontEngine` that loads fonts via `fetch`. `@paragraf/typography`, `@paragraf/render-pdf`, `@paragraf/shaping-wasm`, `@paragraf/compile`, and `@paragraf/font-engine` (with the built-in adapters) are Node-only.
+**Browser path.** The packages that run in a browser without modification are: `@paragraf/types`, `@paragraf/linebreak`, `@paragraf/layout`, `@paragraf/style`, and `@paragraf/render-core`. Pair them with a custom `FontEngine` that loads fonts via `fetch`. `@paragraf/color` (it reads profiles from disk), `@paragraf/typography`, `@paragraf/render-pdf`, `@paragraf/shaping-wasm`, `@paragraf/compile`, and `@paragraf/font-engine` (with the built-in adapters) are Node-only.
 
 **For browser-side KP line breaking** (injecting optimal word spacing back into DOM text), see [tex-linebreak](https://github.com/robertknight/tex-linebreak) by robertknight. That is a different problem — paragraf is a print and PDF pipeline, not a browser text renderer.
 
