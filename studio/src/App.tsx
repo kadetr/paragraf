@@ -112,7 +112,7 @@ export function App(): React.JSX.Element {
 
   // Compile settings — kept in sync with template.json via IPC round-trip.
   const [compileSettings, setCompileSettings] = useState<CompileSettings>({
-    shaping: 'js',
+    shaping: 'auto',
     opticalMargins: false,
     hyphenation: true,
     selectable: false,
@@ -126,7 +126,7 @@ export function App(): React.JSX.Element {
       const parsed = JSON.parse(templateContent) as Record<string, unknown>;
       const compile = (parsed['compile'] ?? {}) as Record<string, unknown>;
       setCompileSettings({
-        shaping: (compile['shaping'] as CompileSettings['shaping']) ?? 'js',
+        shaping: (compile['shaping'] as CompileSettings['shaping']) ?? 'auto',
         opticalMargins: (compile['opticalMargins'] as boolean) ?? false,
         hyphenation: (compile['hyphenation'] as boolean) ?? true,
         selectable: (compile['selectable'] as boolean) ?? false,

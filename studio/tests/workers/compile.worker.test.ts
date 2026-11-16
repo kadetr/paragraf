@@ -183,3 +183,156 @@ describe('RT7 — CompileWorkerResult union covers all branches', () => {
     expect(assertExhaustive({ type: 'compile-error', message: 'oops' })).toBe('compile-error');
   });
 });
+
+// ─── RT8–RT12 — shaping mode reaches the session ─────────────────────────────
+
+const mockSvg = {
+  data: '<svg></svg>',
+  metadata: {
+    pageCount: 1,
+    overflowLines: 0,
+    overfullLines: [],
+    fallbackParagraphs: [],
+    shapingEngine: 'fontkit' as const,
+  },
+};
+
+type Shaping = 'fontkit' | 'wasm' | 'auto';
+
+function shapingInput(shaping?: Shaping, fontsKey = 'same-key'): CompileWorkerInput {
+  return makeInput({
+    fontsKey,
+    options: { data: { text: 'Hello.' }, output: 'svg', verbose: false, shaping },
+  });
+}
+
+/** The shaping modes createCompilerSession was called with, in call order. */
+function sessionShapings(deps: WorkerDeps): unknown[] {
+  return vi
+    .mocked(deps.createCompilerSession)
+    .mock.calls.map((call) => call[1]?.shaping);
+}
+
+describe('RT8 — no shaping in options → session is created on "auto"', () => {
+  it('keeps the library default for templates that set no shaping mode', async () => {
+    const deps = makeMockDeps({ compile: vi.fn().mockResolvedValue(mockSvg) });
+
+    await handleMessage(makeInput(), { session: null, fontsKey: null }, deps);
+
+    expect(sessionShapings(deps)).toEqual(['auto']);
+  });
+});
+
+describe('RT9 — options.shaping is passed to createCompilerSession', () => {
+  it.each(['fontkit', 'wasm', 'auto'] as const)(
+    'creates the session with shaping: %s',
+    async (shaping) => {
+      const deps = makeMockDeps({ compile: vi.fn().mockResolvedValue(mockSvg) });
+
+      await handleMessage(
+        shapingInput(shaping),
+        { session: null, fontsKey: null },
+        deps,
+      );
+
+      expect(sessionShapings(deps)).toEqual([shaping]);
+    },
+  );
+});
+
+describe('RT10 — shaping change with identical fontsKey → session is rebuilt', () => {
+  it('rebuilds on a mode change and reuses when the mode is unchanged', async () => {
+    const deps = makeMockDeps({ compile: vi.fn().mockResolvedValue(mockSvg) });
+    const cache = { session: null, fontsKey: null };
+
+    await handleMessage(shapingInput(undefined), cache, deps);
+    await handleMessage(shapingInput('fontkit'), cache, deps);
+    await handleMessage(shapingInput('fontkit'), cache, deps);
+    await handleMessage(shapingInput('wasm'), cache, deps);
+
+    expect(sessionShapings(deps)).toEqual(['auto', 'fontkit', 'wasm']);
+  });
+
+  it('treats an unset mode and an explicit "auto" as the same session', async () => {
+    const deps = makeMockDeps({ compile: vi.fn().mockResolvedValue(mockSvg) });
+    const cache = { session: null, fontsKey: null };
+
+    await handleMessage(shapingInput(undefined), cache, deps);
+    await handleMessage(shapingInput('auto'), cache, deps);
+
+    expect(vi.mocked(deps.createCompilerSession)).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe('RT11 — createCompilerSession throws → { type: compile-error }', () => {
+  it('returns the error, skips compile() and retries the session next time', async () => {
+    const deps = makeMockDeps({
+      compile: vi.fn().mockResolvedValue(mockSvg),
+      createCompilerSession: vi
+        .fn()
+        .mockRejectedValueOnce(new Error('WASM shaper is not built'))
+        .mockResolvedValue({}),
+    });
+    const cache = { session: null, fontsKey: null };
+
+    const first = await handleMessage(shapingInput('wasm'), cache, deps);
+
+    expect(first).toEqual({
+      type: 'compile-error',
+      message: 'WASM shaper is not built',
+    });
+    expect(vi.mocked(deps.compile)).not.toHaveBeenCalled();
+    expect(cache.session).toBeNull();
+
+    const second = await handleMessage(shapingInput('wasm'), cache, deps);
+
+    expect(second.type).toBe('svg');
+    expect(vi.mocked(deps.createCompilerSession)).toHaveBeenCalledTimes(2);
+  });
+});
+
+describe('RT12 — integration: the session engine follows the requested mode', () => {
+  /** Runs the real library and reports the engine of the session it built. */
+  async function run(shaping?: Shaping) {
+    const real = await import('@paragraf/compile');
+    const engines: string[] = [];
+    const deps: WorkerDeps = {
+      compile: real.compile,
+      createCompilerSession: async (template, opts) => {
+        const session = await real.createCompilerSession(template, opts);
+        engines.push(session.shapingEngine);
+        return session;
+      },
+    };
+    const result = await handleMessage(
+      shapingInput(shaping),
+      { session: null, fontsKey: null },
+      deps,
+    );
+    return { result, engine: engines[0] as string | undefined };
+  }
+
+  it('"fontkit" builds a fontkit session and compiles', async () => {
+    const { result, engine } = await run('fontkit');
+
+    expect(engine).toBe('fontkit');
+    expect(result.type).toBe('svg');
+  });
+
+  it('"wasm" builds a WASM session, or reports the library error', async () => {
+    const auto = await run(undefined);
+    const { result, engine } = await run('wasm');
+
+    if (auto.engine === 'wasm') {
+      // The WASM binary is built in this checkout.
+      expect(engine).toBe('wasm');
+      expect(result.type).toBe('svg');
+    } else {
+      // No binary: no session is created and the preview gets the reason.
+      expect(engine).toBeUndefined();
+      expect(result.type).toBe('compile-error');
+      const r = result as Extract<CompileWorkerResult, { type: 'compile-error' }>;
+      expect(r.message).toMatch(/wasm/i);
+    }
+  });
+});
