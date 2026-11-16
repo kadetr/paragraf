@@ -1,8 +1,25 @@
 {
   "name": "@paragraf/color",
-  "version": "0.6.0",
+  "version": "0.7.0",
   "description": "ICC color management for the paragraf typography library",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/kadetr/paragraf.git",
+    "directory": "0-color"
+  },
+  "homepage": "https://github.com/kadetr/paragraf/tree/main/0-color#readme",
+  "keywords": [
+    "typography",
+    "typesetting",
+    "color",
+    "icc",
+    "paragraf"
+  ],
   "type": "module",
+  "engines": {
+    "node": ">=22"
+  },
   "files": [
     "dist/",
     "README.md"
@@ -11,20 +28,24 @@
     ".": "./src/index.ts"
   },
   "publishConfig": {
+    "access": "public",
     "exports": {
       ".": {
-        "import": "./dist/index.js",
-        "types": "./dist/index.d.ts"
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.js"
       }
     }
   },
   "scripts": {
     "build": "tsup",
+    "prepublishOnly": "npm run build",
     "test": "vitest run --passWithNoTests",
     "test:watch": "vitest",
     "test:ui": "vitest --ui",
     "coverage": "vitest run --coverage",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "prepack": "node ../scripts/publishconfig-swap.mjs apply",
+    "postpack": "node ../scripts/publishconfig-swap.mjs restore"
   },
   "devDependencies": {
     "@types/node": "^22.0.0",

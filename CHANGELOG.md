@@ -4,7 +4,36 @@ All notable changes to this project will be documented in this file.
 
 ---
 
-## Unreleased
+## v0.7.0 — not yet published
+
+First release intended for the npm registry. All thirteen `@paragraf/*` packages are at 0.7.0.
+
+### Packaging and release
+
+#### WASM modules were missing from the packed packages
+`wasm-pack` writes a `.gitignore` containing `*` into its output folder, and `npm pack` honours it. As packed before this release, `@paragraf/color-wasm` contained no WASM module at all, and `@paragraf/shaping-wasm` would have had none either when packed from a clean build. The pack step now adds an `.npmignore` to those folders, which takes precedence. No version with this defect was published.
+
+#### Pack check and smoke test
+- `npm run pack:check` packs every package and checks the tarball: `dist/`, types, README, licence, WASM files where expected, `exports` pointing at `dist`, internal dependency ranges, no tests or sources, every relative path in the built code present in the tarball, and every imported package declared as a dependency.
+- `npm run smoke -- <folder>` installs those tarballs into an empty project outside the repo and compiles the README quick-start with `shaping: 'wasm'`.
+- Both run in CI on every pull request.
+
+#### Release workflow
+`.github/workflows/release.yml` runs on a `vX.Y.Z` tag that matches the package version and sits on `main`: build WASM, build, type check, tests, pack check, smoke test. A separate job then publishes the tarballs that were checked, in dependency order and with npm provenance, skipping versions already on the registry so a failed run can be repeated. Starting the workflow by hand is always a dry run.
+
+#### Versioning
+Changesets in fixed mode keeps all `@paragraf/*` packages on one version (see `.changeset/README.md`). This changelog stays hand-written.
+
+#### `@paragraf/compile` bundled a broken copy of the colour packages
+The build inlined `@paragraf/color` and `@paragraf/color-wasm` into `@paragraf/compile`. The inlined WASM loader looked for its module inside `@paragraf/compile`, failed, and every CMYK output-intent compile silently used the TypeScript transform. They are now ordinary imports.
+
+#### Package manifests
+- `exports` is `{ "types", "default" }` for every package. `require('@paragraf/…')` now works on Node 22, which can load ES modules with `require`; the packages remain ES modules.
+- `engines.node` is `>=22`, the version CI tests.
+- `@paragraf/shaping-wasm` no longer ships the browser (`pkg-bundler`) build: it was not reachable through `exports`, and browser use is not supported yet. This halves the package size.
+- All library packages declare `publishConfig.access: "public"`.
+- `@paragraf/color` gained the licence, repository and pack scripts it lacked; `@paragraf/color` and `@paragraf/color-wasm` gained `LICENSE` files; `@paragraf/color-wasm` gained a README.
+- Root: `vite` moved from `dependencies` to `devDependencies`.
 
 ### ⚠️ Breaking: infeasible paragraphs no longer throw by default
 

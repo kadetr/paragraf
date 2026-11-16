@@ -1,6 +1,6 @@
 {
   "name": "@paragraf/types",
-  "version": "0.6.0",
+  "version": "0.7.0",
   "description": "Shared TypeScript interfaces and constants for the paragraf typography library",
   "license": "MIT",
   "repository": {
@@ -15,6 +15,9 @@
     "paragraf"
   ],
   "type": "module",
+  "engines": {
+    "node": ">=22"
+  },
   "files": [
     "dist/",
     "README.md"
@@ -23,10 +26,11 @@
     ".": "./src/index.ts"
   },
   "publishConfig": {
+    "access": "public",
     "exports": {
       ".": {
-        "import": "./dist/index.js",
-        "types": "./dist/index.d.ts"
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.js"
       }
     }
   },

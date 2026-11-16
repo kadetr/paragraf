@@ -13,3 +13,5 @@ output/
 internal/
 methodology/
 methodology-old/
+# written during npm pack by scripts/publishconfig-swap.mjs
+.dev-exports.json

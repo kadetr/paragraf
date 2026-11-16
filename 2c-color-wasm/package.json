@@ -1,6 +1,6 @@
 {
   "name": "@paragraf/color-wasm",
-  "version": "0.6.0",
+  "version": "0.7.0",
   "description": "Rust/WASM ICC color transform backend for @paragraf/color.",
   "license": "MIT",
   "repository": {
@@ -18,6 +18,9 @@
     "paragraf"
   ],
   "type": "module",
+  "engines": {
+    "node": ">=22"
+  },
   "files": [
     "dist/",
     "wasm/pkg/",
@@ -27,10 +30,11 @@
     ".": "./src/index.ts"
   },
   "publishConfig": {
+    "access": "public",
     "exports": {
       ".": {
-        "import": "./dist/index.js",
-        "types": "./dist/index.d.ts"
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.js"
       }
     }
   },
@@ -45,7 +49,7 @@
     "build:wasm": "cd wasm && wasm-pack build --target nodejs --out-dir pkg"
   },
   "dependencies": {
-    "@paragraf/color": "^0.6.0"
+    "@paragraf/color": "^0.7.0"
   },
   "devDependencies": {
     "@types/node": "^22.19.15",
