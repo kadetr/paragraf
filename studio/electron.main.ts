@@ -259,12 +259,10 @@ async function triggerCompile(
       template.content = [];
     }
 
-    // Session key includes shaping so changing the engine busts the cache.
-    // compile() ignores options.shaping when a session is provided — the
-    // composer inside the session was built with the original engine.
+    // The worker rebuilds its session when this key or options.shaping
+    // changes (the shaping engine is fixed when the session is created).
     const fontsKey = JSON.stringify({
       fonts: (raw as Record<string, unknown>)['fonts'] ?? {},
-      shaping: compileOptions.shaping ?? 'fontkit',
     });
 
     // Compute frame geometry for the overlay (SVG previews only).

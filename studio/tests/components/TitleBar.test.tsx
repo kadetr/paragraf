@@ -143,6 +143,51 @@ describe('RT12 — clicking OMA checkbox calls window.studio.setCompileSetting',
   });
 });
 
+describe('shaping selector', () => {
+  function renderWith(compileSettings: CompileSettings): HTMLSelectElement {
+    render(
+      <TitleBar
+        projectName='x'
+        projectPath={null}
+        compileSettings={compileSettings}
+        editorLayout='split'
+        previewVisible={true}
+        onEditorLayoutChange={vi.fn()}
+        onPreviewVisibleChange={vi.fn()}
+        onOpenFolder={vi.fn()}
+        onNewProject={vi.fn()}
+        onToggleEditorSettings={vi.fn()}
+      />,
+    );
+    return screen.getByTestId('shaping-select') as HTMLSelectElement;
+  }
+
+  it('shows "auto" when the template sets no shaping mode', () => {
+    expect(renderWith({}).value).toBe('auto');
+  });
+
+  it('offers auto, js and wasm', () => {
+    const values = Array.from(renderWith({}).options).map((o) => o.value);
+    expect(values).toEqual(['auto', 'js', 'wasm']);
+  });
+
+  it.each(['js', 'wasm'] as const)('shows an explicit "%s"', (shaping) => {
+    expect(renderWith({ shaping }).value).toBe(shaping);
+  });
+
+  it('writes the chosen mode with setCompileSetting', () => {
+    const setCompileSetting = vi.fn().mockResolvedValue(undefined);
+    Object.defineProperty(window, 'studio', {
+      configurable: true,
+      value: { setCompileSetting },
+    });
+
+    fireEvent.change(renderWith({}), { target: { value: 'js' } });
+
+    expect(setCompileSetting).toHaveBeenCalledWith('shaping', 'js');
+  });
+});
+
 describe('preview toggle in menu bar', () => {
   it('calls onPreviewVisibleChange(false) when Hide Preview is clicked', () => {
     const onPreviewVisibleChange = vi.fn();

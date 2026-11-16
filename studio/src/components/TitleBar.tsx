@@ -10,8 +10,11 @@
 import React from 'react';
 
 export interface CompileSettings {
-  /** Which shaping engine to use: 'js' | 'wasm' */
-  shaping?: 'js' | 'wasm';
+  /**
+   * Which shaping engine to use. 'auto' (also when unset) is WASM when the
+   * binary is usable, otherwise fontkit; 'js' is always fontkit.
+   */
+  shaping?: 'auto' | 'js' | 'wasm';
   /** Optical margin alignment */
   opticalMargins?: boolean;
   /** Hyphenation */
@@ -109,7 +112,7 @@ export function TitleBar({
             Shaping
             <select
               data-testid='shaping-select'
-              value={compileSettings.shaping ?? 'js'}
+              value={compileSettings.shaping ?? 'auto'}
               onChange={(e) => set('shaping', e.target.value)}
               style={{
                 marginLeft: 4,
@@ -119,6 +122,7 @@ export function TitleBar({
                 border: '1px solid #444',
               }}
             >
+              <option value='auto'>Auto</option>
               <option value='js'>JS</option>
               <option value='wasm'>WASM</option>
             </select>

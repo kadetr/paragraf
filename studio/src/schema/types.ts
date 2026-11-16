@@ -58,7 +58,11 @@ export interface StudioPage {
  * Only keys in the studio allowlist are valid.
  */
 export interface StudioCompileSection {
-  shaping?: 'js' | 'wasm';
+  /**
+   * Shaping engine. 'auto' (also when unset): WASM when the binary is usable,
+   * otherwise fontkit. 'js': always fontkit. 'wasm': WASM, or a compile error.
+   */
+  shaping?: 'auto' | 'js' | 'wasm';
   selectable?: boolean;
   maxPages?: number;
   onOverflow?: 'truncate' | 'error';

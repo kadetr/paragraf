@@ -146,9 +146,14 @@ export function translateToTemplate(t: StudioTemplate): TranslationResult {
 
   if (t.compile) {
     if (t.compile.shaping !== undefined)
-      // Studio uses 'js'/'wasm'; CompileOptions uses 'fontkit'/'wasm'/'auto'.
+      // Studio uses 'auto'/'js'/'wasm'; CompileOptions uses
+      // 'auto'/'fontkit'/'wasm'. Unset stays unset, which compiles as 'auto'.
       compileOptions.shaping =
-        t.compile.shaping === 'wasm' ? 'wasm' : 'fontkit';
+        t.compile.shaping === 'wasm'
+          ? 'wasm'
+          : t.compile.shaping === 'auto'
+            ? 'auto'
+            : 'fontkit';
     if (t.compile.selectable !== undefined)
       compileOptions.selectable = t.compile.selectable;
     if (t.compile.maxPages !== undefined)
