@@ -27,7 +27,7 @@ interface Font {
 
 interface FontDescriptor {
   id: FontId;
-  face: string;   // PostScript or family name used by the font engine
+  family: string; // family name, e.g. 'Source Serif 4'
   filePath: string;
 }
 
@@ -103,6 +103,9 @@ interface ComposedLine {
   baseline: number;
   direction?: 'ltr' | 'rtl';
   xOffset?: number; // optical margin alignment shift
+  overfull?: boolean; // true when the line is wider than its measure (since v0.7)
+  overflow?: number;  // how far an overfull line sticks out, in points
+  // ... further optional fields in the type definition
 }
 
 type ComposedParagraph = ComposedLine[];

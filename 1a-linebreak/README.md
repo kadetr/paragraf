@@ -18,7 +18,8 @@ Build a node sequence, find breakpoints, then assemble composed lines:
 import { computeBreakpoints, traceback, composeParagraph } from '@paragraf/linebreak';
 
 const result = computeBreakpoints(paragraph);
-// throws if no solution; result.usedEmergency is true if emergencyStretch was needed
+// result.usedEmergency is true if emergencyStretch was needed; result.usedFallback is true
+// if the paragraph could not be set within tolerance (pass onInfeasible: 'throw' to throw instead)
 const breaks = traceback(result.node);
 const lines  = composeParagraph(nodes, breaks, 'justified', false, lineWidth, [], getMetrics);
 ```

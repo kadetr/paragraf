@@ -21,7 +21,7 @@ import { createMeasurer }  from '@paragraf/font-engine';
 import { FontRegistry }    from '@paragraf/types';
 
 const registry: FontRegistry = new Map([
-  ['regular', { id: 'regular', face: 'SourceSerif4', filePath: './fonts/SourceSerif4-Regular.ttf' }],
+  ['regular', { id: 'regular', family: 'SourceSerif4', filePath: './fonts/SourceSerif4-Regular.ttf' }],
 ]);
 
 const measurer = createMeasurer(registry);

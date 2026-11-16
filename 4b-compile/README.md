@@ -8,6 +8,8 @@
 npm install @paragraf/compile
 ```
 
+Requires Node.js 22 or later.
+
 ## Quick start
 
 ```ts
@@ -77,7 +79,11 @@ compile<T = unknown>(options: CompileOptions<T>): Promise<CompileResult>
 | `title` | `string` | — | PDF document title (Info dict). |
 | `lang` | `string` | — | BCP 47 language tag (PDF Info dict). |
 | `selectable` | `boolean` | `false` | Add invisible text layer for copy-paste (PDF only). |
-| `maxPages` | `number` | `100` | Maximum pages to generate before truncating. |
+| `outputIntent` | `OutputIntent` | — | ICC output intent to embed in the PDF (PDF only). Build one with `createColorManager().getOutputIntent()` from `@paragraf/color`. |
+| `pdfxConformance` | `'PDF/X-3:2002' \| 'PDF/X-3:2003'` | — | Add PDF/X-3 markers to the PDF. Needs `outputIntent`. |
+| `maxPages` | `number` | `100` | Maximum pages to generate. Content beyond it is an overflow: see `onOverflow`. |
+| `session` | `CompilerSession` | — | Reuse fonts, composer and font engine from `createCompilerSession()`. |
+| `verbose` | `boolean` | `true` | `false` suppresses non-critical `console.warn` output, including the fontkit fallback warning and the overfull-line warning. |
 
 #### `CompileResult`
 
@@ -120,6 +126,7 @@ All `CompileOptions` except `data`, plus:
 | `records` | `T[]` | required | Array of records to compile. |
 | `concurrency` | `number` | `4` | Maximum number of in-process concurrent compile calls. |
 | `onProgress` | `(completed, total) => void` | — | Called after each record finishes. |
+| `signal` | `AbortSignal` | — | When aborted, records that have not started are not started and `compileBatch` rejects with an `AbortError`. |
 
 #### `CompileBatchResult<T>`
 
@@ -131,6 +138,33 @@ interface CompileBatchResult<T> {
   error?: Error;
 }
 ```
+
+---
+
+### `createCompilerSession(template, options?)`
+
+Loads the template's fonts and creates the composer and font engine once. Pass the session to `compile()` or `compileBatch()` when the same template is compiled many times.
+
+```ts
+import { compile, createCompilerSession } from '@paragraf/compile';
+
+const session = await createCompilerSession(template, { shaping: 'wasm' });
+
+for (const record of records) {
+  const { data } = await compile({ template, data: record, session });
+  // ...
+}
+```
+
+#### `SessionOptions`
+
+| Option | Type | Default | Description |
+|---|---|---|---|
+| `basePath` | `string` | `process.cwd()` | Base directory for resolving relative font paths. |
+| `shaping` | `'auto' \| 'wasm' \| 'fontkit'` | `'auto'` | Font shaping engine, as for `compile()`. `'wasm'` throws when the WASM shaper is not built or failed to load. |
+| `verbose` | `boolean` | `true` | `false` lets `shaping: 'auto'` fall back to fontkit without printing the warning. |
+
+`session.shapingEngine` is `'wasm'` or `'fontkit'`: the engine every compile with this session uses.
 
 ---
 
@@ -165,10 +199,9 @@ When no exact weight match is found for a style, `@paragraf/compile` selects the
 
 ---
 
-## Known limitations (v0.5)
+## Known limitations
 
-- **`spaceBefore` / `spaceAfter` on paragraph styles** — per-paragraph spacing is not yet passed to the compositor (the underlying `ParagraphInput` type does not have these fields). Use the frame-level `paragraphSpacing` on `Frame` for uniform spacing. Per-paragraph spacing is planned for v0.6.
-- **`hyphenation: false`** — this style property is not yet propagated to the compositor in v0.5.
+See [Known limitations](https://github.com/kadetr/paragraf#known-limitations) in the repository README.
 
 ---
 
