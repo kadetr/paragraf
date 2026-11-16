@@ -327,9 +327,9 @@ wasm-pack build --target bundler --out-dir pkg-bundler --release  # Browser (Vit
 
 | `shaping` | WASM built | WASM absent or broken |
 |---|---|---|
-| `'auto'` (default) | WASM | fontkit, with one warning per process |
+| `'auto'` (default) | WASM | fontkit, with one warning per process or worker thread |
 | `'wasm'` | WASM | throws, with the build command in the message |
-| `'fontkit'` | fontkit | fontkit, no warning |
+| `'fontkit'` | fontkit | fontkit, no fallback warning |
 
 Use `'wasm'` in production builds where a silent change of shaping engine would be a defect. Check which path is active:
 

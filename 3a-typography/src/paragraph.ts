@@ -41,8 +41,8 @@ import { buildOmaAdjustments, buildOmaInput } from './optical-margin.js';
 //
 // Loaded synchronously via the CJS shim (same pattern as opentype.js in
 // measure.ts). If the WASM package is absent or fails to initialise, _wasm
-// stays null and every compose() call transparently falls back to the
-// TypeScript implementations.
+// stays null. What happens then depends on the `shaping` option: see
+// resolveUseWasm below.
 
 // NOTE: module-level singletons (_wasm, _wasmError, _rtlFallbackWarnIssued) persist for
 // the lifetime of the process, including across test runs in a single vitest worker.
@@ -89,8 +89,9 @@ const wasmProblem = (): string => {
     : `the WASM shaper failed to load (${s.error ?? 'unknown error'})`;
 };
 
-const WASM_BUILD_HINT =
-  'Build it with `wasm-pack build --target nodejs --out-dir pkg` in ' +
+const wasmBuildHint = (): string =>
+  `${wasmStatus().status === 'absent' ? 'Build' : 'Rebuild'} it with ` +
+  '`wasm-pack build --target nodejs --out-dir pkg` in ' +
   '2a-shaping-wasm/wasm (needs Rust), or install a published ' +
   '@paragraf/shaping-wasm, which includes the binary.';
 
@@ -111,14 +112,14 @@ const resolveUseWasm = (options: ComposerOptions | undefined): boolean => {
   if (mode === 'wasm') {
     throw new Error(
       `[paragraf] shaping: 'wasm' was requested but ${wasmProblem()}. ` +
-        `${WASM_BUILD_HINT} Use shaping: 'auto' to fall back to fontkit.`,
+        `${wasmBuildHint()} Use shaping: 'auto' to fall back to fontkit.`,
     );
   }
   if (!_autoFallbackWarnIssued) {
     _autoFallbackWarnIssued = true;
     console.warn(
       `[paragraf] ${wasmProblem().replace(/^t/, 'T')}; using the TypeScript/fontkit path. ` +
-        `${WASM_BUILD_HINT} Pass shaping: 'fontkit' to silence this warning, ` +
+        `${wasmBuildHint()} Pass shaping: 'fontkit' to silence this warning, ` +
         "or shaping: 'wasm' to fail instead.",
     );
   }
@@ -323,10 +324,12 @@ export interface ParagraphComposer {
  *
  * - `'auto'`    — the Rust/WASM shaper when it is built, otherwise the
  *                 TypeScript/fontkit path. Falling back prints one warning
- *                 per process.
+ *                 (once per loaded copy of this module, so once per process
+ *                 or worker thread).
  * - `'wasm'`    — the Rust/WASM shaper. Throws when the binary is not built
  *                 or failed to load.
- * - `'fontkit'` — always the TypeScript/fontkit path. Never warns.
+ * - `'fontkit'` — always the TypeScript/fontkit path, without the fallback
+ *                 warning.
  */
 export type ShapingMode = 'auto' | 'wasm' | 'fontkit';
 
@@ -861,7 +864,7 @@ export const createParagraphComposer = async (
 
     if (direction === 'rtl' && !useWasm && !_rtlFallbackWarnIssued) {
       console.warn(
-        '[knuth-plass] BiDi: WASM not loaded — using TypeScript paragraph-level ' +
+        '[knuth-plass] BiDi: WASM shaper not in use — using TypeScript paragraph-level ' +
           'direction detection. Full run segmentation unavailable.',
       );
       _rtlFallbackWarnIssued = true;
@@ -1070,6 +1073,8 @@ export const createParagraphComposer = async (
 /**
  * Create a FontEngine backed by WASM (WasmFontEngine) when available,
  * falling back to FontkitEngine. All fonts in the registry are loaded.
+ * `options.shaping` selects the engine as for createParagraphComposer:
+ * `'wasm'` throws when the binary is unusable. Pass the same value to both.
  *
  * Use this when you need a FontEngine for rendering (renderToSvg / renderToCanvas /
  * renderToPdf) and want to stay consistent with the composer's measurement backend.

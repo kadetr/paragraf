@@ -130,9 +130,9 @@ const composer = await createParagraphComposer(registry, { shaping: 'wasm' });
 
 | `shaping` | WASM built | WASM absent or broken |
 |---|---|---|
-| `'auto'` (default) | WASM | fontkit, with one warning per process |
+| `'auto'` (default) | WASM | fontkit, with one warning per process or worker thread |
 | `'wasm'` | WASM | throws |
-| `'fontkit'` | fontkit | fontkit, no warning |
+| `'fontkit'` | fontkit | fontkit, no fallback warning |
 
 `createDefaultFontEngine` takes the same option; pass the same value to both.
 `useWasm` is deprecated: `false` means `'fontkit'`, `true` means `'auto'`.

@@ -136,6 +136,15 @@ export async function compile<T = unknown>(
     composer = session.composer;
     fontEngine = session.fontEngine;
     shapingEngine = session.shapingEngine;
+    // A session fixes the engine. 'wasm' is a requirement, so a session that
+    // is not on WASM must not satisfy it silently.
+    if (shaping === 'wasm' && shapingEngine !== 'wasm') {
+      throw new Error(
+        "[paragraf/compile] shaping: 'wasm' was requested but the session " +
+          `uses ${shapingEngine}. Create the session with shaping: 'wasm'; ` +
+          'that fails at once when the WASM shaper is not usable.',
+      );
+    }
   } else {
     registry = buildFontRegistry(template.fonts, basePath);
     const composerOpts = resolveComposerOptions(shaping, verbose);

@@ -38,6 +38,12 @@ export interface SessionOptions {
    * @default 'auto'
    */
   shaping?: ShapingMode;
+  /**
+   * When `false`, `shaping: 'auto'` falls back to fontkit without printing
+   * the warning.
+   * @default true
+   */
+  verbose?: boolean;
 }
 
 /**
@@ -72,10 +78,14 @@ export async function createCompilerSession(
   template: Template,
   options: SessionOptions = {},
 ): Promise<CompilerSession> {
-  const { basePath = process.cwd(), shaping = 'auto' } = options;
+  const {
+    basePath = process.cwd(),
+    shaping = 'auto',
+    verbose = true,
+  } = options;
 
   const registry = buildFontRegistry(template.fonts, basePath);
-  const composerOpts = resolveComposerOptions(shaping);
+  const composerOpts = resolveComposerOptions(shaping, verbose);
   const shapingEngine = detectActualShaping(composerOpts);
 
   const [composer, fontEngine] = await Promise.all([

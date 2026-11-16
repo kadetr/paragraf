@@ -16,8 +16,9 @@ npm install @paragraf/shaping-wasm @paragraf/font-engine @paragraf/types
 ## Usage
 
 This package is not typically used directly. `@paragraf/typography` loads the
-WASM module automatically and falls back to the TypeScript fontkit engine if the
-module is unavailable.
+WASM module automatically. If the module is unavailable it falls back to the
+TypeScript fontkit engine with a warning, or throws when `shaping: 'wasm'` was
+requested.
 
 ### Manual loading
 
@@ -62,8 +63,10 @@ If you modify the Rust source (`wasm/src/lib.rs`), rebuild before running tests.
 ## Fallback behaviour
 
 `@paragraf/typography` loads this module at startup. If the module is absent
-or fails to initialise, all composition falls back to the TypeScript
-Knuth-Plass implementation transparently. Call `wasmStatus()` from
+or fails to initialise, composition falls back to the TypeScript
+Knuth-Plass implementation and prints one warning. With `shaping: 'wasm'`
+it throws instead; with `shaping: 'fontkit'` the TypeScript path is chosen
+on purpose. Call `wasmStatus()` from
 `@paragraf/typography` to inspect the current state.
 
 ## Benchmark

@@ -81,7 +81,8 @@ export interface CompileOptions<T = unknown> {
    * - 'wasm'    — require WASM; throws when the binary is not built or
    *               failed to load.
    * - 'fontkit' — always use the TypeScript/fontkit path.
-   * Ignored when `session` is given; the session's engine is used.
+   * With `session`, the session's engine is used: `'wasm'` throws when the
+   * session is not on WASM; `'auto'` and `'fontkit'` are ignored.
    * @default 'auto'
    */
   shaping?: ShapingMode;

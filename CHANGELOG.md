@@ -40,9 +40,11 @@ Both engines implement the fallback and are compared on infeasible paragraphs in
 #### Shaping mode (`shaping`)
 `createParagraphComposer` and `createDefaultFontEngine` accept `shaping: 'auto' | 'wasm' | 'fontkit'`, the same values `compile()` already took.
 
-- `'wasm'` throws when the WASM shaper is not built or failed to load. Before, `compile({ shaping: 'wasm' })` fell back to fontkit without saying so. This also applies to `createCompilerSession` and to Studio templates with `compile.shaping: "wasm"`.
-- `'auto'` (default) still falls back to fontkit, and now prints one warning per process when it does. `compile({ verbose: false })` suppresses it.
-- `'fontkit'` never warns.
+- `'wasm'` throws when the WASM shaper is not built or failed to load. Before, `compile({ shaping: 'wasm' })` fell back to fontkit without saying so. This also applies to `createCompilerSession`.
+- `compile({ session, shaping: 'wasm' })` throws when the session is not on WASM. With a session, `'auto'` and `'fontkit'` are still ignored and the session's engine is used.
+- `'auto'` (default) still falls back to fontkit, and now prints one warning when it does (once per process or worker thread). `verbose: false` on `compile()`, `compileBatch()` or `createCompilerSession()` suppresses it; `createCompilerSession` has a new `verbose` option for this.
+- `'fontkit'` does not print the fallback warning.
+- Studio: with the shaping setting on "wasm" and no usable WASM shaper, the preview now shows a compile error. The setting is otherwise still not applied (Studio's session always uses `'auto'`); that is unchanged.
 - `useWasm` is deprecated. `false` means `'fontkit'`; `true` means `'auto'`, as before (it never was strict).
 - New exported type `ShapingMode` in `@paragraf/typography`.
 

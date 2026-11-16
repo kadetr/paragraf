@@ -85,6 +85,7 @@ export async function compileBatch<T = unknown>(
     (await createCompilerSession(sharedOptions.template, {
       basePath: sharedOptions.basePath,
       shaping: sharedOptions.shaping,
+      verbose: sharedOptions.verbose,
     }));
 
   const total = records.length;

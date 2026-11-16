@@ -31,8 +31,8 @@ export function resolveComposerOptions(
 export function detectActualShaping(
   options: ComposerOptions | undefined,
 ): 'wasm' | 'fontkit' {
-  if (options?.shaping === 'fontkit' || options?.useWasm === false) {
-    return 'fontkit';
-  }
+  const mode =
+    options?.shaping ?? (options?.useWasm === false ? 'fontkit' : 'auto');
+  if (mode === 'fontkit') return 'fontkit';
   return wasmStatus().status === 'loaded' ? 'wasm' : 'fontkit';
 }
