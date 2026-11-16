@@ -74,6 +74,7 @@ const extractLine = (
   justifyLastLine: boolean,
   lineWidth: number,
   getMetrics?: GetFontMetrics,
+  overfull: boolean = false,
 ): ComposedLine => {
   const words: string[] = [];
   const fonts: Font[] = [];
@@ -86,8 +87,9 @@ const extractLine = (
   // consecutive boxes are always span fragments of the same word, never adjacent words.
   // If nodes.ts breaks this contract, word slots will silently merge across boundaries.
 
+  // An overfull line keeps the breaker's ratio of -1: spaces fully shrunk.
   const effectiveRatio =
-    isLastLine && justifyLastLine
+    isLastLine && justifyLastLine && !overfull
       ? computeLastLineRatio(nodes, from, to, lineWidth)
       : ratio;
 
@@ -161,17 +163,24 @@ const extractLine = (
   // and is the value that fills the measure exactly, when the line mixes
   // fonts (glues of different widths) or was set with emergency stretch
   // (the ratio then counts stretch that no glue on the line has).
-  if (alignment === 'justified' && (!isLastLine || justifyLastLine)) {
-    const breakNode = nodes[to];
-    // Break node contributes a word glue if it's a glue (word break); exclude it
-    // from the visible gap count since it is consumed by the line break, not rendered.
-    const breakIsWordGlue =
-      breakNode?.type === 'glue' && breakNode.kind === 'word';
-    const visibleGlues = wordGlueCount - (breakIsWordGlue ? 1 : 0);
-    // Hyphen penalty width is part of the rendered line width (the '-' is in wordRuns)
-    // but is NOT counted in boxWidthSum since penalty nodes don't add to prefix sums.
-    const penaltyWidth =
-      breakNode?.type === 'penalty' && breakNode.flagged ? breakNode.width : 0;
+  const breakNode = nodes[to];
+  // Break node contributes a word glue if it's a glue (word break); exclude it
+  // from the visible gap count since it is consumed by the line break, not rendered.
+  const breakIsWordGlue =
+    breakNode?.type === 'glue' && breakNode.kind === 'word';
+  const visibleGlues = wordGlueCount - (breakIsWordGlue ? 1 : 0);
+  // Hyphen penalty width is part of the rendered line width (the '-' is in wordRuns)
+  // but is NOT counted in boxWidthSum since penalty nodes don't add to prefix sums.
+  const penaltyWidth =
+    breakNode?.type === 'penalty' && breakNode.flagged ? breakNode.width : 0;
+
+  // An overfull line cannot fill the measure: its spaces stay at the fully
+  // shrunk width resolved above and the line sticks out by `overflow`.
+  if (
+    alignment === 'justified' &&
+    (!isLastLine || justifyLastLine) &&
+    !overfull
+  ) {
     if (visibleGlues > 0) {
       wordSpacing = Math.max(
         0,
@@ -216,6 +225,15 @@ const extractLine = (
     lineWidth,
     lineHeight,
     baseline,
+    ...(overfull
+      ? {
+          overfull: true,
+          overflow: Math.max(
+            0,
+            boxWidthSum + penaltyWidth + visibleGlues * wordSpacing - lineWidth,
+          ),
+        }
+      : {}),
   };
 };
 
@@ -261,6 +279,7 @@ export const composeParagraph = (
       justifyLastLine,
       effectiveWidth,
       getMetrics,
+      lineBreak.overfull === true,
     );
 
     if (line.words.length > 0) {

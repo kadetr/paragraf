@@ -105,6 +105,7 @@ word content, spacing, hyphenation status, and metrics.
 | `alignment` | `'justified'` | `'justified'` \| `'left'` \| `'right'` \| `'center'` |
 | `tolerance` | `2` | How aggressively to fit lines; higher = more flexibility |
 | `emergencyStretch` | `0` | Extra stretch budget for paragraphs that can't fit at tolerance |
+| `onInfeasible` | `'overfull'` | If it still can't fit: `'overfull'` returns lines and marks the ones that stick out; `'throw'` throws |
 | `looseness` | `0` | `+1` = prefer looser (more lines), `-1` = prefer tighter |
 | `firstLineIndent` | `0` | First-line indent in points |
 | `language` | `'en-us'` | Drives the hyphenation dictionary |

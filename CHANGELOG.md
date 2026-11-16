@@ -6,6 +6,35 @@ All notable changes to this project will be documented in this file.
 
 ## Unreleased
 
+### ⚠️ Breaking: infeasible paragraphs no longer throw by default
+
+#### Overfull fallback (`onInfeasible`)
+A paragraph that cannot be set within `tolerance` (even with `emergencyStretch`) used to throw "Paragraph could not be set within tolerance". One long URL could therefore stop a whole batch. The default is now to return lines anyway:
+
+- The breaker runs a last pass that accepts every line that fits, however loose. Without `emergencyStretch` this is what an unlimited tolerance would give; a finite higher tolerance can choose different breaks.
+- Where one unbreakable piece is wider than the measure (a long URL, a word that cannot be hyphenated), the line holding it is wider than its measure and sticks out: to the right for left-aligned and justified text, to the left for right-aligned text, on both sides for centred text. In justified text its spaces are fully shrunk.
+- In this last pass `consecutiveHyphenLimit` and `looseness` are ignored: enforcing them could only make more lines stick out or add near-empty lines.
+- Nothing is silent. `ParagraphOutput.usedFallback` is `true`; a line that sticks out has `overfull: true` and `overflow` (points) on its `ComposedLine`; `compile()` lists such lines in `metadata.overfullLines` (paragraph index, line index, overflow, text), lists every paragraph set by the fallback in `metadata.fallbackParagraphs`, and prints one warning unless `verbose: false`.
+- `overflow` is measured against the line's measure (the frame width less `leftSkip` and `rightSkip`) before glyph expansion; with `maxGlyphExpansion > 0` the drawn line is slightly narrower than reported.
+- `emergencyStretch` is still tried first. A paragraph it rescues is not a fallback. A paragraph it could not rescue reports both `usedEmergency: true` and `usedFallback: true`.
+- Paragraphs that could already be set are unchanged: in the golden corpus only the four paragraphs that used to throw have a new snapshot. One exception: with `tolerance: Infinity`, a line with nothing to stretch now reports `ratio: 0`, where it reported `Infinity` (`null` from the WASM engine).
+
+**To keep the old behaviour**, pass `onInfeasible: 'throw'` to `compose()`, `computeBreakpoints()` or `compile()`.
+
+New and changed API:
+
+| Where | Change |
+|---|---|
+| `ParagraphInput`, `Paragraph` (`@paragraf/types`), `CompileOptions` | new option `onInfeasible?: 'throw' \| 'overfull'`, default `'overfull'` |
+| `ParagraphOutput`, `BreakpointResult` | new required field `usedFallback: boolean` |
+| `ComposedLine`, `LineBreak` | new optional fields `overfull`, and `overflow` on `ComposedLine`; present only on overfull lines |
+| `CompileResult.metadata` | new required fields `overfullLines`, `fallbackParagraphs` |
+| `tracebackWasmBinary()` | new last argument `onInfeasible`; result carries `usedFallback` |
+
+Code that builds a `ParagraphOutput` or a `CompileResult` by hand (a mock composer in a test, for example) must add the new required fields.
+
+Both engines implement the fallback and are compared on infeasible paragraphs in `2a-shaping-wasm/tests/linebreak-parity.test.ts`.
+
 ### ⚠️ Line breaks change
 
 #### Line measure no longer includes the glue at the previous break

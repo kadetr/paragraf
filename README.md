@@ -270,6 +270,7 @@ writeFileSync('document.pdf', pdfBuffer);
 | `tolerance` | `2` | How aggressively to fit lines; higher = more flexibility |
 | `looseness` | `0` | `+1` prefer looser (more lines), `-1` prefer tighter |
 | `emergencyStretch` | `0` | Extra stretch budget when no solution found at tolerance |
+| `onInfeasible` | `'overfull'` | What happens when the paragraph still cannot be set: `'overfull'` returns lines anyway (lines that fit are set however loose; a piece wider than the measure sticks out and is marked `overfull`), `'throw'` throws an error |
 | `firstLineIndent` | `0` | First-line indent in points |
 | `consecutiveHyphenLimit` | `∞` | Maximum consecutive hyphenated lines |
 | `runtPenalty` | `0` | Demerit added when the final line of a paragraph is a single word (runt line). Best-effort — does not guarantee elimination when no feasible alternative layout exists. |
@@ -301,6 +302,7 @@ These are intentional gaps for the current release, not bugs:
 - **PDF output is vector-path, not PDF/X-conformant.** Text is rendered as filled glyph outlines. PDF/X and PDF/A require embedded fonts with `TJ` operators and ToUnicode CMaps. This is planned but not yet implemented.
 - **`runtPenalty` / `singleLinePenalty` are single-line runt penalties**, not frame-level widow/orphan control. True widow/orphan handling (preventing the first or last line of a paragraph from being isolated on a different page) requires frame-level composition, which is not yet implemented. The penalty is best-effort and may not change the layout when no feasible alternative exists.
 - **`adjDemerits`** is available on the paragraph input (`ParagraphInput.adjDemerits`) in both engines. The default is `0`, which preserves backwards-compatible Knuth-Plass behaviour. Set to `10000` for TeX-equivalent quality (penalises jarring transitions between very tight and very loose consecutive lines).
+- **Overfull lines are reported, not repaired.** When a single unbreakable piece (a long URL, a word that cannot be hyphenated) is wider than the column, the line is wider than the column and sticks out. `compose()` marks it (`line.overfull`, `line.overflow` in points, `usedFallback` on the result) and `compile()` lists it in `metadata.overfullLines`. Capitalised words are not hyphenated by default, which affects German nouns in narrow columns.
 - **`nestedStyles` / `grepStyles`** are accepted by the style registry but not yet applied. Character-style rules based on regex or run-length patterns require the inline-markup pipeline (F027) to be wired end-to-end.
 
 ---

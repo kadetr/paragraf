@@ -232,6 +232,120 @@ describe('compile() — onMissing behaviour', () => {
   });
 });
 
+// ─── compile() — onInfeasible ─────────────────────────────────────────────────
+
+describe('compile() — paragraphs that cannot be set within tolerance', () => {
+  const LONG_URL =
+    'https://example.com/a/very/long/path/that/cannot/be/hyphenated/anywhere/index.html';
+
+  // A4 with 200 pt margins leaves a 195 pt column; the URL is far wider.
+  function narrowTemplate() {
+    return defineTemplate({
+      layout: { size: 'A4', margins: 200 },
+      fonts: {
+        'Liberation Serif': {
+          regular: path.join(FONTS_DIR, 'LiberationSerif-Regular.ttf'),
+        },
+      },
+      styles: {
+        body: {
+          font: { family: 'Liberation Serif', size: 12 },
+          alignment: 'justified',
+          lineHeight: 18,
+        },
+      },
+      content: [
+        { style: 'body', text: '{{intro}}' },
+        { style: 'body', text: '{{body}}' },
+      ],
+    });
+  }
+  const data = {
+    intro: 'A short first paragraph that sets without any trouble at all.',
+    body: `The report is published at ${LONG_URL} and is updated every week.`,
+  };
+
+  for (const shaping of ['fontkit', 'wasm'] as const) {
+    it(`produces the document and lists the overfull line (${shaping})`, async () => {
+      const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+      const result = await compile({
+        template: narrowTemplate(),
+        data,
+        output: 'rendered',
+        shaping,
+      });
+      const warnings = warn.mock.calls.map((c) => String(c[0]));
+      warn.mockRestore();
+
+      expect(result.metadata.pageCount).toBe(1);
+      // Paragraph 0 is fine; paragraph 1 holds the URL.
+      expect(result.metadata.fallbackParagraphs).toEqual([1]);
+      expect(result.metadata.overfullLines).toHaveLength(1);
+      const line = result.metadata.overfullLines[0];
+      expect(line.paragraph).toBe(1);
+      expect(line.text).toBe(LONG_URL);
+      expect(line.overflow).toBeGreaterThan(100);
+      // … and it is announced, not silent.
+      expect(warnings.some((w) => /1 overfull line/.test(w))).toBe(true);
+    });
+  }
+
+  it('warns about a paragraph set by the fallback even when no line is overfull', async () => {
+    // Every word fits the 195 pt column, but not within a tolerance of 0.
+    const template = narrowTemplate();
+    (template.styles as any).body.tolerance = 0;
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const result = await compile({
+      template,
+      data: { intro: data.intro, body: data.intro },
+      output: 'rendered',
+      shaping: 'fontkit',
+    });
+    const warnings = warn.mock.calls.map((c) => String(c[0]));
+    warn.mockRestore();
+    expect(result.metadata.overfullLines).toEqual([]);
+    expect(result.metadata.fallbackParagraphs).toEqual([0, 1]);
+    expect(
+      warnings.some((w) => /2 paragraph\(s\) could not be set within tolerance/.test(w)),
+    ).toBe(true);
+  });
+
+  it('a PDF comes out', async () => {
+    const result = await compile({
+      template: narrowTemplate(),
+      data,
+      output: 'pdf',
+      shaping: 'fontkit',
+      verbose: false,
+    });
+    expect((result.data as Buffer).subarray(0, 5).toString()).toBe('%PDF-');
+    expect(result.metadata.overfullLines).toHaveLength(1);
+  });
+
+  it("throws with onInfeasible: 'throw'", async () => {
+    await expect(
+      compile({
+        template: narrowTemplate(),
+        data,
+        output: 'rendered',
+        shaping: 'fontkit',
+        onInfeasible: 'throw',
+      }),
+    ).rejects.toThrow(/could not be set within tolerance/);
+  });
+
+  it('reports nothing for a document that sets normally', async () => {
+    const result = await compile({
+      template: makeTemplate(),
+      data: SAMPLE_DATA,
+      output: 'rendered',
+      shaping: 'fontkit',
+    });
+    expect(result.metadata.overfullLines).toEqual([]);
+    expect(result.metadata.fallbackParagraphs).toEqual([]);
+  });
+});
+
 // ─── compile() — onOverflow ───────────────────────────────────────────────────
 
 describe('compile() — overflow handling', () => {

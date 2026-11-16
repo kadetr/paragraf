@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeAll } from 'vitest';
 import * as path from 'path';
-import { computeBreakpoints, BreakpointResult } from '../src/linebreak';
+import { computeBreakpoints as computeBreakpointsDefault, BreakpointResult } from '../src/linebreak';
 import { buildNodeSequence } from '../src/nodes';
 import { hyphenateParagraph, loadLanguages } from '../src/hyphenate';
 import { createMeasurer } from './helpers/measure';
@@ -14,6 +14,13 @@ import {
   Node,
   FORCED_BREAK,
 } from '@paragraf/types';
+
+// These tests describe the breaker within tolerance. Since v0.7 the default
+// for an infeasible paragraph is the overfull fallback (covered in
+// overfull-fallback.test.ts); here the strict mode is kept so that
+// "infeasible" still means "throws".
+const computeBreakpoints = (p: Paragraph) =>
+  computeBreakpointsDefault({ onInfeasible: 'throw', ...p });
 
 // ─── Fixtures ────────────────────────────────────────────────────────────────
 

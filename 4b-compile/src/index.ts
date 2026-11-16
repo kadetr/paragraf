@@ -15,6 +15,8 @@ export type {
   CompileBatchResult,
   OutputFormat,
   OverflowBehavior,
+  InfeasibleBehavior,
+  OverfullLine,
   ShapingMode,
   Template,
 } from './types.js';

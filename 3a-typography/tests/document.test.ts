@@ -66,6 +66,7 @@ function makeParagraphOutput(lineCount: number): ParagraphOutput {
     lines: Array.from({ length: lineCount }, () => makeLine()),
     lineCount,
     usedEmergency: false,
+    usedFallback: false,
   };
 }
 
@@ -466,6 +467,7 @@ describe('layoutDocument — paragraph split across columns', () => {
       lines: Array.from({ length: 5 }, () => makeLine()),
       lineCount: 5,
       usedEmergency: false,
+      usedFallback: false,
     };
     const splitComposer: ParagraphComposer = {
       compose: () => mockOutput,
@@ -497,6 +499,7 @@ describe('layoutDocument — paragraph split across columns', () => {
       lines: Array.from({ length: 5 }, () => makeLine()),
       lineCount: 5,
       usedEmergency: false,
+      usedFallback: false,
     };
     const splitComposer: ParagraphComposer = {
       compose: () => mockOutput,
@@ -625,6 +628,7 @@ describe('layoutDocument — paragraphSpacing on Frame', () => {
       lines: Array.from({ length: 5 }, () => makeLine()),
       lineCount: 5,
       usedEmergency: false,
+      usedFallback: false,
     };
     const splitComposer: ParagraphComposer = {
       compose: () => mockOutput,
@@ -677,6 +681,7 @@ describe('layoutDocument — spaceBefore', () => {
       lines: Array.from({ length: 5 }, () => makeLine()),
       lineCount: 5,
       usedEmergency: false,
+      usedFallback: false,
     };
     const splitComposer: ParagraphComposer = {
       compose: () => mockOutput,
@@ -715,11 +720,13 @@ describe('layoutDocument — spaceBefore', () => {
       lines: Array.from({ length: 2 }, () => makeLine()),
       lineCount: 2,
       usedEmergency: false,
+      usedFallback: false,
     };
     const para2Output: ParagraphOutput = {
       lines: [makeLine()],
       lineCount: 1,
       usedEmergency: false,
+      usedFallback: false,
     };
     let callCount = 0;
     const twoParaComposer: ParagraphComposer = {
@@ -775,11 +782,13 @@ describe('layoutDocument — spaceAfter', () => {
       lines: Array.from({ length: 5 }, () => makeLine()),
       lineCount: 5,
       usedEmergency: false,
+      usedFallback: false,
     };
     const mockOutput2: ParagraphOutput = {
       lines: Array.from({ length: 2 }, () => makeLine()),
       lineCount: 2,
       usedEmergency: false,
+      usedFallback: false,
     };
     let callCount = 0;
     const splitComposer: ParagraphComposer = {

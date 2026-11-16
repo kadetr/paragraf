@@ -112,7 +112,7 @@ describe('RT3 — compile() throws → { type: compile-error, message }, no reth
 
 describe('RT4 — two calls with identical fontsKey → createCompilerSession called once', () => {
   it('reuses the session on the second call', async () => {
-    const mockSvgResult = { data: '<svg></svg>', metadata: { pageCount: 1, overflowLines: 0, shapingEngine: 'fontkit' as const } };
+    const mockSvgResult = { data: '<svg></svg>', metadata: { pageCount: 1, overflowLines: 0, overfullLines: [], fallbackParagraphs: [], shapingEngine: 'fontkit' as const } };
     const deps = makeMockDeps({
       compile: vi.fn().mockResolvedValue(mockSvgResult),
     });
@@ -131,7 +131,7 @@ describe('RT4 — two calls with identical fontsKey → createCompilerSession ca
 
 describe('RT5 — two calls where fontsKey changes → createCompilerSession called twice', () => {
   it('rebuilds the session when fontsKey changes', async () => {
-    const mockSvgResult = { data: '<svg></svg>', metadata: { pageCount: 1, overflowLines: 0, shapingEngine: 'fontkit' as const } };
+    const mockSvgResult = { data: '<svg></svg>', metadata: { pageCount: 1, overflowLines: 0, overfullLines: [], fallbackParagraphs: [], shapingEngine: 'fontkit' as const } };
     const deps = makeMockDeps({
       compile: vi.fn().mockResolvedValue(mockSvgResult),
     });

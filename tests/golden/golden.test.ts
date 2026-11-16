@@ -113,8 +113,8 @@ const runEngine = (engine: Engine): void => {
     try {
       out = kit.composer.compose(c.input);
     } catch (e) {
-      // An infeasible paragraph is part of current behaviour; record it so a
-      // later change (for example an overfull fallback) shows up as a diff.
+      // Composition threw (for example an infeasible paragraph under
+      // onInfeasible: 'throw'); record the message so a change shows as a diff.
       return {
         ...base,
         error: e instanceof Error ? e.message : String(e),
@@ -143,6 +143,7 @@ const runEngine = (engine: Engine): void => {
       ...base,
       lineCount: out.lineCount,
       usedEmergency: out.usedEmergency,
+      ...(out.usedFallback ? { usedFallback: true as const } : {}),
       lines: out.lines.map((line, i) => serializeLine(line, rendered[i])),
     };
   };
@@ -175,7 +176,11 @@ const runEngine = (engine: Engine): void => {
   const body = (id: string): string => {
     const s = results.get(id);
     if (!s) throw new Error(`No result for case "${id}"`);
-    return JSON.stringify({ error: s.error, lines: s.lines });
+    return JSON.stringify({
+      error: s.error,
+      usedFallback: s.usedFallback,
+      lines: s.lines,
+    });
   };
   for (const [a, b] of DISTINCT_PAIRS) {
     it(`${a} differs from ${b}`, () => {
