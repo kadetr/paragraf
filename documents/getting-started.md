@@ -60,7 +60,9 @@ const composer = await createParagraphComposer(registry);
 Internally, it auto-detects whether the Rust/WASM shaper
 (`@paragraf/shaping-wasm`) is available. If so, shaping and metrics come from
 the compiled Rust path. If not, it falls back to the TypeScript fontkit path
-transparently. You can check with:
+and prints one warning. To make a missing shaper an error, pass
+`{ shaping: 'wasm' }` as the second argument; to choose fontkit on purpose,
+pass `{ shaping: 'fontkit' }`. You can check with:
 
 ```ts
 import { wasmStatus } from '@paragraf/typography';

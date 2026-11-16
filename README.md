@@ -155,7 +155,7 @@ const result = await compile({
 writeFileSync('output.pdf', result.data as Buffer);
 ```
 
-`defineTemplate()` validates the template at definition time (style references, binding syntax, inheritance cycles). `compile()` auto-detects the WASM shaper and falls back to fontkit silently.
+`defineTemplate()` validates the template at definition time (style references, binding syntax, inheritance cycles). `compile()` auto-detects the WASM shaper and falls back to fontkit with one warning. Pass `shaping: 'wasm'` to fail instead, or `shaping: 'fontkit'` to choose the fallback on purpose.
 
 ### Low-level API (`@paragraf/typography`)
 
@@ -323,7 +323,15 @@ wasm-pack build --target nodejs                                   # Node
 wasm-pack build --target bundler --out-dir pkg-bundler --release  # Browser (Vite)
 ```
 
-`@paragraf/typography` auto-detects the WASM shaper at module init and falls back to the TypeScript fontkit path silently if WASM is absent. Check which path is active:
+`@paragraf/typography` auto-detects the WASM shaper at module init. What happens when it is absent depends on the `shaping` option of `createParagraphComposer`, `createDefaultFontEngine`, `compile()` and `createCompilerSession`:
+
+| `shaping` | WASM built | WASM absent or broken |
+|---|---|---|
+| `'auto'` (default) | WASM | fontkit, with one warning per process or worker thread |
+| `'wasm'` | WASM | throws, with the build command in the message |
+| `'fontkit'` | fontkit | fontkit, no fallback warning |
+
+Use `'wasm'` in production builds where a silent change of shaping engine would be a defect. Check which path is active:
 
 ```ts
 import { wasmStatus } from '@paragraf/typography';

@@ -41,8 +41,8 @@ import { buildOmaAdjustments, buildOmaInput } from './optical-margin.js';
 //
 // Loaded synchronously via the CJS shim (same pattern as opentype.js in
 // measure.ts). If the WASM package is absent or fails to initialise, _wasm
-// stays null and every compose() call transparently falls back to the
-// TypeScript implementations.
+// stays null. What happens then depends on the `shaping` option: see
+// resolveUseWasm below.
 
 // NOTE: module-level singletons (_wasm, _wasmError, _rtlFallbackWarnIssued) persist for
 // the lifetime of the process, including across test runs in a single vitest worker.
@@ -77,6 +77,54 @@ export function wasmStatus(): {
   }
   return { status: 'error', error: _wasmError ?? undefined };
 }
+
+// ─── Shaping mode ─────────────────────────────────────────────────────────────
+
+let _autoFallbackWarnIssued = false;
+
+const wasmProblem = (): string => {
+  const s = wasmStatus();
+  return s.status === 'absent'
+    ? 'the WASM shaper is not built'
+    : `the WASM shaper failed to load (${s.error ?? 'unknown error'})`;
+};
+
+const wasmBuildHint = (): string =>
+  `${wasmStatus().status === 'absent' ? 'Build' : 'Rebuild'} it with ` +
+  '`wasm-pack build --target nodejs --out-dir pkg` in ' +
+  '2a-shaping-wasm/wasm (needs Rust), or install a published ' +
+  '@paragraf/shaping-wasm, which includes the binary.';
+
+/**
+ * Decide whether the WASM path is used. Throws for `shaping: 'wasm'` when the
+ * binary is unusable; warns once per process when `'auto'` falls back.
+ */
+const resolveUseWasm = (options: ComposerOptions | undefined): boolean => {
+  const mode: ShapingMode =
+    options?.shaping ?? (options?.useWasm === false ? 'fontkit' : 'auto');
+  if (mode !== 'auto' && mode !== 'wasm' && mode !== 'fontkit') {
+    throw new TypeError(
+      `[paragraf] shaping must be 'auto', 'wasm' or 'fontkit' (got ${JSON.stringify(mode)}).`,
+    );
+  }
+  if (mode === 'fontkit') return false;
+  if (_wasm !== null) return true;
+  if (mode === 'wasm') {
+    throw new Error(
+      `[paragraf] shaping: 'wasm' was requested but ${wasmProblem()}. ` +
+        `${wasmBuildHint()} Use shaping: 'auto' to fall back to fontkit.`,
+    );
+  }
+  if (!_autoFallbackWarnIssued) {
+    _autoFallbackWarnIssued = true;
+    console.warn(
+      `[paragraf] ${wasmProblem().replace(/^t/, 'T')}; using the TypeScript/fontkit path. ` +
+        `${wasmBuildHint()} Pass shaping: 'fontkit' to silence this warning, ` +
+        "or shaping: 'wasm' to fail instead.",
+    );
+  }
+  return false;
+};
 
 // ─── WASM helpers ─────────────────────────────────────────────────────────────
 
@@ -272,15 +320,29 @@ export interface ParagraphComposer {
 }
 
 /**
- * Options for createParagraphComposer / createDefaultFontEngine.
+ * Which shaping engine a composer or font engine uses.
  *
- * useWasm — when explicitly false, forces the TypeScript Knuth-Plass linebreaker
- * and fontkit measurer even if the WASM binary is present.  Defaults to
- * auto-detect: uses WASM when loaded, falls back to TS when absent.
- * Passing useWasm: true on a build where WASM was not compiled is a no-op
- * (falls back silently to TypeScript).
+ * - `'auto'`    — the Rust/WASM shaper when it is built, otherwise the
+ *                 TypeScript/fontkit path. Falling back prints one warning
+ *                 (once per loaded copy of this module, so once per process
+ *                 or worker thread).
+ * - `'wasm'`    — the Rust/WASM shaper. Throws when the binary is not built
+ *                 or failed to load.
+ * - `'fontkit'` — always the TypeScript/fontkit path, without the fallback
+ *                 warning.
+ */
+export type ShapingMode = 'auto' | 'wasm' | 'fontkit';
+
+/**
+ * Options for createParagraphComposer / createDefaultFontEngine.
  */
 export interface ComposerOptions {
+  /** Shaping engine. Default `'auto'`. Takes precedence over `useWasm`. */
+  shaping?: ShapingMode;
+  /**
+   * @deprecated Use `shaping`. `false` means `shaping: 'fontkit'`; `true` or
+   * unset means `shaping: 'auto'` (it never was strict).
+   */
   useWasm?: boolean;
   measureCache?: MeasureCacheOptions;
 }
@@ -678,11 +740,10 @@ export const createParagraphComposer = async (
   registry: FontRegistry,
   options?: ComposerOptions,
 ): Promise<ParagraphComposer> => {
-  await loadHyphenator('en-us');
+  // Resolved before anything else so that shaping: 'wasm' fails immediately.
+  const useWasm = resolveUseWasm(options);
 
-  // useWasm: default is auto-detect (true when WASM loaded); callers can force false
-  // to use the TypeScript path unconditionally (e.g. for the 1a layer split).
-  const useWasm = (options?.useWasm ?? true) && _wasm !== null;
+  await loadHyphenator('en-us');
 
   const baseMeasurer: Measurer = useWasm
     ? createWasmMeasurer(registry)
@@ -803,7 +864,7 @@ export const createParagraphComposer = async (
 
     if (direction === 'rtl' && !useWasm && !_rtlFallbackWarnIssued) {
       console.warn(
-        '[knuth-plass] BiDi: WASM not loaded — using TypeScript paragraph-level ' +
+        '[knuth-plass] BiDi: WASM shaper not in use — using TypeScript paragraph-level ' +
           'direction detection. Full run segmentation unavailable.',
       );
       _rtlFallbackWarnIssued = true;
@@ -1012,6 +1073,8 @@ export const createParagraphComposer = async (
 /**
  * Create a FontEngine backed by WASM (WasmFontEngine) when available,
  * falling back to FontkitEngine. All fonts in the registry are loaded.
+ * `options.shaping` selects the engine as for createParagraphComposer:
+ * `'wasm'` throws when the binary is unusable. Pass the same value to both.
  *
  * Use this when you need a FontEngine for rendering (renderToSvg / renderToCanvas /
  * renderToPdf) and want to stay consistent with the composer's measurement backend.
@@ -1020,7 +1083,7 @@ export const createDefaultFontEngine = async (
   registry: FontRegistry,
   options?: ComposerOptions,
 ): Promise<FontEngine> => {
-  const useWasm = (options?.useWasm ?? true) && _wasm !== null;
+  const useWasm = resolveUseWasm(options);
 
   if (useWasm) {
     const engine = new WasmFontEngine(_wasm);

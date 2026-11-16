@@ -9,6 +9,7 @@ import * as typography from '@paragraf/typography';
 import type { RenderedDocument } from '@paragraf/typography';
 import { compile } from '../src/compile.js';
 import { compileBatch } from '../src/batch.js';
+import { createCompilerSession } from '../src/session.js';
 import type { CompileOptions } from '../src/types.js';
 
 const FONTS_DIR = path.resolve(__dirname, '../../fonts');
@@ -85,6 +86,43 @@ describe('compile() — rendered output', () => {
       output: 'rendered',
     });
     expect(result.metadata.overflowLines).toBe(0);
+  });
+
+  it.skipIf(typography.wasmStatus().status !== 'loaded')(
+    'honours the wasm shaping mode when the binary is built',
+    async () => {
+    const result = await compile({
+      template: makeTemplate(),
+      data: SAMPLE_DATA,
+      output: 'rendered',
+      shaping: 'wasm',
+    });
+    expect(result.metadata.shapingEngine).toBe('wasm');
+    },
+  );
+
+  it("shaping: 'wasm' with a session that is on fontkit throws", async () => {
+    const session = await createCompilerSession(makeTemplate(), {
+      shaping: 'fontkit',
+    });
+    expect(session.shapingEngine).toBe('fontkit');
+    await expect(
+      compile({
+        template: makeTemplate(),
+        data: SAMPLE_DATA,
+        output: 'rendered',
+        session,
+        shaping: 'wasm',
+      }),
+    ).rejects.toThrow(/shaping: 'wasm' was requested but the session uses fontkit/);
+    // 'auto' and 'fontkit' keep using the session's engine.
+    const ok = await compile({
+      template: makeTemplate(),
+      data: SAMPLE_DATA,
+      output: 'rendered',
+      session,
+    });
+    expect(ok.metadata.shapingEngine).toBe('fontkit');
   });
 
   it('honours the fontkit shaping mode', async () => {
@@ -266,7 +304,10 @@ describe('compile() — paragraphs that cannot be set within tolerance', () => {
   };
 
   for (const shaping of ['fontkit', 'wasm'] as const) {
-    it(`produces the document and lists the overfull line (${shaping})`, async () => {
+    // 'wasm' is strict since v0.7: without the binary this case cannot run.
+    it.skipIf(
+      shaping === 'wasm' && typography.wasmStatus().status !== 'loaded',
+    )(`produces the document and lists the overfull line (${shaping})`, async () => {
       const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
       const result = await compile({
         template: narrowTemplate(),

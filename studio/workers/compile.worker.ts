@@ -73,6 +73,7 @@ export async function handleMessage(
   if (sessionCache.session === null || sessionCache.fontsKey !== fontsKey) {
     sessionCache.session = await deps.createCompilerSession(template, {
       basePath: projectPath,
+      verbose: options.verbose,
     });
     sessionCache.fontsKey = fontsKey;
     // Sync module-level cache so the live worker thread benefits too

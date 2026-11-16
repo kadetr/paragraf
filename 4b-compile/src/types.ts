@@ -76,9 +76,13 @@ export interface CompileOptions<T = unknown> {
   onInfeasible?: InfeasibleBehavior;
   /**
    * Font shaping engine.
-   * - 'auto'    — use WASM when available, fall back to fontkit (recommended).
-   * - 'wasm'    — force WASM (falls back silently to fontkit when not built).
+   * - 'auto'    — use WASM when available, otherwise fontkit with one
+   *               warning per process (none when `verbose` is false).
+   * - 'wasm'    — require WASM; throws when the binary is not built or
+   *               failed to load.
    * - 'fontkit' — always use the TypeScript/fontkit path.
+   * With `session`, the session's engine is used: `'wasm'` throws when the
+   * session is not on WASM; `'auto'` and `'fontkit'` are ignored.
    * @default 'auto'
    */
   shaping?: ShapingMode;
