@@ -18,6 +18,7 @@ import Store from 'electron-store';
 import type {
   CompileWorkerInput,
   CompileWorkerResult,
+  CompileResult,
   ChangedFile,
   WorkspaceState,
 } from './src/ipc-types.js';
@@ -112,10 +113,13 @@ function spawnWorker(projectPath: string): Worker {
 
       await writeFile(
         filePath,
-        (result as unknown as { type: 'pdf'; buffer: Buffer }).buffer,
+        result.buffer,
       );
       shell.openPath(filePath);
-      mainWindow?.webContents.send('compileResult', { type: 'pdf', filePath });
+      mainWindow?.webContents.send('compileResult', {
+        type: 'pdf',
+        filePath,
+      } satisfies CompileResult);
       return;
     }
     mainWindow?.webContents.send('compileResult', result);
@@ -126,7 +130,7 @@ function spawnWorker(projectPath: string): Worker {
     mainWindow?.webContents.send('compileResult', {
       type: 'compile-error',
       message: err.message,
-    } satisfies CompileWorkerResult);
+    } satisfies CompileResult);
   });
 
   return worker;
@@ -255,12 +259,10 @@ async function triggerCompile(
       template.content = [];
     }
 
-    // Session key includes shaping so changing the engine busts the cache.
-    // compile() ignores options.shaping when a session is provided — the
-    // composer inside the session was built with the original engine.
+    // The worker rebuilds its session when this key or options.shaping
+    // changes (the shaping engine is fixed when the session is created).
     const fontsKey = JSON.stringify({
       fonts: (raw as Record<string, unknown>)['fonts'] ?? {},
-      shaping: compileOptions.shaping ?? 'fontkit',
     });
 
     // Compute frame geometry for the overlay (SVG previews only).
@@ -291,7 +293,7 @@ async function triggerCompile(
     mainWindow?.webContents.send('compileResult', {
       type: 'compile-error',
       message: err instanceof Error ? err.message : String(err),
-    } satisfies CompileWorkerResult);
+    } satisfies CompileResult);
   }
 }
 
@@ -330,7 +332,7 @@ const DEFAULT_TEMPLATE_JSON = JSON.stringify(
     },
     frames: { body: { height: 'auto' } },
     pages: { default: { frames: ['body'] } },
-    compile: { shaping: 'js', hyphenation: false },
+    compile: { shaping: 'auto', hyphenation: false },
   },
   null,
   2,

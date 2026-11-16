@@ -48,13 +48,16 @@ import type { RenderedParagraph } from '@paragraf/render-core';
 import type { FontEngine } from '@paragraf/font-engine';
 import { createMeasurer } from '@paragraf/font-engine';
 import { renderDocumentToPdf } from '@paragraf/render-pdf';
-import type { OutputIntent } from '@paragraf/render-pdf';
 // Minimal structural type for an ICC color transform — avoids a type-level
 // import from @paragraf/color which is an optionalDependency and would cause
 // tsc to fail for consumers installing with --no-optional.
 type ColorTransform = { apply(input: number[]): number[] };
 
-import type { CompileOptions, CompileResult } from './types.js';
+import type {
+  CompileOptions,
+  CompileResult,
+  OverfullLine,
+} from './types.js';
 import {
   buildFontRegistry,
   selectVariant,
@@ -83,6 +86,7 @@ export async function compile<T = unknown>(
     output = 'pdf',
     basePath = process.cwd(),
     onOverflow = 'throw',
+    onInfeasible = 'overfull',
     shaping = 'auto',
     title,
     lang,
@@ -132,9 +136,18 @@ export async function compile<T = unknown>(
     composer = session.composer;
     fontEngine = session.fontEngine;
     shapingEngine = session.shapingEngine;
+    // A session fixes the engine. 'wasm' is a requirement, so a session that
+    // is not on WASM must not satisfy it silently.
+    if (shaping === 'wasm' && shapingEngine !== 'wasm') {
+      throw new Error(
+        "[paragraf/compile] shaping: 'wasm' was requested but the session " +
+          `uses ${shapingEngine}. Create the session with shaping: 'wasm'; ` +
+          'that fails at once when the WASM shaper is not usable.',
+      );
+    }
   } else {
     registry = buildFontRegistry(template.fonts, basePath);
-    const composerOpts = resolveComposerOptions(shaping);
+    const composerOpts = resolveComposerOptions(shaping, verbose);
     shapingEngine = detectActualShaping(composerOpts);
     [composer, fontEngine] = await Promise.all([
       createParagraphComposer(registry, composerOpts),
@@ -241,10 +254,43 @@ export async function compile<T = unknown>(
 
   // ── 9. Compose document ───────────────────────────────────────────────────
   const doc: Document = {
-    paragraphs: deriveLineWidths(paragraphs, frames, frameAssignments),
+    paragraphs: deriveLineWidths(paragraphs, frames, frameAssignments).map(
+      (p) => ({ ...p, onInfeasible }),
+    ),
     frames,
   };
   const composedDoc = composeDocument(doc, composer);
+
+  // Paragraphs that could not be set within tolerance, and the lines that
+  // stick out as a result. Reported, never silent.
+  const overfullLines: OverfullLine[] = [];
+  const fallbackParagraphs: number[] = [];
+  composedDoc.paragraphs.forEach((p, paragraph) => {
+    if (p.output.usedFallback) fallbackParagraphs.push(paragraph);
+    p.output.lines.forEach((l, line) => {
+      if (l.overfull) {
+        overfullLines.push({
+          paragraph,
+          line,
+          overflow: l.overflow ?? 0,
+          text: l.words.join(' '),
+        });
+      }
+    });
+  });
+  if (verbose && fallbackParagraphs.length > 0) {
+    const first = overfullLines[0];
+    console.warn(
+      `[paragraf/compile] ${fallbackParagraphs.length} paragraph(s) could not be set within tolerance ` +
+        `(paragraph ${fallbackParagraphs.slice(0, 5).join(', ')}${fallbackParagraphs.length > 5 ? ', …' : ''}); ` +
+        `${overfullLines.length} overfull line(s).` +
+        (first
+          ? ` First: paragraph ${first.paragraph}, line ${first.line}, ` +
+            `${first.overflow.toFixed(1)}pt too wide ("${first.text.slice(0, 60)}").`
+          : '') +
+        ` See metadata.fallbackParagraphs and metadata.overfullLines.`,
+    );
+  }
 
   // ── 10. Layout document ──────────────────────────────────────────────────
   // Reuse the measurer the composer already holds when available — both hit
@@ -268,7 +314,13 @@ export async function compile<T = unknown>(
   if (output === 'rendered') {
     return {
       data: renderedDoc,
-      metadata: { pageCount, overflowLines, shapingEngine },
+      metadata: {
+      pageCount,
+      overflowLines,
+      overfullLines,
+      fallbackParagraphs,
+      shapingEngine,
+    },
     };
   }
 
@@ -288,7 +340,13 @@ export async function compile<T = unknown>(
     });
     return {
       data: svgPages.join('\n'),
-      metadata: { pageCount, overflowLines, shapingEngine },
+      metadata: {
+      pageCount,
+      overflowLines,
+      overfullLines,
+      fallbackParagraphs,
+      shapingEngine,
+    },
     };
   }
 
@@ -331,7 +389,13 @@ export async function compile<T = unknown>(
 
   return {
     data: pdfBuf,
-    metadata: { pageCount, overflowLines, shapingEngine },
+    metadata: {
+      pageCount,
+      overflowLines,
+      overfullLines,
+      fallbackParagraphs,
+      shapingEngine,
+    },
   };
 }
 
@@ -623,7 +687,13 @@ async function emptyResult(
   title?: string,
   lang?: string,
 ): Promise<CompileResult> {
-  const metadata = { pageCount: 0, overflowLines: 0, shapingEngine };
+  const metadata = {
+    pageCount: 0,
+    overflowLines: 0,
+    overfullLines: [],
+    fallbackParagraphs: [],
+    shapingEngine,
+  };
   const renderedDoc: RenderedDocument = { pages: [] };
 
   if (output === 'rendered') return { data: renderedDoc, metadata };

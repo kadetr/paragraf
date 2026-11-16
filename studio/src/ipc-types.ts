@@ -51,12 +51,25 @@ export interface CompileWorkerInput {
   frameGeometry?: StudioFrameGeometry[];
 }
 
-/** Result posted back from compile.worker.ts to the main process. */
-export type CompileWorkerResult =
+/** Result variants shared by the worker → main and main → renderer hops. */
+type CompileResultCommon =
   | { type: 'svg'; svgPages: string[]; frameGeometry?: StudioFrameGeometry[] }
-  | { type: 'pdf'; filePath: string }
   | { type: 'error'; errors: ValidationError[] }
   | { type: 'compile-error'; message: string };
+
+/**
+ * Result posted back from compile.worker.ts to the main process.
+ * A PDF arrives as raw bytes; the main process writes them to disk and
+ * forwards a CompileResult carrying the file path instead.
+ */
+export type CompileWorkerResult =
+  | CompileResultCommon
+  | { type: 'pdf'; buffer: Uint8Array };
+
+/** Result sent from the main process to the renderer over IPC. */
+export type CompileResult =
+  | CompileResultCommon
+  | { type: 'pdf'; filePath: string };
 
 // ─── Workspace state ──────────────────────────────────────────────────────────
 
@@ -90,7 +103,7 @@ export interface IpcApi {
    * Register a listener for compile results from the worker.
    * Returns an unsubscribe function — call it in React effect cleanup.
    */
-  onCompileResult(cb: (result: CompileWorkerResult) => void): () => void;
+  onCompileResult(cb: (result: CompileResult) => void): () => void;
   /**
    * Register a listener for file-change notifications.
    * Returns an unsubscribe function — call it in React effect cleanup.

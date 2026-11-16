@@ -175,7 +175,9 @@ export function parseContentXml(
 
   const sections = doc.getElementsByTagName('section');
   for (let s = 0; s < sections.length; s++) {
-    const section = sections[s] as Element;
+    // xmldom's Element is not assignable to the DOM lib Element type, but it
+    // provides every member this module uses (getAttribute, childNodes, tagName).
+    const section = sections[s] as unknown as Element;
     const frameName = section.getAttribute('frame');
 
     if (!frameName) {

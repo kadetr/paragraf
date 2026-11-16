@@ -1,0 +1,27 @@
+{
+  "$schema": "https://unpkg.com/@changesets/config@latest/schema.json",
+  "changelog": false,
+  "commit": false,
+  "fixed": [
+    [
+      "@paragraf/types",
+      "@paragraf/color",
+      "@paragraf/color-wasm",
+      "@paragraf/linebreak",
+      "@paragraf/font-engine",
+      "@paragraf/layout",
+      "@paragraf/style",
+      "@paragraf/shaping-wasm",
+      "@paragraf/render-core",
+      "@paragraf/typography",
+      "@paragraf/render-pdf",
+      "@paragraf/template",
+      "@paragraf/compile"
+    ]
+  ],
+  "linked": [],
+  "access": "public",
+  "baseBranch": "main",
+  "updateInternalDependencies": "patch",
+  "ignore": []
+}

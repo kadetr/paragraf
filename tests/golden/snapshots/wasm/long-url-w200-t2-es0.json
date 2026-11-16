@@ -1,0 +1,75 @@
+{
+  "id": "long-url-w200-t2-es0",
+  "mirrors": "MT-06",
+  "engine": "wasm",
+  "lineCount": 5,
+  "usedEmergency": false,
+  "usedFallback": true,
+  "lines": [
+    {
+      "text": "Optical margin alignment makes the",
+      "hyphenated": false,
+      "ratio": 3.1731,
+      "wordSpacing": 9.3462,
+      "lineWidth": 200,
+      "alignment": "justified",
+      "direction": "ltr",
+      "isRunt": false,
+      "baseline": 80.3203,
+      "x": [72, 86.666, 93.334, 116.6665, 135.3228, 160.0029, 183.9971, 217.3374, 257.3398],
+      "y": [80.3203, 80.3203, 80.3203, 80.3203, 80.3203, 80.3203, 80.3203, 80.3203, 80.3203]
+    },
+    {
+      "text": "text block appear flush. A long URL",
+      "hyphenated": false,
+      "ratio": 2.0309,
+      "wordSpacing": 7.0618,
+      "lineWidth": 200,
+      "alignment": "justified",
+      "direction": "ltr",
+      "isRunt": false,
+      "baseline": 93.0293,
+      "x": [72, 97.056, 130.778, 142.1042, 169.8145, 203.8763, 219.6042, 248],
+      "y": [93.0293, 93.0293, 93.0293, 93.0293, 93.0293, 93.0293, 93.0293, 93.0293]
+    },
+    {
+      "text": "like https://example.com/path?q=1 causes",
+      "hyphenated": false,
+      "ratio": -0.3926,
+      "wordSpacing": 2.4766,
+      "lineWidth": 200,
+      "alignment": "justified",
+      "direction": "ltr",
+      "isRunt": false,
+      "baseline": 105.7383,
+      "x": [72, 92.4707, 240.6816],
+      "y": [105.7383, 105.7383, 105.7383]
+    },
+    {
+      "text": "overflow in a narrow column unless emer-",
+      "hyphenated": true,
+      "ratio": -0.4919,
+      "wordSpacing": 2.3441,
+      "lineWidth": 200,
+      "alignment": "justified",
+      "direction": "ltr",
+      "isRunt": false,
+      "baseline": 118.4473,
+      "x": [72, 93.3223, 117.6624, 129.3405, 137.0107, 152.333, 173.3392, 187.9993, 211.6774, 223.6774, 244.0215],
+      "y": [118.4473, 118.4473, 118.4473, 118.4473, 118.4473, 118.4473, 118.4473, 118.4473, 118.4473, 118.4473, 118.4473]
+    },
+    {
+      "text": "gency stretch is enabled.",
+      "hyphenated": false,
+      "ratio": 0,
+      "wordSpacing": 3,
+      "lineWidth": 200,
+      "alignment": "justified",
+      "direction": "ltr",
+      "isRunt": false,
+      "baseline": 131.1563,
+      "x": [72, 103.6523, 138.6387, 149.6426, 160.9688],
+      "y": [131.1563, 131.1563, 131.1563, 131.1563, 131.1563]
+    }
+  ]
+}

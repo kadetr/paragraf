@@ -3,8 +3,10 @@
 // Receives CompileWorkerInput messages, runs createCompilerSession + compile(),
 // and posts a CompileWorkerResult back to the parent.
 //
-// Session is reused as long as fontsKey (serialised template.fonts) is unchanged.
-// When fontsKey changes, the session is rebuilt.
+// Session is reused as long as fontsKey (serialised template.fonts) and the
+// shaping mode are unchanged. When either changes, the session is rebuilt:
+// the shaping engine is fixed when a session is created, and compile() does
+// not switch it afterwards.
 //
 // The message handler function `handleMessage` is exported for direct testing
 // with vitest without spawning an actual thread. Dependencies are injectable.
@@ -15,7 +17,7 @@ import {
   compile as _compile,
   createCompilerSession as _createCompilerSession,
 } from '@paragraf/compile';
-import type { CompilerSession } from '@paragraf/compile';
+import type { CompilerSession, ShapingMode } from '@paragraf/compile';
 import type {
   CompileWorkerInput,
   CompileWorkerResult,
@@ -43,6 +45,16 @@ const defaultDeps: WorkerDeps = {
 let cachedSession: CompilerSession | null = null;
 /** The fontsKey that produced cachedSession. */
 let cachedFontsKey: string | null = null;
+/** The shaping mode that produced cachedSession. */
+let cachedShaping: ShapingMode | null = null;
+
+/** Session cache passed to handleMessage. */
+export interface SessionCache {
+  session: CompilerSession | null;
+  fontsKey: string | null;
+  /** Shaping mode the session was created with. */
+  shaping?: ShapingMode | null;
+}
 
 // ─── Core handler (exported for testing) ─────────────────────────────────────
 
@@ -54,9 +66,10 @@ let cachedFontsKey: string | null = null;
  */
 export async function handleMessage(
   input: CompileWorkerInput,
-  sessionCache: { session: CompilerSession | null; fontsKey: string | null } = {
+  sessionCache: SessionCache = {
     session: cachedSession,
     fontsKey: cachedFontsKey,
+    shaping: cachedShaping,
   },
   deps: WorkerDeps = defaultDeps,
 ): Promise<CompileWorkerResult> {
@@ -68,23 +81,37 @@ export async function handleMessage(
     return { type: 'error', errors: validationErrors };
   }
 
-  // ── Session management ──────────────────────────────────────────────────
-
-  if (sessionCache.session === null || sessionCache.fontsKey !== fontsKey) {
-    sessionCache.session = await deps.createCompilerSession(template, {
-      basePath: projectPath,
-    });
-    sessionCache.fontsKey = fontsKey;
-    // Sync module-level cache so the live worker thread benefits too
-    cachedSession = sessionCache.session;
-    cachedFontsKey = fontsKey;
-  }
-
-  // ── Compile ─────────────────────────────────────────────────────────────
-
   const output = options.output ?? 'svg';
+  // A template without a shaping mode keeps the library default.
+  const shaping: ShapingMode = options.shaping ?? 'auto';
 
   try {
+    // ── Session management ────────────────────────────────────────────────
+    // Inside the try: with shaping 'wasm' and no usable binary,
+    // createCompilerSession throws, and the preview must show that message.
+
+    if (
+      sessionCache.session === null ||
+      sessionCache.fontsKey !== fontsKey ||
+      sessionCache.shaping !== shaping
+    ) {
+      // Drop the old session first, so a failed rebuild is retried next time.
+      sessionCache.session = cachedSession = null;
+      sessionCache.session = await deps.createCompilerSession(template, {
+        basePath: projectPath,
+        shaping,
+        verbose: options.verbose,
+      });
+      sessionCache.fontsKey = fontsKey;
+      sessionCache.shaping = shaping;
+      // Sync module-level cache so the live worker thread benefits too
+      cachedSession = sessionCache.session;
+      cachedFontsKey = fontsKey;
+      cachedShaping = shaping;
+    }
+
+    // ── Compile ───────────────────────────────────────────────────────────
+
     const result = await deps.compile({
       ...options,
       template,

@@ -41,8 +41,8 @@ import { buildOmaAdjustments, buildOmaInput } from './optical-margin.js';
 //
 // Loaded synchronously via the CJS shim (same pattern as opentype.js in
 // measure.ts). If the WASM package is absent or fails to initialise, _wasm
-// stays null and every compose() call transparently falls back to the
-// TypeScript implementations.
+// stays null. What happens then depends on the `shaping` option: see
+// resolveUseWasm below.
 
 // NOTE: module-level singletons (_wasm, _wasmError, _rtlFallbackWarnIssued) persist for
 // the lifetime of the process, including across test runs in a single vitest worker.
@@ -78,6 +78,54 @@ export function wasmStatus(): {
   return { status: 'error', error: _wasmError ?? undefined };
 }
 
+// ─── Shaping mode ─────────────────────────────────────────────────────────────
+
+let _autoFallbackWarnIssued = false;
+
+const wasmProblem = (): string => {
+  const s = wasmStatus();
+  return s.status === 'absent'
+    ? 'the WASM shaper is not built'
+    : `the WASM shaper failed to load (${s.error ?? 'unknown error'})`;
+};
+
+const wasmBuildHint = (): string =>
+  `${wasmStatus().status === 'absent' ? 'Build' : 'Rebuild'} it with ` +
+  '`wasm-pack build --target nodejs --out-dir pkg` in ' +
+  '2a-shaping-wasm/wasm (needs Rust), or install a published ' +
+  '@paragraf/shaping-wasm, which includes the binary.';
+
+/**
+ * Decide whether the WASM path is used. Throws for `shaping: 'wasm'` when the
+ * binary is unusable; warns once per process when `'auto'` falls back.
+ */
+const resolveUseWasm = (options: ComposerOptions | undefined): boolean => {
+  const mode: ShapingMode =
+    options?.shaping ?? (options?.useWasm === false ? 'fontkit' : 'auto');
+  if (mode !== 'auto' && mode !== 'wasm' && mode !== 'fontkit') {
+    throw new TypeError(
+      `[paragraf] shaping must be 'auto', 'wasm' or 'fontkit' (got ${JSON.stringify(mode)}).`,
+    );
+  }
+  if (mode === 'fontkit') return false;
+  if (_wasm !== null) return true;
+  if (mode === 'wasm') {
+    throw new Error(
+      `[paragraf] shaping: 'wasm' was requested but ${wasmProblem()}. ` +
+        `${wasmBuildHint()} Use shaping: 'auto' to fall back to fontkit.`,
+    );
+  }
+  if (!_autoFallbackWarnIssued) {
+    _autoFallbackWarnIssued = true;
+    console.warn(
+      `[paragraf] ${wasmProblem().replace(/^t/, 'T')}; using the TypeScript/fontkit path. ` +
+        `${wasmBuildHint()} Pass shaping: 'fontkit' to silence this warning, ` +
+        "or shaping: 'wasm' to fail instead.",
+    );
+  }
+  return false;
+};
+
 // ─── WASM helpers ─────────────────────────────────────────────────────────────
 
 // ─── BiDi helpers ─────────────────────────────────────────────────────────────
@@ -86,7 +134,7 @@ export function wasmStatus(): {
 //   WASM path  — calls analyze_bidi (full UBA, run-level)
 //   TS fallback — P2/P3 scan: first strong directional character wins
 //
-// For v0.8 scope (one paragraph = one direction), the TS fallback is sufficient.
+// Current scope is one direction per paragraph, for which the TS fallback is sufficient.
 // A one-time console.warn is emitted when RTL text is encountered without WASM.
 
 let _rtlFallbackWarnIssued = false;
@@ -199,6 +247,23 @@ export interface ParagraphInput {
    * breaks). Applied regardless of word count on that line. @since v0.6
    */
   singleLinePenalty?: number;
+  /**
+   * Demerits added when two consecutive lines differ by more than one fitness
+   * class (for example a tight line directly followed by a very loose one).
+   * `0` (default) disables the check; TeX's default is `10000`. @since v0.7
+   */
+  adjDemerits?: number;
+  /**
+   * What to do when the paragraph cannot be set within `tolerance`, even with
+   * `emergencyStretch`.
+   * - `'overfull'` (default) — still return lines. Lines that fit are set
+   *   however loose they are; a line holding one piece wider than the measure
+   *   (a long URL, for example) sticks out and is marked `overfull`.
+   *   `ParagraphOutput.usedFallback` is then `true`.
+   * - `'throw'` — throw an Error, as before v0.7.
+   * @since v0.7
+   */
+  onInfeasible?: 'throw' | 'overfull';
   preserveSoftHyphens?: boolean;
   /** When set, overrides the font-metric-derived line height on every composed
    *  line. Use this to enforce exact leading (e.g. 16pt) independent of the
@@ -236,6 +301,12 @@ export interface ParagraphOutput {
   lines: ComposedParagraph;
   lineCount: number;
   usedEmergency: boolean;
+  /**
+   * True when the paragraph could not be set within tolerance and fallback
+   * breaks were used (see `ParagraphInput.onInfeasible`). Overfull lines carry
+   * `overfull: true` and `overflow` in points. @since v0.7
+   */
+  usedFallback: boolean;
 }
 
 export interface ParagraphComposer {
@@ -249,15 +320,29 @@ export interface ParagraphComposer {
 }
 
 /**
- * Options for createParagraphComposer / createDefaultFontEngine.
+ * Which shaping engine a composer or font engine uses.
  *
- * useWasm — when explicitly false, forces the TypeScript Knuth-Plass linebreaker
- * and fontkit measurer even if the WASM binary is present.  Defaults to
- * auto-detect: uses WASM when loaded, falls back to TS when absent.
- * Passing useWasm: true on a build where WASM was not compiled is a no-op
- * (falls back silently to TypeScript).
+ * - `'auto'`    — the Rust/WASM shaper when it is built, otherwise the
+ *                 TypeScript/fontkit path. Falling back prints one warning
+ *                 (once per loaded copy of this module, so once per process
+ *                 or worker thread).
+ * - `'wasm'`    — the Rust/WASM shaper. Throws when the binary is not built
+ *                 or failed to load.
+ * - `'fontkit'` — always the TypeScript/fontkit path, without the fallback
+ *                 warning.
+ */
+export type ShapingMode = 'auto' | 'wasm' | 'fontkit';
+
+/**
+ * Options for createParagraphComposer / createDefaultFontEngine.
  */
 export interface ComposerOptions {
+  /** Shaping engine. Default `'auto'`. Takes precedence over `useWasm`. */
+  shaping?: ShapingMode;
+  /**
+   * @deprecated Use `shaping`. `false` means `shaping: 'fontkit'`; `true` or
+   * unset means `shaping: 'auto'` (it never was strict).
+   */
   useWasm?: boolean;
   measureCache?: MeasureCacheOptions;
 }
@@ -375,7 +460,7 @@ const resolveFeatureSetId = (
   if (options?.featureSetId && options.featureSetId.trim().length > 0) {
     return options.featureSetId;
   }
-  // TODO(v2): add script + direction to cache key for non-LTR support
+  // TODO: add script + direction to the cache key for non-LTR support.
   return '__default-feature-set__';
 };
 
@@ -655,11 +740,10 @@ export const createParagraphComposer = async (
   registry: FontRegistry,
   options?: ComposerOptions,
 ): Promise<ParagraphComposer> => {
-  await loadHyphenator('en-us');
+  // Resolved before anything else so that shaping: 'wasm' fails immediately.
+  const useWasm = resolveUseWasm(options);
 
-  // useWasm: default is auto-detect (true when WASM loaded); callers can force false
-  // to use the TypeScript path unconditionally (e.g. for the 1a layer split).
-  const useWasm = (options?.useWasm ?? true) && _wasm !== null;
+  await loadHyphenator('en-us');
 
   const baseMeasurer: Measurer = useWasm
     ? createWasmMeasurer(registry)
@@ -712,6 +796,8 @@ export const createParagraphComposer = async (
       consecutiveHyphenLimit = 0,
       runtPenalty = 0,
       singleLinePenalty = 0,
+      adjDemerits = 0,
+      onInfeasible = 'overfull',
       preserveSoftHyphens = true,
     } = input;
 
@@ -744,7 +830,7 @@ export const createParagraphComposer = async (
         : lineWidths;
 
     // Detect paragraph direction.
-    // RTL paragraphs bypass language loading and hyphenation for v0.8.
+    // RTL paragraphs currently bypass language loading and hyphenation.
     if (spans && text) {
       console.warn(
         '[paragraf] compose(): both `text` and `spans` provided — `spans` takes precedence and `text` is ignored.',
@@ -778,7 +864,7 @@ export const createParagraphComposer = async (
 
     if (direction === 'rtl' && !useWasm && !_rtlFallbackWarnIssued) {
       console.warn(
-        '[knuth-plass] BiDi: WASM not loaded — using TypeScript paragraph-level ' +
+        '[knuth-plass] BiDi: WASM shaper not in use — using TypeScript paragraph-level ' +
           'direction detection. Full run segmentation unavailable.',
       );
       _rtlFallbackWarnIssued = true;
@@ -801,7 +887,7 @@ export const createParagraphComposer = async (
     let withFonts: HyphenatedWordWithFont[];
 
     if (direction === 'rtl') {
-      // Spans not supported in RTL for v0.8 — only one-direction paragraphs with a single font.
+      // Spans are not yet supported in RTL — only one-direction paragraphs with a single font.
       if (hasSpans) {
         throw new Error(
           '[paragraf] RTL paragraphs do not support span input yet. ' +
@@ -856,6 +942,7 @@ export const createParagraphComposer = async (
 
     let breaks: LineBreak[];
     let usedEmergency: boolean;
+    let usedFallback: boolean;
 
     if (useWasm) {
       const tbResult = tracebackWasmBinary(
@@ -869,10 +956,13 @@ export const createParagraphComposer = async (
         kpLineWidths,
         runtPenalty,
         singleLinePenalty,
+        adjDemerits,
+        onInfeasible,
       );
       if ('error' in tbResult) throw new Error(tbResult.error);
       breaks = tbResult.ok.breaks as LineBreak[];
       usedEmergency = tbResult.ok.usedEmergency as boolean;
+      usedFallback = tbResult.ok.usedFallback === true;
     } else {
       const result = computeBreakpoints({
         nodes,
@@ -883,10 +973,13 @@ export const createParagraphComposer = async (
         consecutiveHyphenLimit,
         runtPenalty,
         singleLinePenalty,
-        looseness,
+        adjDemerits,
+        onInfeasible,
+        looseness: looseInt,
       });
       breaks = traceback(result.node);
       usedEmergency = result.usedEmergency;
+      usedFallback = result.usedFallback;
     }
 
     let lines = composeParagraph(
@@ -970,6 +1063,7 @@ export const createParagraphComposer = async (
       lines,
       lineCount: lines.length,
       usedEmergency,
+      usedFallback,
     };
   };
 
@@ -979,6 +1073,8 @@ export const createParagraphComposer = async (
 /**
  * Create a FontEngine backed by WASM (WasmFontEngine) when available,
  * falling back to FontkitEngine. All fonts in the registry are loaded.
+ * `options.shaping` selects the engine as for createParagraphComposer:
+ * `'wasm'` throws when the binary is unusable. Pass the same value to both.
  *
  * Use this when you need a FontEngine for rendering (renderToSvg / renderToCanvas /
  * renderToPdf) and want to stay consistent with the composer's measurement backend.
@@ -987,7 +1083,7 @@ export const createDefaultFontEngine = async (
   registry: FontRegistry,
   options?: ComposerOptions,
 ): Promise<FontEngine> => {
-  const useWasm = (options?.useWasm ?? true) && _wasm !== null;
+  const useWasm = resolveUseWasm(options);
 
   if (useWasm) {
     const engine = new WasmFontEngine(_wasm);

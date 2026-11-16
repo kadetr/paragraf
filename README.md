@@ -2,7 +2,7 @@
 
 [![CI](https://github.com/kadetr/paragraf/actions/workflows/ci.yml/badge.svg)](https://github.com/kadetr/paragraf/actions/workflows/ci.yml)
 
-**Publication-quality typesetting in JavaScript.** The only Node.js library that produces print-grade output: Knuth-Plass optimal line breaking with real OpenType shaping, 22-language hyphenation, Unicode BiDi, optical margin alignment, and multi-frame document composition — outputting PDF, SVG, or Canvas.
+**Publication-quality typesetting in JavaScript.** A Node.js library for print-grade output: Knuth-Plass optimal line breaking with real OpenType shaping, 22-language hyphenation, Unicode BiDi, optical margin alignment, and multi-frame document composition — outputting PDF, SVG, or Canvas.
 
 **[→ Live demo](https://kadetr.github.io/paragraf/)**
 
@@ -12,12 +12,13 @@
 
 Generating documents programmatically in Node.js means choosing between:
 
-- **Headless Chrome / Puppeteer** — renders HTML to PDF. Quality is whatever CSS gives you: greedy line breaking, no real hyphenation, no glyph-level metrics. Output looks like a webpage printed to PDF.
+- **Headless Chrome / Puppeteer** — renders HTML to PDF. Quality is whatever CSS gives you: greedy line breaking by default, dictionary hyphenation only where the browser ships one, no control over glyph-level metrics. Output looks like a webpage printed to PDF.
 - **pdfmake / jsPDF** — programmatic PDF, but greedy line breaking and no OpenType shaping. Adequate for invoices and reports where typography quality doesn't matter.
-- **LaTeX pipelines** — publication quality, but requires a full TeX installation, shell process overhead, and a separate templating system. Not a Node library.
+- **react-pdf** — React components to PDF, with a Knuth-Plass line breaker and fontkit shaping. A good fit for component-style layouts; it does not offer optical margin alignment, ICC colour management, or InDesign-style paragraph styles.
+- **LaTeX and Typst pipelines** — publication quality, but they run as a separate process with their own markup language and templating. Not Node libraries.
 - **InDesign Server** — the professional standard. Expensive, GUI-dependent, operationally complex, and not scriptable in JavaScript.
 
-**paragraf is the missing option:** publication-quality typesetting as a Node.js library. No TeX installation, no browser process, no InDesign licence. The same class of output as InDesign, scriptable from TypeScript.
+**Where paragraf fits:** publication-quality typesetting as a Node.js library, with the print-production parts (optical margins, ICC colour, paragraph styles, multi-frame documents) included. No TeX installation, no browser process, no InDesign licence. The same paragraph-composition techniques InDesign and TeX use, scriptable from TypeScript.
 
 ---
 
@@ -25,13 +26,13 @@ Generating documents programmatically in Node.js means choosing between:
 
 The core of every professional typesetting engine — InDesign, TeX, QuarkXPress — is the **Knuth-Plass algorithm**: solve the entire paragraph at once, minimising total spacing deviation across all lines simultaneously. The difference is visible:
 
-Every JavaScript library uses a greedy algorithm — fill each line as full as possible, no lookahead. It's fast and simple, but it produces rivers of white space and inconsistent line density. But optimal line breaking is only one layer. Five things together separate paragraf from any other JavaScript output library:
+Most JavaScript PDF libraries use a greedy algorithm — fill each line as full as possible, no lookahead. It's fast and simple, but it produces rivers of white space and inconsistent line density. (react-pdf is an exception: its text layout also runs Knuth-Plass.) But optimal line breaking is only one layer. Five things together are what paragraf is built around:
 
 **Real text shaping.** Most libraries measure text with a canvas element or multiply character count by an average advance width. paragraf runs rustybuzz — a Rust port of HarfBuzz, the same shaping engine used by Firefox, Chrome, and Android — for every text run. GSUB ligature substitution, GPOS kerning, correct Arabic/Hebrew advance widths, per-run OpenType feature flags. The output is metrically identical to what a desktop application produces, not an approximation.
 
-**Optical margin alignment.** A two-pass algorithm that protrudes punctuation and soft-hyphens partially into the page margin, then re-runs Knuth-Plass with the adjusted column widths. The result is a visually flush edge on justified text — the technique InDesign calls "optical margin alignment" and TeX calls `\pdfprotrudechars`. No other JavaScript library implements this.
+**Optical margin alignment.** A two-pass algorithm that protrudes punctuation and soft-hyphens partially into the page margin, then re-runs Knuth-Plass with the adjusted column widths. The result is a visually flush edge on justified text — the technique InDesign calls "optical margin alignment" and TeX calls `\pdfprotrudechars`. We are not aware of another JavaScript PDF library that implements this.
 
-**ICC colour management.** `@paragraf/color` implements the ICC transform pipeline for the sRGB and CIE Lab colour spaces: profile parsing, sRGB → Lab conversion, and tetrahedral LUT interpolation. CMYK output uses device-profile LUT lookups (B2A tables); full gamut-mapping and chromatic adaptation are partial. For commercial printing that mandates a specific output-device profile (Fogra39, SWOP), the transform produces correct colour for profiles with 8-bit B2A LUTs. No other Node.js PDF library provides ICC-based colour management at all.
+**ICC colour management.** `@paragraf/color` implements the ICC transform pipeline for the sRGB and CIE Lab colour spaces: profile parsing, sRGB → Lab conversion, and tetrahedral LUT interpolation. CMYK output uses device-profile LUT lookups (B2A tables); full gamut-mapping and chromatic adaptation are partial. For commercial printing that mandates a specific output-device profile (Fogra39, SWOP), the transform produces correct colour for profiles with 8-bit B2A LUTs. We are not aware of another Node.js PDF library that provides ICC-based colour transforms.
 
 **Style inheritance.** `@paragraf/style` provides InDesign-equivalent paragraph styles and character styles with cascading inheritance — derived styles override only what they change, in a named style registry. This is what makes template-driven documents maintainable at scale.
 
@@ -41,23 +42,26 @@ Every JavaScript library uses a greedy algorithm — fill each line as full as p
 
 ## How it compares
 
-| Capability | paragraf | Puppeteer | pdfmake | LaTeX |
-|---|:---:|:---:|:---:|:---:|
-| Knuth-Plass line breaking | ✅ | — | — | ✅ |
-| Real OpenType shaping (GSUB/GPOS) | ✅ | partial¹ | — | ✅ |
-| 22-language hyphenation | ✅ | — | — | ✅ |
-| Unicode BiDi (Arabic, Hebrew) | partial³ | ✅ | — | partial |
-| Optical margin alignment | ✅ | — | — | ✅ |
-| Multi-frame / multi-column layout | ✅ | via CSS | ✅ | ✅ |
-| Selectable text in PDF output | ✅ | ✅ | ✅ | ✅ |
-| Node-native (no browser subprocess) | ✅ | — | ✅ | — |
-| Open source | ✅ | ✅ | ✅ | ✅ |
+| Capability | paragraf | Puppeteer | pdfmake | react-pdf | LaTeX | Typst |
+|---|:---:|:---:|:---:|:---:|:---:|:---:|
+| Knuth-Plass (whole-paragraph) line breaking | ✅ | — | — | ✅ | ✅ | ✅ |
+| Real OpenType shaping (GSUB/GPOS) | ✅ | ✅¹ | — | ✅² | ✅ | ✅ |
+| Multi-language hyphenation | ✅ (22) | via CSS | — | ✅ | ✅ | ✅ |
+| Unicode BiDi (Arabic, Hebrew) | partial³ | ✅ | — | ✅ | partial | ✅ |
+| Optical margin alignment | ✅ | — | — | — | ✅ | ✅ |
+| Multi-frame / multi-column layout | ✅ | via CSS | ✅ | via flexbox | ✅ | ✅ |
+| Selectable text in PDF output | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Node-native (no subprocess, no separate toolchain) | ✅ | — | ✅ | ✅ | — | —⁴ |
+| Open source | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
 
-¹ Puppeteer delegates shaping to the OS renderer (CoreText/DirectWrite). Quality varies by platform and cannot be controlled programmatically.  
-² The `FontEngine` interface is environment-agnostic, but the bundled fontkit adapter (`createMeasurer`, `FontkitEngine`) reads font files from disk via Node's `fs.openSync` and is Node-only. In a browser you must supply your own `FontEngine` implementation backed by `fetch`/`ArrayBuffer`.  
-³ Paragraph-level direction detection and visual reordering via the first-strong character heuristic. Full Unicode Bidirectional Algorithm (UBA) line-level reordering is not yet implemented.
+This table reflects our reading of each project's documentation in November 2026. If an entry is out of date, please open an issue.
 
-**Browser path.** The packages that run in a browser without modification are: `@paragraf/types`, `@paragraf/color`, `@paragraf/linebreak`, `@paragraf/layout`, `@paragraf/style`, and `@paragraf/render-core`. Pair them with a custom `FontEngine` that loads fonts via `fetch`. `@paragraf/typography`, `@paragraf/render-pdf`, `@paragraf/shaping-wasm`, `@paragraf/compile`, and `@paragraf/font-engine` (with the built-in adapters) are Node-only.
+¹ Chromium shapes text with HarfBuzz. Shaping can only be influenced through CSS (`font-feature-settings` and related properties), not addressed per glyph.  
+² react-pdf shapes text with fontkit, the same library paragraf uses as its fallback when the WASM shaper is absent.  
+³ Paragraph-level direction detection and visual reordering via the first-strong character heuristic. Full Unicode Bidirectional Algorithm (UBA) line-level reordering is not yet implemented.  
+⁴ Typst is a Rust compiler with its own markup language. It can be called from Node as a command-line tool or through community WebAssembly bindings.
+
+**Browser path.** The packages that run in a browser without modification are: `@paragraf/types`, `@paragraf/linebreak`, `@paragraf/layout`, `@paragraf/style`, and `@paragraf/render-core`. Pair them with a custom `FontEngine` that loads fonts via `fetch`. `@paragraf/color` (it reads profiles from disk), `@paragraf/typography`, `@paragraf/render-pdf`, `@paragraf/shaping-wasm`, `@paragraf/compile`, and `@paragraf/font-engine` (with the built-in adapters) are Node-only.
 
 **For browser-side KP line breaking** (injecting optimal word spacing back into DOM text), see [tex-linebreak](https://github.com/robertknight/tex-linebreak) by robertknight. That is a different problem — paragraf is a print and PDF pipeline, not a browser text renderer.
 
@@ -72,7 +76,7 @@ Twelve packages in strict layers. Each package only imports from layers below it
 | `0-types/` | `@paragraf/types` | Zero-dep shared interfaces: `Font`, `ComposedLine`, `FontRegistry`, `TextSpan` | both |
 | `0-color/` | `@paragraf/color` | ICC colour profiles, sRGB/Lab/CMYK spaces, LUT interpolation | both |
 | `1a-linebreak/` | `@paragraf/linebreak` | Knuth-Plass algorithm, 22-language hyphenation, traceback, node builder | both |
-| `1b-font-engine/` | `@paragraf/font-engine` | FontEngine interface, fontkit adapter, measurer factory | Node² |
+| `1b-font-engine/` | `@paragraf/font-engine` | FontEngine interface, fontkit adapter, measurer factory | Node⁵ |
 | `1c-layout/` | `@paragraf/layout` | Page geometry, unit converters (mm/in/cm), named page sizes (A4, Letter…) | both |
 | `1d-style/` | `@paragraf/style` | Paragraph and character style definitions with cascading inheritance | both |
 | `2a-shaping-wasm/` | `@paragraf/shaping-wasm` | Rust/WASM OpenType shaper (rustybuzz): GSUB ligatures, GPOS kerning, sups/subs | Node |
@@ -81,6 +85,8 @@ Twelve packages in strict layers. Each package only imports from layers below it
 | `3b-render-pdf/` | `@paragraf/render-pdf` | PDF output via pdfkit, selectable text overlay | Node |
 | `4a-template/` | `@paragraf/template` | Document schema: named content slots, style bindings, page size declarations | Node |
 | `4b-compile/` | `@paragraf/compile` | Full pipeline: template + data + fonts → PDF / SVG / RenderedDocument | Node |
+
+⁵ The `FontEngine` interface is environment-agnostic, but the bundled fontkit adapter (`createMeasurer`, `FontkitEngine`) reads font files from disk via Node's `fs.openSync` and is Node-only. In a browser you must supply your own `FontEngine` implementation backed by `fetch`/`ArrayBuffer`.
 
 ---
 
@@ -147,7 +153,7 @@ const result = await compile({
 writeFileSync('output.pdf', result.data as Buffer);
 ```
 
-`defineTemplate()` validates the template at definition time (style references, binding syntax, inheritance cycles). `compile()` auto-detects the WASM shaper and falls back to fontkit silently.
+`defineTemplate()` validates the template at definition time (style references, binding syntax, inheritance cycles). `compile()` auto-detects the WASM shaper and falls back to fontkit with one warning. Pass `shaping: 'wasm'` to fail instead, or `shaping: 'fontkit'` to choose the fallback on purpose.
 
 ### Low-level API (`@paragraf/typography`)
 
@@ -157,7 +163,7 @@ For custom rendering pipelines or when you need direct access to composed lines 
 npm install @paragraf/typography @paragraf/render-pdf
 ```
 
-`@paragraf/types`, `@paragraf/linebreak`, `@paragraf/font-engine`, `@paragraf/render-core`, and `@paragraf/shaping-wasm` (including the prebuilt WASM binary) are all declared as direct dependencies of `@paragraf/typography` and install automatically.
+`@paragraf/types`, `@paragraf/linebreak`, `@paragraf/font-engine`, `@paragraf/render-core`, and `@paragraf/shaping-wasm` (whose npm package is set up to carry the compiled WASM shaper) are all declared as direct dependencies of `@paragraf/typography` and install automatically.
 
 ```ts
 import { createParagraphComposer, createDefaultFontEngine } from '@paragraf/typography';
@@ -262,6 +268,7 @@ writeFileSync('document.pdf', pdfBuffer);
 | `tolerance` | `2` | How aggressively to fit lines; higher = more flexibility |
 | `looseness` | `0` | `+1` prefer looser (more lines), `-1` prefer tighter |
 | `emergencyStretch` | `0` | Extra stretch budget when no solution found at tolerance |
+| `onInfeasible` | `'overfull'` | What happens when the paragraph still cannot be set: `'overfull'` returns lines anyway (lines that fit are set however loose; a piece wider than the measure sticks out and is marked `overfull`), `'throw'` throws an error |
 | `firstLineIndent` | `0` | First-line indent in points |
 | `consecutiveHyphenLimit` | `∞` | Maximum consecutive hyphenated lines |
 | `runtPenalty` | `0` | Demerit added when the final line of a paragraph is a single word (runt line). Best-effort — does not guarantee elimination when no feasible alternative layout exists. |
@@ -292,7 +299,8 @@ These are intentional gaps for the current release, not bugs:
 
 - **PDF output is vector-path, not PDF/X-conformant.** Text is rendered as filled glyph outlines. PDF/X and PDF/A require embedded fonts with `TJ` operators and ToUnicode CMaps. This is planned but not yet implemented.
 - **`runtPenalty` / `singleLinePenalty` are single-line runt penalties**, not frame-level widow/orphan control. True widow/orphan handling (preventing the first or last line of a paragraph from being isolated on a different page) requires frame-level composition, which is not yet implemented. The penalty is best-effort and may not change the layout when no feasible alternative exists.
-- **`adjDemerits`** is available via the paragraph input parameter; the default is `0`, which preserves backwards-compatible Knuth-Plass behaviour. Set to `10000` for TeX-equivalent quality (penalises jarring transitions between very tight and very loose consecutive lines).
+- **`adjDemerits`** is available on the paragraph input (`ParagraphInput.adjDemerits`) in both engines. The default is `0`, which preserves backwards-compatible Knuth-Plass behaviour. Set to `10000` for TeX-equivalent quality (penalises jarring transitions between very tight and very loose consecutive lines).
+- **Overfull lines are reported, not repaired.** When a single unbreakable piece (a long URL, a word that cannot be hyphenated) is wider than the column, the line is wider than the column and sticks out. `compose()` marks it (`line.overfull`, `line.overflow` in points, `usedFallback` on the result) and `compile()` lists it in `metadata.overfullLines`. Capitalised words are not hyphenated by default, which affects German nouns in narrow columns.
 - **`nestedStyles` / `grepStyles`** are accepted by the style registry but not yet applied. Character-style rules based on regex or run-length patterns require the inline-markup pipeline (F027) to be wired end-to-end.
 
 ---
@@ -305,7 +313,7 @@ npm test      # unit tests across all packages
 npm run build # build all packages to dist/
 ```
 
-The WASM shaper ships as a prebuilt binary (`2a-shaping-wasm/wasm/pkg/`). The Rust source is included in this repository at `2a-shaping-wasm/wasm/src/lib.rs`. To rebuild the binary after modifying the Rust layer:
+The compiled WASM shaper is **not committed to this repository**. CI builds it for every test run, and the `@paragraf/shaping-wasm` package lists `wasm/pkg/` in its `files`, so a release built with the shaper present will include it. In a fresh clone the shaper is absent, so composition runs on the TypeScript fontkit path until you build it. The Rust source is at `2a-shaping-wasm/wasm/src/lib.rs`. To build it (requires Rust and `wasm-pack`), or to rebuild after modifying the Rust layer:
 
 ```bash
 cd 2a-shaping-wasm/wasm
@@ -313,7 +321,15 @@ wasm-pack build --target nodejs                                   # Node
 wasm-pack build --target bundler --out-dir pkg-bundler --release  # Browser (Vite)
 ```
 
-`@paragraf/typography` auto-detects the WASM shaper at module init and falls back to the TypeScript fontkit path silently if WASM is absent. Check which path is active:
+`@paragraf/typography` auto-detects the WASM shaper at module init. What happens when it is absent depends on the `shaping` option of `createParagraphComposer`, `createDefaultFontEngine`, `compile()` and `createCompilerSession`:
+
+| `shaping` | WASM built | WASM absent or broken |
+|---|---|---|
+| `'auto'` (default) | WASM | fontkit, with one warning per process or worker thread |
+| `'wasm'` | WASM | throws, with the build command in the message |
+| `'fontkit'` | fontkit | fontkit, no fallback warning |
+
+Use `'wasm'` in production builds where a silent change of shaping engine would be a defect. Check which path is active:
 
 ```ts
 import { wasmStatus } from '@paragraf/typography';
@@ -324,6 +340,6 @@ console.log(wasmStatus()); // { status: 'loaded' | 'absent' | 'error' }
 
 ## Status
 
-**Pre-release.** The core algorithm and rendering pipeline are stable and well-tested. APIs may change before v1.0. Not yet published to npm — GitHub only at this stage.
+**Pre-release.** The core algorithm and rendering pipeline are stable and well-tested. APIs may change before v1.0. Published to npm under the `@paragraf` scope since v0.7.0; Node 22 or later.
 
-All packages are at **v0.6.0**.
+All packages are at **v0.7.0**.

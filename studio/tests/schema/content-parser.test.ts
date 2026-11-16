@@ -8,9 +8,9 @@ const baseTemplate: StudioTemplate = {
   layout: { size: 'A4', margins: 72 },
   fonts: { Serif: { regular: './Serif-Regular.ttf' } },
   styles: {
-    body: { font: { family: 'Serif' }, fontSize: 12 },
-    caption: { font: { family: 'Serif' }, fontSize: 9 },
-    heading: { font: { family: 'Serif' }, fontSize: 18 },
+    body: { font: { family: 'Serif', size: 12 } },
+    caption: { font: { family: 'Serif', size: 9 } },
+    heading: { font: { family: 'Serif', size: 18 } },
   },
   frames: {
     main: { height: 'auto' },

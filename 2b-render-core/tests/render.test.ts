@@ -79,6 +79,7 @@ const LINE_A: ComposedLine = {
   ratio: 0,
   alignment: 'left',
   isWidow: false,
+  isRunt: false,
   lineWidth: 200,
   lineHeight: 12, // ascender(9.6) - descender(-2.4) + lineGap(0)
   baseline: 9.6, // ascender = size * 0.8
@@ -100,6 +101,7 @@ const LINE_MSEG: ComposedLine = {
   ratio: 0,
   alignment: 'left',
   isWidow: false,
+  isRunt: false,
   lineWidth: 200,
   lineHeight: 12,
   baseline: 9.6,
@@ -120,6 +122,7 @@ const LINE_SUP: ComposedLine = {
   ratio: 0,
   alignment: 'left',
   isWidow: false,
+  isRunt: false,
   lineWidth: 200,
   lineHeight: 12,
   baseline: 9.6,
@@ -344,6 +347,7 @@ describe('renderToSvg', () => {
       ratio: 0,
       alignment: 'left',
       isWidow: false,
+      isRunt: false,
       lineWidth: 200,
       lineHeight: 20,
       baseline: 14,
@@ -441,6 +445,7 @@ describe('renderToCanvas', () => {
       ratio: 0,
       alignment: 'left',
       isWidow: false,
+      isRunt: false,
       lineWidth: 200,
       lineHeight: 20,
       baseline: 14,
@@ -546,6 +551,7 @@ describe('layoutParagraph — RTL multi-segment word, segment ordering', () => {
     ratio: 0,
     alignment: 'right',
     isWidow: false,
+    isRunt: false,
     lineWidth: 200,
     lineHeight: 12,
     baseline: 9.6,
@@ -581,6 +587,8 @@ describe('layoutParagraph — RTL multi-segment word, segment ordering', () => {
 
 describe('layoutParagraph — glyphExpansion scales advance widths (RT-4)', () => {
   const BASE_LINE: ComposedLine = {
+    words: ['helloworld'],
+    fonts: [FONT_12],
     wordRuns: [
       [
         { text: 'hello', font: FONT_12 },
@@ -592,6 +600,7 @@ describe('layoutParagraph — glyphExpansion scales advance widths (RT-4)', () =
     ratio: 0,
     alignment: 'justified',
     isWidow: false,
+    isRunt: false,
     lineWidth: 200,
     lineHeight: 12,
     baseline: 9.6,

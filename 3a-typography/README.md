@@ -49,6 +49,7 @@ interface ParagraphInput {
   lineWidths?: number[];        // per-line widths for shaped columns
   tolerance?: number;           // Knuth-Plass tolerance, default 2
   emergencyStretch?: number;    // fallback stretch when no solution found
+  onInfeasible?: 'throw' | 'overfull'; // when it still cannot be set; default 'overfull'
   firstLineIndent?: number;
   alignment?: AlignmentMode;    // 'justified' | 'left' | 'right' | 'center'
   language?: Language;          // default 'en-us'
@@ -68,8 +69,15 @@ interface ParagraphOutput {
   lines: ComposedParagraph;
   lineCount: number;
   usedEmergency: boolean; // true if emergencyStretch was needed
+  usedFallback: boolean;  // true if the paragraph could not be set within tolerance
 }
 ```
+
+When `usedFallback` is `true`, the lines were produced by the fallback pass:
+every line that fits is accepted however loose, and a line holding one piece
+wider than the measure sticks out. Such a line has `overfull: true` and
+`overflow` (points) on its `ComposedLine`. Pass `onInfeasible: 'throw'` to get
+an error instead, as before v0.7.
 
 ## Multi-language paragraphs
 
@@ -113,6 +121,21 @@ const { status } = wasmStatus();
 // 'absent'  — wasm/pkg not built; TypeScript fallback active
 // 'error'   — build present but failed to init
 ```
+
+## Shaping mode
+
+```ts
+const composer = await createParagraphComposer(registry, { shaping: 'wasm' });
+```
+
+| `shaping` | WASM built | WASM absent or broken |
+|---|---|---|
+| `'auto'` (default) | WASM | fontkit, with one warning per process or worker thread |
+| `'wasm'` | WASM | throws |
+| `'fontkit'` | fontkit | fontkit, no fallback warning |
+
+`createDefaultFontEngine` takes the same option; pass the same value to both.
+`useWasm` is deprecated: `false` means `'fontkit'`, `true` means `'auto'`.
 
 ## Optical margin alignment
 

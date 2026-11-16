@@ -2,7 +2,7 @@
 
 import { parseDimension } from '@paragraf/layout';
 import { defineStyles } from '@paragraf/style';
-import type { Template } from './types.js';
+import type { Template, Dimension } from './types.js';
 import { parseTokens } from './interpolate.js';
 
 /**
@@ -30,7 +30,9 @@ export function validateTemplate(t: Template): void {
     if (typeof margins === 'object' && !Array.isArray(margins)) {
       for (const val of Object.values(margins)) parseDimension(val);
     } else {
-      parseDimension(margins);
+      // Arrays are not a valid margins value; they fall through here on
+      // purpose so parseDimension rejects them at runtime.
+      parseDimension(margins as Dimension);
     }
     if (gutter !== undefined) parseDimension(gutter);
     if (bleed !== undefined) parseDimension(bleed);

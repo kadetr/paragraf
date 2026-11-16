@@ -241,6 +241,12 @@ export interface BreakpointNode {
    * Used by adjDemerits to penalise abrupt changes in line tightness.
    */
   fitnessClass: 0 | 1 | 2 | 3;
+  /**
+   * True when the line ending at this break is wider than the measure even
+   * with every space fully shrunk. Only set by the fallback pass.
+   * @since v0.7
+   */
+  overfull?: boolean;
 }
 
 // ─── Paragraph I/O ───────────────────────────────────────────────────────────
@@ -276,6 +282,16 @@ export interface Paragraph {
    * @since v0.6
    */
   adjDemerits?: number;
+  /**
+   * What to do when the paragraph cannot be set within `tolerance`, even with
+   * `emergencyStretch`.
+   * - `'overfull'` (default) — run a fallback pass: accept any line that fits,
+   *   however loose, and where one unbreakable piece is wider than the measure
+   *   let that line stick out and mark it `overfull`.
+   * - `'throw'` — throw an Error (the behaviour before v0.7).
+   * @since v0.7
+   */
+  onInfeasible?: 'throw' | 'overfull';
   /**
    * Fixed left margin reserved on every line in points (TeX \leftskip equivalent).
    * The effective line width is reduced by leftSkip + rightSkip.
@@ -324,6 +340,15 @@ export interface ComposedLine {
   rightSkip?: number; // fixed right margin in points (from Paragraph.rightSkip); 0 when not set
   kashidaSpacing?: number; // per-word kashida fill in points for RTL justified lines; 0 when not applicable
   glyphExpansion?: number; // per-line glyph scale delta (range: -maxGlyphExpansion..+maxGlyphExpansion); 0 when disabled
+  /**
+   * True when the line is wider than its measure even with every space fully
+   * shrunk, so it sticks out of the measure (to the right in left-aligned and
+   * justified text). Absent on normal lines.
+   * @since v0.7
+   */
+  overfull?: boolean;
+  /** How far an overfull line sticks out, in points. Absent on normal lines. @since v0.7 */
+  overflow?: number;
 }
 
 export type ComposedParagraph = ComposedLine[];

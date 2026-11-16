@@ -5,9 +5,14 @@
   "scripts": {
     "build": "npm run build --workspaces --if-present",
     "test": "npm test --workspaces --if-present",
+    "typecheck": "npm run typecheck --workspaces --if-present",
     "test:e2e": "vitest run --config tests/vitest.config.ts",
+    "golden:update": "UPDATE_GOLDEN=1 vitest run --config tests/vitest.config.ts tests/golden",
+    "golden:preview": "GOLDEN_PREVIEW=1 vitest run --config tests/vitest.config.ts tests/golden",
     "manual": "tsx tests/manual/run-all.ts",
-    "verify-fonts": "tsx scripts/setup-fonts.ts"
+    "verify-fonts": "tsx scripts/setup-fonts.ts",
+    "pack:check": "node scripts/pack-check.mjs",
+    "smoke": "node scripts/smoke-test.mjs"
   },
   "workspaces": [
     "0-types",
@@ -27,10 +32,9 @@
     "demo"
   ],
   "devDependencies": {
+    "@changesets/cli": "^3.0.3",
     "tsup": "^8.5.1",
-    "tsx": "^4.21.0"
-  },
-  "dependencies": {
+    "tsx": "^4.21.0",
     "vite": "^8.0.11"
   }
 }

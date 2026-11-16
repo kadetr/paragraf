@@ -71,8 +71,9 @@ compile<T = unknown>(options: CompileOptions<T>): Promise<CompileResult>
 | `normalize` | `(raw: T) => Record<string, unknown>` | — | Optional function to reshape `data` before binding. |
 | `output` | `'pdf' \| 'svg' \| 'rendered'` | `'pdf'` | Output format. |
 | `basePath` | `string` | `process.cwd()` | Base directory for resolving relative font paths. |
-| `onOverflow` | `'silent' \| 'throw'` | `'silent'` | Behaviour when content overflows the page count limit. |
-| `shaping` | `'auto' \| 'wasm' \| 'fontkit'` | `'auto'` | Font shaping engine. `'auto'` uses WASM when available, falls back to fontkit. |
+| `onOverflow` | `'silent' \| 'throw'` | `'throw'` | Behaviour when content overflows the page count limit. |
+| `onInfeasible` | `'overfull' \| 'throw'` | `'overfull'` | Behaviour when a paragraph cannot be set within its tolerance (for example a URL wider than the column). `'overfull'` produces the document and lists lines that stick out in `metadata.overfullLines`; `'throw'` throws. |
+| `shaping` | `'auto' \| 'wasm' \| 'fontkit'` | `'auto'` | Font shaping engine. `'auto'` uses WASM when available, otherwise fontkit with one warning. `'wasm'` throws when the WASM shaper is not built. `'fontkit'` always uses fontkit. With `session`, the session's engine is used; `'wasm'` then throws if the session is not on WASM. |
 | `title` | `string` | — | PDF document title (Info dict). |
 | `lang` | `string` | — | BCP 47 language tag (PDF Info dict). |
 | `selectable` | `boolean` | `false` | Add invisible text layer for copy-paste (PDF only). |
@@ -86,6 +87,13 @@ interface CompileResult {
   metadata: {
     pageCount: number;
     overflowLines: number;          // lines dropped due to maxPages limit
+    overfullLines: Array<{          // lines wider than their frame
+      paragraph: number;            //   index of the composed paragraph, from 0
+      line: number;                 //   index of the line in that paragraph
+      overflow: number;             //   points past the right edge
+      text: string;                 //   the words on the line
+    }>;
+    fallbackParagraphs: number[];   // paragraphs that could not be set within tolerance
     shapingEngine: 'wasm' | 'fontkit';
   };
 }

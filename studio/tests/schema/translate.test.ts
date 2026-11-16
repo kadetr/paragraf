@@ -172,6 +172,26 @@ describe('RT18 — compile.shaping: "wasm" → CompileOptions.shaping = "wasm"',
   });
 });
 
+describe('compile.shaping → CompileOptions.shaping', () => {
+  it('maps "js" to "fontkit"', () => {
+    const t = makeTemplate({ compile: { shaping: 'js' } });
+    expect(translateToTemplate(t).compileOptions.shaping).toBe('fontkit');
+  });
+
+  it('maps "auto" to "auto"', () => {
+    const t = makeTemplate({ compile: { shaping: 'auto' } });
+    expect(translateToTemplate(t).compileOptions.shaping).toBe('auto');
+  });
+
+  it('leaves shaping unset when the template does not set it', () => {
+    expect(
+      translateToTemplate(makeTemplate()).compileOptions.shaping,
+    ).toBeUndefined();
+    const t = makeTemplate({ compile: { selectable: true } });
+    expect(translateToTemplate(t).compileOptions.shaping).toBeUndefined();
+  });
+});
+
 // ─── RT19 ────────────────────────────────────────────────────────────────────
 
 describe('RT19 — compile.selectable: true → CompileOptions.selectable = true', () => {
@@ -179,6 +199,25 @@ describe('RT19 — compile.selectable: true → CompileOptions.selectable = true
     const t = makeTemplate({ compile: { selectable: true } });
     const { compileOptions } = translateToTemplate(t);
     expect(compileOptions.selectable).toBe(true);
+  });
+});
+
+// ─── onOverflow ──────────────────────────────────────────────────────────────
+
+describe('compile.onOverflow → CompileOptions.onOverflow', () => {
+  it('maps "error" to "throw" so that overflow stops the compile', () => {
+    const t = makeTemplate({ compile: { onOverflow: 'error' } });
+    expect(translateToTemplate(t).compileOptions.onOverflow).toBe('throw');
+  });
+
+  it('maps "truncate" to "silent"', () => {
+    const t = makeTemplate({ compile: { onOverflow: 'truncate' } });
+    expect(translateToTemplate(t).compileOptions.onOverflow).toBe('silent');
+  });
+
+  it('leaves onOverflow unset when the template does not set it', () => {
+    const t = makeTemplate({ compile: { selectable: true } });
+    expect(translateToTemplate(t).compileOptions.onOverflow).toBeUndefined();
   });
 });
 

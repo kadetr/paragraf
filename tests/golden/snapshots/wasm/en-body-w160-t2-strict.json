@@ -1,0 +1,9 @@
+{
+  "id": "en-body-w160-t2-strict",
+  "mirrors": "MT-20",
+  "engine": "wasm",
+  "error": "Paragraph could not be set within tolerance.",
+  "lineCount": 0,
+  "usedEmergency": false,
+  "lines": []
+}

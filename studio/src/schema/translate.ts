@@ -146,15 +146,22 @@ export function translateToTemplate(t: StudioTemplate): TranslationResult {
 
   if (t.compile) {
     if (t.compile.shaping !== undefined)
-      // Studio uses 'js'/'wasm'; CompileOptions uses 'fontkit'/'wasm'/'auto'.
+      // Studio uses 'auto'/'js'/'wasm'; CompileOptions uses
+      // 'auto'/'fontkit'/'wasm'. Unset stays unset, which compiles as 'auto'.
       compileOptions.shaping =
-        t.compile.shaping === 'wasm' ? 'wasm' : 'fontkit';
+        t.compile.shaping === 'wasm'
+          ? 'wasm'
+          : t.compile.shaping === 'auto'
+            ? 'auto'
+            : 'fontkit';
     if (t.compile.selectable !== undefined)
       compileOptions.selectable = t.compile.selectable;
     if (t.compile.maxPages !== undefined)
       compileOptions.maxPages = t.compile.maxPages;
     if (t.compile.onOverflow !== undefined)
-      compileOptions.onOverflow = t.compile.onOverflow;
+      // Studio's schema names differ from @paragraf/compile's OverflowBehavior.
+      compileOptions.onOverflow =
+        t.compile.onOverflow === 'error' ? 'throw' : 'silent';
     // Studio-specific: not passed to CompileOptions
     if (t.compile.opticalMargins !== undefined)
       studioSettings.opticalMargins = t.compile.opticalMargins;

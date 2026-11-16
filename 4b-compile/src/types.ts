@@ -13,6 +13,21 @@ export type OutputFormat = 'pdf' | 'svg' | 'rendered';
 /** Overflow handling strategy. */
 export type OverflowBehavior = 'silent' | 'throw';
 
+/** What to do with a paragraph that cannot be set within its tolerance. */
+export type InfeasibleBehavior = 'throw' | 'overfull';
+
+/** One line that is wider than its measure and sticks out of its frame. */
+export interface OverfullLine {
+  /** Index of the paragraph, counting composed paragraphs from 0 in document order. */
+  paragraph: number;
+  /** Index of the line within that paragraph, from 0. */
+  line: number;
+  /** How much wider than its measure the line is, in points. */
+  overflow: number;
+  /** The words on the line, so it can be found in the source. */
+  text: string;
+}
+
 /** Font shaping engine selection. */
 export type ShapingMode = 'auto' | 'wasm' | 'fontkit';
 
@@ -50,10 +65,24 @@ export interface CompileOptions<T = unknown> {
    */
   onOverflow?: OverflowBehavior;
   /**
+   * Behaviour when a paragraph cannot be set within its tolerance (for
+   * example a URL wider than the column).
+   * - 'overfull' — still produce the document. Lines that fit are set however
+   *   loose; a line that cannot fit sticks out and is listed in
+   *   `metadata.overfullLines` (default).
+   * - 'throw'    — throw an Error, as before v0.7.
+   * @default 'overfull'
+   */
+  onInfeasible?: InfeasibleBehavior;
+  /**
    * Font shaping engine.
-   * - 'auto'    — use WASM when available, fall back to fontkit (recommended).
-   * - 'wasm'    — force WASM (falls back silently to fontkit when not built).
+   * - 'auto'    — use WASM when available, otherwise fontkit with one
+   *               warning per process (none when `verbose` is false).
+   * - 'wasm'    — require WASM; throws when the binary is not built or
+   *               failed to load.
    * - 'fontkit' — always use the TypeScript/fontkit path.
+   * With `session`, the session's engine is used: `'wasm'` throws when the
+   * session is not on WASM; `'auto'` and `'fontkit'` are ignored.
    * @default 'auto'
    */
   shaping?: ShapingMode;
@@ -116,6 +145,20 @@ export interface CompileResult {
      * Zero when all content was placed.
      */
     overflowLines: number;
+    /**
+     * Lines that stick out of their frame because their content cannot fit
+     * the measure. Empty when every line fits.
+     * Not to be confused with `overflowLines` (lines beyond the last page).
+     * @since v0.7
+     */
+    overfullLines: OverfullLine[];
+    /**
+     * Indices of paragraphs that could not be set within tolerance and were
+     * set by the fallback pass. Their lines may be looser than the tolerance
+     * allows even when none is overfull.
+     * @since v0.7
+     */
+    fallbackParagraphs: number[];
     /** Which font shaping engine was actually used for this compile. */
     shapingEngine: 'wasm' | 'fontkit';
   };

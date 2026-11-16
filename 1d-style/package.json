@@ -1,6 +1,6 @@
 {
   "name": "@paragraf/style",
-  "version": "0.6.0",
+  "version": "0.7.0",
   "description": "Paragraph and character style definitions with inheritance resolution for the paragraf typography library.",
   "license": "MIT",
   "repository": {
@@ -17,6 +17,9 @@
     "paragraf"
   ],
   "type": "module",
+  "engines": {
+    "node": ">=22"
+  },
   "files": [
     "dist/",
     "README.md"
@@ -25,10 +28,11 @@
     ".": "./src/index.ts"
   },
   "publishConfig": {
+    "access": "public",
     "exports": {
       ".": {
-        "import": "./dist/index.js",
-        "types": "./dist/index.d.ts"
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.js"
       }
     }
   },
@@ -42,7 +46,7 @@
     "postpack": "node ../scripts/publishconfig-swap.mjs restore"
   },
   "dependencies": {
-    "@paragraf/types": "^0.6.0"
+    "@paragraf/types": "^0.7.0"
   },
   "devDependencies": {
     "typescript": "^5.4.0",

@@ -71,7 +71,9 @@ export function serializeNodesToBinary(
  * Call WASM traceback with binary node serialization.
  * Avoids JSON overhead compared to traceback_wasm(json).
  *
- * Returns { ok: { breaks: LineBreak[], usedEmergency: bool } } or { error: string }
+ * Returns { ok: { breaks: LineBreak[], usedEmergency: bool, usedFallback: bool } }
+ * or { error: string }. With onInfeasible 'overfull' (default) an infeasible
+ * paragraph returns fallback breaks; with 'throw' it returns { error }.
  */
 export function tracebackWasmBinary(
   wasm: any,
@@ -84,6 +86,8 @@ export function tracebackWasmBinary(
   lineWidths: number[] = [],
   runtPenalty: number = 0,
   singleLinePenalty: number = 0,
+  adjDemerits: number = 0,
+  onInfeasible: 'throw' | 'overfull' = 'overfull',
 ): any {
   const [f64s, u8s] = serializeNodesToBinary(nodes);
   const result = JSON.parse(
@@ -98,6 +102,8 @@ export function tracebackWasmBinary(
       runtPenalty,
       singleLinePenalty,
       consecutiveHyphenLimit,
+      adjDemerits,
+      onInfeasible === 'throw',
     ),
   );
   return result;

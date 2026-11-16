@@ -1,0 +1,35 @@
+{
+  "id": "spans-subscript",
+  "mirrors": "MT-04",
+  "engine": "ts",
+  "lineCount": 2,
+  "usedEmergency": false,
+  "lines": [
+    {
+      "text": "H2O is the molecular formula for water. The subscript numeral appears below the baseline. CO2",
+      "hyphenated": false,
+      "ratio": -0.3298,
+      "wordSpacing": 2.5603,
+      "lineWidth": 451.28,
+      "alignment": "justified",
+      "direction": "ltr",
+      "isRunt": false,
+      "baseline": 80.3203,
+      "x": [72, 80.666, 83.4551, 94.6814, 105.2456, 122.4661, 141.1341, 146.4603, 151.7864, 157.7864, 173.003, 186.9952, 213.5496, 230.1021, 244.0943, 261.6488, 282.8654, 299.5353, 328.7558, 340.7558, 370.6325, 381.9586, 409.8373, 421.1635, 441.7238, 458.9443, 480.2666, 503.821, 520.4909],
+      "y": [80.3203, 81.4648, 80.3203, 80.3203, 80.3203, 80.3203, 80.3203, 80.3203, 80.3203, 80.3203, 80.3203, 80.3203, 80.3203, 80.3203, 80.3203, 80.3203, 80.3203, 80.3203, 80.3203, 80.3203, 80.3203, 80.3203, 80.3203, 80.3203, 80.3203, 80.3203, 80.3203, 80.3203, 81.4648]
+    },
+    {
+      "text": "is carbon dioxide.",
+      "hyphenated": false,
+      "ratio": 0,
+      "wordSpacing": 3,
+      "lineWidth": 451.28,
+      "alignment": "justified",
+      "direction": "ltr",
+      "isRunt": false,
+      "baseline": 93.0293,
+      "x": [72, 83.0039, 97.6523, 118.6523, 139.9863],
+      "y": [93.0293, 93.0293, 93.0293, 93.0293, 93.0293]
+    }
+  ]
+}

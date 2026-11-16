@@ -11,6 +11,7 @@ import {
   GetFontMetrics,
 } from '@paragraf/types';
 import { LineBreak } from './traceback.js';
+import { lineStartAfter } from './linebreak.js';
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -37,7 +38,7 @@ const computeLastLineRatio = (
   let totalShrink = 0;
   let glueCount = 0;
 
-  const start = from === 0 ? 0 : from + 1;
+  const start = lineStartAfter(nodes, from, to);
 
   for (let i = start; i <= to; i++) {
     const node = nodes[i];
@@ -73,6 +74,7 @@ const extractLine = (
   justifyLastLine: boolean,
   lineWidth: number,
   getMetrics?: GetFontMetrics,
+  overfull: boolean = false,
 ): ComposedLine => {
   const words: string[] = [];
   const fonts: Font[] = [];
@@ -85,18 +87,17 @@ const extractLine = (
   // consecutive boxes are always span fragments of the same word, never adjacent words.
   // If nodes.ts breaks this contract, word slots will silently merge across boundaries.
 
+  // An overfull line keeps the breaker's ratio of -1: spaces fully shrunk.
   const effectiveRatio =
-    isLastLine && justifyLastLine
+    isLastLine && justifyLastLine && !overfull
       ? computeLastLineRatio(nodes, from, to, lineWidth)
       : ratio;
 
-  const start = from === 0 ? 0 : from + 1;
+  // Same line start the breaker measured from.
+  const start = lineStartAfter(nodes, from, to);
 
-  // Track box widths and word-glue count for exact justified fill computation.
-  // KP's prefix sums include the break glue of the previous line (for non-first lines
-  // that follow a word break), causing the ratio to be computed for N glues while the
-  // layout only applies N-1 visible gaps. We correct this by recomputing wordSpacing
-  // directly from node widths after the scan loop.
+  // Box widths and word-glue count, for the uniform word spacing computed
+  // after the scan loop.
   let boxWidthSum = 0;
   let wordGlueCount = 0;
 
@@ -154,24 +155,32 @@ const extractLine = (
     }
   }
 
-  // Recompute wordSpacing to exactly fill lineWidth for justified non-last lines.
-  // The KP algorithm's prefix sums include the break glue of the previous line in
-  // each line's width/stretch totals (since sums[i] - sums[a.position] includes
-  // node[a.position] when a.position > 0 and that node is a glue). This causes the
-  // ratio to be computed for N glues while the layout only renders N-1 visible gaps,
-  // making lines fall short by exactly one wordSpacing. We fix this by computing
-  // wordSpacing directly: (lineWidth - totalBoxWidth - hyphenWidth) / visibleGlueCount.
-  if (alignment === 'justified' && (!isLastLine || justifyLastLine)) {
-    const breakNode = nodes[to];
-    // Break node contributes a word glue if it's a glue (word break); exclude it
-    // from the visible gap count since it is consumed by the line break, not rendered.
-    const breakIsWordGlue =
-      breakNode?.type === 'glue' && breakNode.kind === 'word';
-    const visibleGlues = wordGlueCount - (breakIsWordGlue ? 1 : 0);
-    // Hyphen penalty width is part of the rendered line width (the '-' is in wordRuns)
-    // but is NOT counted in boxWidthSum since penalty nodes don't add to prefix sums.
-    const penaltyWidth =
-      breakNode?.type === 'penalty' && breakNode.flagged ? breakNode.width : 0;
+  // Word spacing for justified lines. The renderer applies ONE spacing value
+  // to every gap on the line, so it is computed directly as
+  //   (lineWidth - box widths - hyphen width) / visible gaps
+  // rather than by scaling the first glue with the ratio. For a line whose
+  // glues are all alike this is the same number the ratio gives. It differs,
+  // and is the value that fills the measure exactly, when the line mixes
+  // fonts (glues of different widths) or was set with emergency stretch
+  // (the ratio then counts stretch that no glue on the line has).
+  const breakNode = nodes[to];
+  // Break node contributes a word glue if it's a glue (word break); exclude it
+  // from the visible gap count since it is consumed by the line break, not rendered.
+  const breakIsWordGlue =
+    breakNode?.type === 'glue' && breakNode.kind === 'word';
+  const visibleGlues = wordGlueCount - (breakIsWordGlue ? 1 : 0);
+  // Hyphen penalty width is part of the rendered line width (the '-' is in wordRuns)
+  // but is NOT counted in boxWidthSum since penalty nodes don't add to prefix sums.
+  const penaltyWidth =
+    breakNode?.type === 'penalty' && breakNode.flagged ? breakNode.width : 0;
+
+  // An overfull line cannot fill the measure: its spaces stay at the fully
+  // shrunk width resolved above and the line sticks out by `overflow`.
+  if (
+    alignment === 'justified' &&
+    (!isLastLine || justifyLastLine) &&
+    !overfull
+  ) {
     if (visibleGlues > 0) {
       wordSpacing = Math.max(
         0,
@@ -216,6 +225,15 @@ const extractLine = (
     lineWidth,
     lineHeight,
     baseline,
+    ...(overfull
+      ? {
+          overfull: true,
+          overflow: Math.max(
+            0,
+            boxWidthSum + penaltyWidth + visibleGlues * wordSpacing - lineWidth,
+          ),
+        }
+      : {}),
   };
 };
 
@@ -261,6 +279,7 @@ export const composeParagraph = (
       justifyLastLine,
       effectiveWidth,
       getMetrics,
+      lineBreak.overfull === true,
     );
 
     if (line.words.length > 0) {

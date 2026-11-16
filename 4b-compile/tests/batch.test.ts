@@ -162,6 +162,8 @@ describe('compileBatch — concurrency semaphore', () => {
           metadata: {
             pageCount: 0,
             overflowLines: 0,
+            overfullLines: [],
+            fallbackParagraphs: [],
             shapingEngine: 'fontkit' as const,
           },
         };

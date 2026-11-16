@@ -68,6 +68,7 @@ function makeParagraphOutput(
     ),
     lineCount,
     usedEmergency: false,
+    usedFallback: false,
   };
 }
 

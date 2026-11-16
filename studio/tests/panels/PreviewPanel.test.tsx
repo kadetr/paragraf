@@ -7,13 +7,13 @@ import React from 'react';
 import { describe, it, expect, vi } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { PreviewPanel } from '../../src/panels/PreviewPanel.js';
-import type { CompileWorkerResult } from '../../src/ipc-types.js';
+import type { CompileResult } from '../../src/ipc-types.js';
 
 // ─── RT1 — SVG string rendered on first load ──────────────────────────────────
 
 describe('RT1 — renders SVG string inside preview div (first page shown by default)', () => {
   it('injects the first SVG page as innerHTML', () => {
-    const result: CompileWorkerResult = {
+    const result: CompileResult = {
       type: 'svg',
       svgPages: [
         '<svg data-testid="page1"><rect/></svg>',
@@ -21,7 +21,7 @@ describe('RT1 — renders SVG string inside preview div (first page shown by def
       ],
     };
 
-    render(<PreviewPanel result={result} isCompiling={false} />);
+    render(<PreviewPanel result={result} isCompiling={false} lastError={null} />);
 
     const pageDiv = screen.getByTestId('svg-page');
     expect(pageDiv.innerHTML).toContain('data-testid="page1"');
@@ -33,7 +33,7 @@ describe('RT1 — renders SVG string inside preview div (first page shown by def
 
 describe('RT2 — shows loading state while isCompiling is true', () => {
   it('renders the compiling indicator', () => {
-    render(<PreviewPanel result={null} isCompiling={true} />);
+    render(<PreviewPanel result={null} isCompiling={true} lastError={null} />);
 
     expect(screen.getByTestId('compiling-indicator')).toBeInTheDocument();
   });
@@ -43,12 +43,12 @@ describe('RT2 — shows loading state while isCompiling is true', () => {
 
 describe('RT3 — single page → no tab bar rendered', () => {
   it('does not render page tabs for a single page', () => {
-    const result: CompileWorkerResult = {
+    const result: CompileResult = {
       type: 'svg',
       svgPages: ['<svg/>'],
     };
 
-    render(<PreviewPanel result={result} isCompiling={false} />);
+    render(<PreviewPanel result={result} isCompiling={false} lastError={null} />);
 
     expect(screen.queryByTestId('page-tabs')).not.toBeInTheDocument();
   });
@@ -58,12 +58,12 @@ describe('RT3 — single page → no tab bar rendered', () => {
 
 describe('RT4 — multiple pages → tab bar with correct count; clicking Page 2 shows second SVG', () => {
   it('renders two tabs and switches page content on click', () => {
-    const result: CompileWorkerResult = {
+    const result: CompileResult = {
       type: 'svg',
       svgPages: ['<svg id="p1"/>', '<svg id="p2"/>'],
     };
 
-    render(<PreviewPanel result={result} isCompiling={false} />);
+    render(<PreviewPanel result={result} isCompiling={false} lastError={null} />);
 
     expect(screen.getByTestId('page-tabs')).toBeInTheDocument();
     expect(screen.getByTestId('page-tab-1')).toBeInTheDocument();
@@ -82,7 +82,7 @@ describe('RT4 — multiple pages → tab bar with correct count; clicking Page 2
 
 describe('RT5 — frame overlay button toggles overlay visibility', () => {
   it('shows overlay when toggled on', () => {
-    const result: CompileWorkerResult = {
+    const result: CompileResult = {
       type: 'svg',
       svgPages: ['<svg/>'],
       frameGeometry: [
@@ -98,7 +98,7 @@ describe('RT5 — frame overlay button toggles overlay visibility', () => {
       ],
     };
 
-    render(<PreviewPanel result={result} isCompiling={false} />);
+    render(<PreviewPanel result={result} isCompiling={false} lastError={null} />);
 
     // Overlay not visible initially
     expect(screen.queryByTestId('frame-overlay')).not.toBeInTheDocument();
@@ -117,7 +117,7 @@ describe('RT5 — frame overlay button toggles overlay visibility', () => {
 
 describe('RT6 — when result is null → placeholder message rendered, no SVG', () => {
   it('shows empty-preview placeholder and no svg-page div', () => {
-    render(<PreviewPanel result={null} isCompiling={false} />);
+    render(<PreviewPanel result={null} isCompiling={false} lastError={null} />);
 
     expect(screen.getByTestId('empty-preview')).toBeInTheDocument();
     expect(screen.queryByTestId('svg-page')).not.toBeInTheDocument();

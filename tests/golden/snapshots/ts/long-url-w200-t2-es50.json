@@ -1,0 +1,74 @@
+{
+  "id": "long-url-w200-t2-es50",
+  "mirrors": "MT-06",
+  "engine": "ts",
+  "lineCount": 5,
+  "usedEmergency": true,
+  "lines": [
+    {
+      "text": "Optical margin alignment makes the text",
+      "hyphenated": false,
+      "ratio": 0.0732,
+      "wordSpacing": 3.8781,
+      "lineWidth": 200,
+      "alignment": "justified",
+      "direction": "ltr",
+      "isRunt": false,
+      "baseline": 80.3203,
+      "x": [72, 86.666, 93.334, 111.1984, 129.8547, 149.0668, 173.0609, 200.9332, 235.4676, 254.0059],
+      "y": [80.3203, 80.3203, 80.3203, 80.3203, 80.3203, 80.3203, 80.3203, 80.3203, 80.3203, 80.3203]
+    },
+    {
+      "text": "block appear flush. A long URL like",
+      "hyphenated": false,
+      "ratio": 0.3931,
+      "wordSpacing": 7.0618,
+      "lineWidth": 200,
+      "alignment": "justified",
+      "direction": "ltr",
+      "isRunt": false,
+      "baseline": 93.0293,
+      "x": [72, 105.722, 117.0482, 144.7585, 178.8203, 194.5482, 222.944, 254.0059],
+      "y": [93.0293, 93.0293, 93.0293, 93.0293, 93.0293, 93.0293, 93.0293, 93.0293]
+    },
+    {
+      "text": "https://example.com/path?q=1 causes",
+      "hyphenated": false,
+      "ratio": 0.3836,
+      "wordSpacing": 22.9473,
+      "lineWidth": 200,
+      "alignment": "justified",
+      "direction": "ltr",
+      "isRunt": false,
+      "baseline": 105.7383,
+      "x": [72, 240.6816],
+      "y": [105.7383, 105.7383]
+    },
+    {
+      "text": "overflow in a narrow column unless",
+      "hyphenated": false,
+      "ratio": 0.4507,
+      "wordSpacing": 8.4086,
+      "lineWidth": 200,
+      "alignment": "justified",
+      "direction": "ltr",
+      "isRunt": false,
+      "baseline": 118.4473,
+      "x": [72, 93.3223, 123.727, 141.4695, 155.2043, 170.5266, 197.5973, 212.2574, 242, 254],
+      "y": [118.4473, 118.4473, 118.4473, 118.4473, 118.4473, 118.4473, 118.4473, 118.4473, 118.4473, 118.4473]
+    },
+    {
+      "text": "emergency stretch is enabled.",
+      "hyphenated": false,
+      "ratio": 0,
+      "wordSpacing": 3,
+      "lineWidth": 200,
+      "alignment": "justified",
+      "direction": "ltr",
+      "isRunt": false,
+      "baseline": 131.1563,
+      "x": [72, 95.9824, 127.6348, 162.6211, 173.625, 184.9512],
+      "y": [131.1563, 131.1563, 131.1563, 131.1563, 131.1563, 131.1563]
+    }
+  ]
+}

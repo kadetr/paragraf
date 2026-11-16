@@ -60,7 +60,9 @@ const composer = await createParagraphComposer(registry);
 Internally, it auto-detects whether the Rust/WASM shaper
 (`@paragraf/shaping-wasm`) is available. If so, shaping and metrics come from
 the compiled Rust path. If not, it falls back to the TypeScript fontkit path
-transparently. You can check with:
+and prints one warning. To make a missing shaper an error, pass
+`{ shaping: 'wasm' }` as the second argument; to choose fontkit on purpose,
+pass `{ shaping: 'fontkit' }`. You can check with:
 
 ```ts
 import { wasmStatus } from '@paragraf/typography';
@@ -105,6 +107,7 @@ word content, spacing, hyphenation status, and metrics.
 | `alignment` | `'justified'` | `'justified'` \| `'left'` \| `'right'` \| `'center'` |
 | `tolerance` | `2` | How aggressively to fit lines; higher = more flexibility |
 | `emergencyStretch` | `0` | Extra stretch budget for paragraphs that can't fit at tolerance |
+| `onInfeasible` | `'overfull'` | If it still can't fit: `'overfull'` returns lines and marks the ones that stick out; `'throw'` throws |
 | `looseness` | `0` | `+1` = prefer looser (more lines), `-1` = prefer tighter |
 | `firstLineIndent` | `0` | First-line indent in points |
 | `language` | `'en-us'` | Drives the hyphenation dictionary |

@@ -191,6 +191,14 @@ active is a signal that either the column is too narrow, the tolerance too tight
 or the text too long for the available space. When used, `ParagraphOutput.usedEmergency`
 is set to `true`. Default `0` (disabled).
 
+**`onInfeasible`** — What to do when the paragraph cannot be set within
+`tolerance`, even with `emergencyStretch`. `'overfull'` (default) still returns
+lines: every line that fits is accepted however loose, and a line holding one
+unbreakable piece wider than the measure (a long URL, for example) sticks out
+past the right edge and is marked `overfull`. `'throw'` throws an `Error`
+("Paragraph could not be set within tolerance"), which was the only behaviour
+before v0.7.
+
 **`firstLineIndent`** — Indentation of the first line in points. A standard
 paragraph indent is typically `1em` = the body font size in points. Default `0`.
 
@@ -268,6 +276,12 @@ Provided as a convenience since checking `lines.length` requires knowing the typ
 find a valid breakpoint sequence. A `true` value is a design signal: the column
 or tolerance settings do not suit this text. Consider widening the column,
 increasing `tolerance`, or shortening the text.
+
+**`usedFallback`** — `true` if the paragraph could not be set within `tolerance`
+and the fallback pass produced the lines (see `onInfeasible`). Lines may then be
+looser than the tolerance allows. A line that does not fit at all carries
+`overfull: true` and `overflow` (how far it sticks out, in points) on its
+`ComposedLine`; other lines carry neither field.
 
 ---
 

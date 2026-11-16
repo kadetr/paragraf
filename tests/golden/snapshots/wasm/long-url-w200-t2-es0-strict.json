@@ -1,0 +1,9 @@
+{
+  "id": "long-url-w200-t2-es0-strict",
+  "mirrors": "MT-06",
+  "engine": "wasm",
+  "error": "Paragraph could not be set within tolerance.",
+  "lineCount": 0,
+  "usedEmergency": false,
+  "lines": []
+}
