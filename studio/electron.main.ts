@@ -332,7 +332,7 @@ const DEFAULT_TEMPLATE_JSON = JSON.stringify(
     },
     frames: { body: { height: 'auto' } },
     pages: { default: { frames: ['body'] } },
-    compile: { shaping: 'js', hyphenation: false },
+    compile: { shaping: 'auto', hyphenation: false },
   },
   null,
   2,
