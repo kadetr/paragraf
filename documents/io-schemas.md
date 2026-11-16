@@ -218,7 +218,9 @@ decides whether capitalised words in mid-sentence are hyphenated: they are for
 `'de'`, where every noun is capitalised, and are left whole (as presumed proper
 nouns) for every other language. URLs are never hyphenated in any language;
 they get break points without a hyphen after `/ ? & = # _ -` and before `.`
-(since v0.7.1).
+(since v0.7.1). Words in capitals, words that contain a digit and e-mail
+addresses are never hyphenated. Neither rule has an option of its own in
+`compose()`: `hyphenation: false` is the only way to switch them off.
 
 **`looseness`** — A signed integer that shifts the optimizer's target line count
 relative to the optimum. `0` = fewest lines that meet tolerance (default).
