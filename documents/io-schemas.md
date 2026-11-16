@@ -194,7 +194,8 @@ is set to `true`. Default `0` (disabled).
 **`onInfeasible`** — What to do when the paragraph cannot be set within
 `tolerance`, even with `emergencyStretch`. `'overfull'` (default) still returns
 lines: every line that fits is accepted however loose, and a line holding one
-unbreakable piece wider than the measure (a long URL, for example) sticks out
+unbreakable piece wider than the measure (a long number, for example, or a
+URL in a paragraph with `hyphenation: false`) sticks out
 past the right edge and is marked `overfull`. `'throw'` throws an `Error`
 ("Paragraph could not be set within tolerance"), which was the only behaviour
 before v0.7.
@@ -212,7 +213,12 @@ remaining space at the right, left, or both edges respectively. Default
 dictionary is loaded. Hyphenation is applied during node construction; the
 dictionary for the requested language must have been loaded via
 `composer.ensureLanguage(language)` before the first `compose()` call with that
-language. `'en-us'` is always pre-loaded. Default `'en-us'`.
+language. `'en-us'` is always pre-loaded. Default `'en-us'`. The language also
+decides whether capitalised words in mid-sentence are hyphenated: they are for
+`'de'`, where every noun is capitalised, and are left whole (as presumed proper
+nouns) for every other language. URLs are never hyphenated in any language;
+they get break points without a hyphen after `/ ? & = # _ -` and before `.`
+(since v0.7.1).
 
 **`looseness`** — A signed integer that shifts the optimizer's target line count
 relative to the optimum. `0` = fewest lines that meet tolerance (default).

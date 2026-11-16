@@ -55,8 +55,43 @@ interface HyphenateOptions {
   fontSize: number;               // required — drives minLeft/minRight derivation
   language: Language;             // required
   preserveSoftHyphens?: boolean;  // default true
+  minLeft?: number;               // override the font-size-derived minimum left fragment
+  minRight?: number;              // override the font-size-derived minimum right fragment
+  processCapitalized?: boolean;   // default: true for 'de', false for every other language
+  breakUrls?: boolean;            // default true (since v0.7.1)
+  exceptions?: ExceptionDictionary;
 }
 ```
+
+**Capitalised words.** A capitalised word that does not start a sentence is
+taken for a proper noun and left whole. German (`de`) is the exception: every
+noun is capitalised there, so capitalised words are hyphenated by default
+(since v0.7.1). An explicit `processCapitalized` always wins. Words in capitals
+only and words that contain a digit are never hyphenated.
+
+**URLs** (since v0.7.1). A URL is never hyphenated. It gets break points that
+take no hyphen instead:
+
+- after `/`, `?`, `&`, `=`, `#`, `_`, `-` (the last one of a run);
+- before a `.` that is followed by a letter or digit;
+- never inside `://`, and never leaving fewer than two characters on a side.
+
+Detected as a URL: `http://…`, `https://…`, `ftp://…`, `www.name.tld…`, and a
+bare host followed by a slash (`example.com/docs`). Not detected: a bare host
+without a slash, e-mail addresses, file paths. Surrounding punctuation, as in
+`(https://example.com/a).`, stays attached and gets no break.
+
+```ts
+hyphenateWord('https://example.com/docs/index.html', opts);
+// { fragments: ['https://', 'example', '.com/', 'docs/', 'index', '.html'],
+//   hyphenable: false, hasSoftHyphen: false, … }
+```
+
+`hyphenable: false` with more than one fragment means "break here, add no
+hyphen". `buildNodeSequence` then puts a zero-width, unflagged penalty of 200
+between the fragments (a hyphenation point is a flagged penalty of 50 with the
+width of a hyphen), and `composeParagraph` keeps the fragments in one word.
+`breakUrls: false` returns a URL as a single fragment, as before v0.7.1.
 
 ### Test utilities
 

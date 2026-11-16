@@ -278,7 +278,9 @@ writeFileSync('document.pdf', pdfBuffer);
 `en-us` `en-gb` `de` `fr` `tr` `nl` `pl` `it` `es` `sv` `no` `da` `fi`
 `hu` `cs` `sk` `ro` `hr` `sl` `lt` `lv` `et`
 
-Note: per-document exception dictionaries are supported via `hyphenation.exceptions`. Sentence-initial capitalised words are not suppressed by the hyphenation engine.
+Note: per-document exception dictionaries are supported via `hyphenation.exceptions`. Sentence-initial capitalised words are not suppressed by the hyphenation engine. Other capitalised words are treated as proper nouns and left whole, except in German (`de`), where every noun is capitalised and capitalised words are hyphenated by default (since v0.7.1).
+
+**URL break points** (since v0.7.1) — a URL (`http://`, `https://`, `ftp://`, `www.…`, or a bare `host.tld/…`) can break after `/ ? & = # _ -` and before `.`, without a hyphen and never inside `://`. Each break carries a penalty, so a URL is only broken where the line would otherwise be clearly loose or overfull. `hyphenation: false` keeps URLs in one piece.
 
 **OpenType shaping** — via rustybuzz (Rust port of HarfBuzz):
 GSUB ligatures, GPOS kerning, superscript (`sups`), subscript (`subs`),
@@ -300,7 +302,8 @@ These are intentional gaps for the current release, not bugs:
 - **PDF output is vector-path, not PDF/X-conformant.** Text is rendered as filled glyph outlines. PDF/X and PDF/A require embedded fonts with `TJ` operators and ToUnicode CMaps. This is planned but not yet implemented.
 - **`runtPenalty` / `singleLinePenalty` are single-line runt penalties**, not frame-level widow/orphan control. True widow/orphan handling (preventing the first or last line of a paragraph from being isolated on a different page) requires frame-level composition, which is not yet implemented. The penalty is best-effort and may not change the layout when no feasible alternative exists.
 - **`adjDemerits`** is available on the paragraph input (`ParagraphInput.adjDemerits`) in both engines. The default is `0`, which preserves backwards-compatible Knuth-Plass behaviour. Set to `10000` for TeX-equivalent quality (penalises jarring transitions between very tight and very loose consecutive lines).
-- **Overfull lines are reported, not repaired.** When a single unbreakable piece (a long URL, a word that cannot be hyphenated) is wider than the column, the line is wider than the column and sticks out. `compose()` marks it (`line.overfull`, `line.overflow` in points, `usedFallback` on the result) and `compile()` lists it in `metadata.overfullLines`. Capitalised words are not hyphenated by default, which affects German nouns in narrow columns.
+- **Overfull lines are reported, not repaired.** When a single unbreakable piece is wider than the column, the line is wider than the column and sticks out. `compose()` marks it (`line.overfull`, `line.overflow` in points, `usedFallback` on the result) and `compile()` lists it in `metadata.overfullLines`. Since v0.7.1 URLs and German nouns are no longer such pieces: URLs have break points and German capitalised words are hyphenated. Still unbreakable: long numbers, words that contain a digit, words in capitals, e-mail addresses, a bare host name without a path (`example.com`), capitalised words in mid-sentence in languages other than German, and any word or URL in a paragraph with `hyphenation: false`.
+- **A line with no space in it cannot be justified.** A line that holds only pieces of one URL, or one fragment of a long hyphenated word, is set at its natural width and can end short of the right edge. Such a paragraph is also still reported in `metadata.fallbackParagraphs`, and throws under `onInfeasible: 'throw'`.
 - **`nestedStyles` / `grepStyles`** are accepted by the style registry but not yet applied. Character-style rules based on regex or run-length patterns require the inline-markup pipeline (F027) to be wired end-to-end.
 
 ---

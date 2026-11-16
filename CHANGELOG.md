@@ -4,6 +4,60 @@ All notable changes to this project will be documented in this file.
 
 ---
 
+## v0.7.1 — unreleased
+
+### ⚠️ Line breaks change in German text and in text that contains URLs
+
+Two things caused most overfull lines in 0.7.0: German nouns were never hyphenated, and a URL was one unbreakable piece. Both are fixed. Output for other text is unchanged: in the golden corpus only three paragraphs have a new snapshot, and all three contain a URL (the corpus had no German paragraph; it has one now).
+
+#### German: capitalised words are hyphenated by default
+The hyphenator skips a capitalised word in mid-sentence, on the assumption that it is a proper noun. In German every noun is capitalised, so long compounds had no break points and stuck out of narrow columns.
+
+- With `language: 'de'`, capitalised words are now hyphenated. `de` is the only shipped language that capitalises all nouns; any `de-…` variant added later is treated the same.
+- Every other language keeps the proper-noun rule.
+- An explicit `processCapitalized: true` or `false` in `HyphenateOptions` wins over the language default, as before.
+- **German paragraphs can break differently from 0.7.0**, at any column width: capitalised words are now candidates for hyphenation everywhere, not only where a line used to be overfull.
+- Words in capitals only (`UNESCO`) and words that contain a digit are still not hyphenated, in any language.
+
+#### URLs: break points without a hyphen
+A URL-like token can now be broken:
+
+- **after** `/`, `?`, `&`, `=`, `#`, `_` and `-` (after the last one when several follow each other);
+- **before** a `.` that is followed by a letter or digit, so that no line ends in a dot that reads like the end of a sentence;
+- never inside the scheme or its `://` (a break directly after `://` is allowed);
+- never so that fewer than two characters of the URL are left on either side.
+
+No hyphen is added at such a break, and the line is not marked `hyphenated`. A URL is never passed to the pattern hyphenator. In 0.7.0 that was only true for `http://` and `https://`: a `www.` address without digits could be hyphenated like a word (`www.exam-ple.org`).
+
+Breaking after the separators follows the LaTeX `url` package (`\UrlBreaks`, and its `hyphens` option for `-`). Breaking before the dot and adding no hyphen follows the Chicago Manual of Style (17th ed., 14.18). Chicago also puts the break *before* `/ ? # _ -` and advises against a line that ends in a hyphen belonging to the URL; that part is not followed.
+
+What counts as a URL, deliberately narrow:
+
+| Detected | Example |
+|---|---|
+| `http://`, `https://`, `ftp://` | `https://example.com/a/b` |
+| `www.` followed by a name and a dot | `www.example.org` |
+| a bare host followed by `/` | `example.com/docs/intro` |
+
+Not detected: a bare host without a slash (`example.com`), e-mail addresses, file paths, other schemes. Punctuation around a URL, as in `(https://example.com/a).`, stays attached to the first or last piece and gets no break.
+
+Each break point is a penalty of 200 (a hyphenation point is 50), so a URL is broken only where the line would otherwise be clearly loose or could not be set.
+
+- **A paragraph that contains a URL can break differently from 0.7.0**, including paragraphs that had no overfull line.
+- A URL is now measured and positioned in pieces, as hyphenated words always were. A URL that is not broken looks the same, but each piece is a text run of its own in `ComposedLine.wordRuns` and in the rendered segments. `ComposedLine.words` still has one entry for it.
+- New option `HyphenateOptions.breakUrls` (`@paragraf/linebreak`), default `true`. `false` restores the 0.7.0 treatment in `hyphenateWord` / `hyphenateParagraph`. In `compose()` and `compile()`, `hyphenation: false` on the paragraph or style keeps URLs in one piece, together with switching hyphenation off; there is no separate switch at that level.
+- `HyphenatedWord.hyphenable` is `false` for a URL although `fragments` has more than one entry: the fragments are break points that take no hyphen. `buildNodeSequence` puts a zero-width, unflagged penalty between them. Code that builds `HyphenatedWord` objects by hand with several fragments must set `hyphenable: true` to get hyphens, as `hyphenateWord` always did.
+- `composeParagraph` keeps boxes joined by such a penalty in one word.
+- Nodes are built in TypeScript for both engines and the breakers needed no change; the Rust breaker is compared with the TypeScript one on paragraphs with these penalties in `2a-shaping-wasm/tests/url-break-parity.test.ts`.
+
+#### What is still not handled
+- A line that consists only of pieces of one URL, or of one fragment of a hyphenated word, has no space to stretch. In justified text it is set at its natural width and can end short of the right edge.
+- A paragraph whose URL or compound had to be broken that way is still set by the fallback pass: `usedFallback` is `true`, `compile()` lists it in `metadata.fallbackParagraphs`, and `onInfeasible: 'throw'` still throws for it. What changes is that `metadata.overfullLines` is empty where a break point exists.
+- In the fallback pass every loose line costs the same, so the breaker can leave the line before a URL very loose instead of starting the URL on it.
+- Long numbers, words with digits, words in capitals and e-mail addresses still have no break points.
+
+---
+
 ## v0.7.0 — 2026-11-16
 
 First release on the npm registry. All thirteen `@paragraf/*` packages are at 0.7.0.

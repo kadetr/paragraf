@@ -72,7 +72,7 @@ compile<T = unknown>(options: CompileOptions<T>): Promise<CompileResult>
 | `output` | `'pdf' \| 'svg' \| 'rendered'` | `'pdf'` | Output format. |
 | `basePath` | `string` | `process.cwd()` | Base directory for resolving relative font paths. |
 | `onOverflow` | `'silent' \| 'throw'` | `'throw'` | Behaviour when content overflows the page count limit. |
-| `onInfeasible` | `'overfull' \| 'throw'` | `'overfull'` | Behaviour when a paragraph cannot be set within its tolerance (for example a URL wider than the column). `'overfull'` produces the document and lists lines that stick out in `metadata.overfullLines`; `'throw'` throws. |
+| `onInfeasible` | `'overfull' \| 'throw'` | `'overfull'` | Behaviour when a paragraph cannot be set within its tolerance (for example a long number wider than the column; since v0.7.1 URLs and German nouns have break points). `'overfull'` produces the document and lists lines that stick out in `metadata.overfullLines`; `'throw'` throws. |
 | `shaping` | `'auto' \| 'wasm' \| 'fontkit'` | `'auto'` | Font shaping engine. `'auto'` uses WASM when available, otherwise fontkit with one warning. `'wasm'` throws when the WASM shaper is not built. `'fontkit'` always uses fontkit. With `session`, the session's engine is used; `'wasm'` then throws if the session is not on WASM. |
 | `title` | `string` | — | PDF document title (Info dict). |
 | `lang` | `string` | — | BCP 47 language tag (PDF Info dict). |
