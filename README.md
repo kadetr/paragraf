@@ -106,8 +106,6 @@ Layer 4 (`4a-template`, `4b-compile`) sits above both. `@paragraf/compile` is th
 
 The fastest path from data to PDF. One call drives the entire pipeline — font loading, style resolution, page geometry, Knuth-Plass composition, glyph layout, and rendering.
 
-> **Not on npm yet.** The `@paragraf/*` packages are not published to the npm registry at the time of writing; the first registry release is planned as v0.7.0. Until then, clone this repository and follow [Development](#development).
-
 ```bash
 npm install @paragraf/compile
 ```
@@ -342,6 +340,6 @@ console.log(wasmStatus()); // { status: 'loaded' | 'absent' | 'error' }
 
 ## Status
 
-**Pre-release.** The core algorithm and rendering pipeline are stable and well-tested. APIs may change before v1.0. Not yet published to npm — GitHub only at this stage.
+**Pre-release.** The core algorithm and rendering pipeline are stable and well-tested. APIs may change before v1.0. Published to npm under the `@paragraf` scope since v0.7.0; Node 22 or later.
 
 All packages are at **v0.7.0**.

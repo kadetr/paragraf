@@ -14,8 +14,7 @@ Changesets does not generate changelogs here (`"changelog": false`).
 2. `npx changeset version` — writes the new version into every
    `package.json` and updates the internal dependency ranges.
 3. Move the "Unreleased" section of `CHANGELOG.md` under the new version,
-   with the date. For the first registry release also remove the two
-   "not on npm yet" statements from the root `README.md`.
+   with the date.
 4. Commit and merge to `main`.
 5. Optional rehearsal: start the "Release" workflow by hand from the Actions
    tab. That is always a dry run.
