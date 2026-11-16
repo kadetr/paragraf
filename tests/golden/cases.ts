@@ -39,11 +39,29 @@ export interface GoldenCase {
   input: ParagraphInput;
 }
 
-// Same text as MT-06: a URL that cannot be broken in a narrow column.
+// Same text as MT-06: a URL in a narrow column. Until v0.7.1 the URL could not
+// be broken; it now breaks after "/" and "?" and before ".".
 const LONG_URL_TEXT =
   'Optical margin alignment makes the text block appear flush. ' +
   'A long URL like https://example.com/path?q=1 causes overflow in a ' +
   'narrow column unless emergency stretch is enabled.';
+
+// v0.7.1: a URL wider than the column, which has to run over several lines.
+const WIDE_URL_TEXT =
+  'The report is published at ' +
+  'https://example.com/a/very/long/path/that/cannot/be/hyphenated/index.html ' +
+  'and the search page at ' +
+  'https://example.com/search?query=line-breaking&lang=en&page=2#results ' +
+  'is updated every week.';
+
+// v0.7.1: German compound nouns, each wider than a 200 pt column. Capitalised
+// words are hyphenated by default when the language is German.
+const DE_COMPOUNDS =
+  'Die Donaudampfschifffahrtsgesellschaft und das ' +
+  'Rindfleischetikettierungsüberwachungsgesetz sowie die ' +
+  'Rechtsschutzversicherungsgesellschaften stehen im ' +
+  'Bundesausbildungsförderungsgesetz nebeneinander. Ein gewöhnlicher Satz ' +
+  'mit kurzen Wörtern folgt darauf und füllt die Zeilen wie zuvor.';
 
 const en = (
   id: string,
@@ -184,6 +202,26 @@ export const CASES: GoldenCase[] = [
   // ── Short narrow text ──────────────────────────────────────────────────────
   en('en-narrow-w200', 'MT-01', { text: EN_NARROW, lineWidth: 200 }),
 
+  // ── URL break points and German nouns (v0.7.1) ─────────────────────────────
+  en('wide-url-w200', 'v0.7.1', { text: WIDE_URL_TEXT, lineWidth: 200 }),
+  // With hyphenation off a URL stays in one piece and sticks out, as before.
+  en('wide-url-w200-nohyphenation', 'v0.7.1', {
+    text: WIDE_URL_TEXT,
+    lineWidth: 200,
+    hyphenation: false,
+  }),
+  en('de-compounds-w200', 'v0.7.1', {
+    text: DE_COMPOUNDS,
+    lineWidth: 200,
+    language: 'de',
+  }),
+  en('de-compounds-w200-nohyphenation', 'v0.7.1', {
+    text: DE_COMPOUNDS,
+    lineWidth: 200,
+    language: 'de',
+    hyphenation: false,
+  }),
+
   // ── Mixed fonts and sub/superscript spans (MT-04, MT-05) ───────────────────
   {
     id: 'spans-subscript',
@@ -279,6 +317,8 @@ export const DISTINCT_PAIRS: [string, string][] = [
   ['en-body-w280-loosep0', 'en-body-w280-loosep1'],
   ['en-body-w280-loosep1', 'en-body-w280-loosep2'],
   ['en-body-w130-t6-hyphens-unlimited', 'en-body-w130-t6-hyphens-limit2'],
+  ['wide-url-w200', 'wide-url-w200-nohyphenation'],
+  ['de-compounds-w200', 'de-compounds-w200-nohyphenation'],
   ['long-url-w200-t2-es0', 'long-url-w200-t2-es50'],
   ['long-url-w200-t2-es0', 'long-url-w200-t2-es0-strict'],
   ['en-body-w160-t2', 'en-body-w160-t2-strict'],

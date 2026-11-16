@@ -1,0 +1,79 @@
+{
+  "id": "wide-url-w200-nohyphenation",
+  "mirrors": "v0.7.1",
+  "engine": "wasm",
+  "lineCount": 5,
+  "usedEmergency": false,
+  "usedFallback": true,
+  "lines": [
+    {
+      "text": "The report is published at",
+      "hyphenated": false,
+      "ratio": 9.6704,
+      "wordSpacing": 22.3408,
+      "lineWidth": 200,
+      "alignment": "justified",
+      "direction": "ltr",
+      "isRunt": false,
+      "baseline": 80.3203,
+      "x": [72, 112.9971, 163.9902, 194.335, 263.3398],
+      "y": [80.3203, 80.3203, 80.3203, 80.3203, 80.3203]
+    },
+    {
+      "text": "https://example.com/a/very/long/path/that/cannot/be/hyphenated/index.html",
+      "hyphenated": false,
+      "ratio": -1,
+      "wordSpacing": 1.6667,
+      "lineWidth": 200,
+      "alignment": "justified",
+      "direction": "ltr",
+      "isRunt": false,
+      "baseline": 93.0293,
+      "x": [72],
+      "y": [93.0293],
+      "overfull": true,
+      "overflow": 164.5762
+    },
+    {
+      "text": "and the search page at",
+      "hyphenated": false,
+      "ratio": 11.7571,
+      "wordSpacing": 26.5142,
+      "lineWidth": 200,
+      "alignment": "justified",
+      "direction": "ltr",
+      "isRunt": false,
+      "baseline": 105.7383,
+      "x": [72, 115.8403, 157.0146, 214.1733, 263.3398],
+      "y": [105.7383, 105.7383, 105.7383, 105.7383, 105.7383]
+    },
+    {
+      "text": "https://example.com/search?query=line-breaking&lang=en&page=2#results",
+      "hyphenated": false,
+      "ratio": -1,
+      "wordSpacing": 1.6667,
+      "lineWidth": 200,
+      "alignment": "justified",
+      "direction": "ltr",
+      "isRunt": false,
+      "baseline": 118.4473,
+      "x": [72],
+      "y": [118.4473],
+      "overfull": true,
+      "overflow": 165.1855
+    },
+    {
+      "text": "is updated every week.",
+      "hyphenated": false,
+      "ratio": 0,
+      "wordSpacing": 3,
+      "lineWidth": 200,
+      "alignment": "justified",
+      "direction": "ltr",
+      "isRunt": false,
+      "baseline": 131.1563,
+      "x": [72, 83.0039, 123.9902, 153.6387],
+      "y": [131.1563, 131.1563, 131.1563, 131.1563]
+    }
+  ]
+}
