@@ -4,9 +4,9 @@ All notable changes to this project will be documented in this file.
 
 ---
 
-## v0.7.0 — not yet published
+## v0.7.0 — 2026-11-16
 
-First release intended for the npm registry. All thirteen `@paragraf/*` packages are at 0.7.0.
+First release on the npm registry. All thirteen `@paragraf/*` packages are at 0.7.0.
 
 ### Packaging and release
 
