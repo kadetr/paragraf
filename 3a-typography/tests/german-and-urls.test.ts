@@ -11,6 +11,7 @@ import * as path from 'path';
 import {
   createParagraphComposer,
   ParagraphComposer,
+  wasmStatus,
 } from '@paragraf/typography';
 import { FontRegistry, Font, ComposedLine } from '@paragraf/types';
 
@@ -62,12 +63,17 @@ const textOf = (lines: ComposedLine[]): string =>
     .join('')
     .trim();
 
-for (const useWasm of [true, false]) {
-  describe(`German and URLs in compose() — ${useWasm ? 'WASM' : 'TypeScript'} engine`, () => {
+// `shaping: 'wasm'` fails when the binary is not built, so the WASM half is
+// skipped then instead of quietly running the TypeScript engine twice.
+const WASM_ABSENT = wasmStatus().status !== 'loaded';
+
+for (const shaping of ['wasm', 'fontkit'] as const) {
+  const describeEngine = describe.skipIf(shaping === 'wasm' && WASM_ABSENT);
+  describeEngine(`German and URLs in compose() — ${shaping === 'wasm' ? 'WASM' : 'TypeScript'} engine`, () => {
     let composer: ParagraphComposer;
 
     beforeAll(async () => {
-      composer = await createParagraphComposer(REGISTRY, { useWasm });
+      composer = await createParagraphComposer(REGISTRY, { shaping });
       await composer.ensureLanguage('de');
     });
 
@@ -138,9 +144,16 @@ for (const useWasm of [true, false]) {
       expect(last).toBeGreaterThan(first);
       for (let i = first; i < last; i++) {
         expect(out.lines[i].hyphenated).toBe(false);
-        // A line inside the URL ends after a separator, never in a hyphen
-        // that was added.
-        expect(texts[i]).toMatch(/[/?&=#_]$|[a-z]$/);
+        // The break rule: a line inside the URL ends after one of
+        // / ? & = # _ - or the next line begins with the dot.
+        const endsAfterSeparator = /[/?&=#_-]$/.test(texts[i]);
+        const nextStartsWithDot = texts[i + 1].startsWith('.');
+        expect(
+          endsAfterSeparator || nextStartsWithDot,
+          `"${texts[i]}" | "${texts[i + 1]}"`,
+        ).toBe(true);
+        // Never inside "://".
+        expect(texts[i]).not.toMatch(/https?:\/?$/);
       }
       // No character was added or lost.
       let joined = texts[first].slice(texts[first].indexOf('https://'));
@@ -222,10 +235,12 @@ for (const useWasm of [true, false]) {
 
 // ── The two engines choose the same breaks ───────────────────────────────────
 
-describe('German and URLs — WASM and TypeScript engines agree', () => {
+const describeBoth = describe.skipIf(WASM_ABSENT);
+
+describeBoth('German and URLs — WASM and TypeScript engines agree', () => {
   it('same words on every line', async () => {
-    const wasm = await createParagraphComposer(REGISTRY, { useWasm: true });
-    const ts = await createParagraphComposer(REGISTRY, { useWasm: false });
+    const wasm = await createParagraphComposer(REGISTRY, { shaping: 'wasm' });
+    const ts = await createParagraphComposer(REGISTRY, { shaping: 'fontkit' });
     await wasm.ensureLanguage('de');
     await ts.ensureLanguage('de');
 

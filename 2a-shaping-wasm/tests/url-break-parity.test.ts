@@ -177,12 +177,16 @@ const compare = (
   expect(emergencyStretch > 0 ? emergencies : fallbacks).toBeGreaterThan(10);
 };
 
+// 120 random paragraphs per case: about a second on a quiet machine, 4 to 17
+// seconds measured under load, so the default 5 seconds is not enough.
+const SYNTHETIC_TIMEOUT = 60_000;
+
 describe('Rust and TypeScript agree on paragraphs with URL break points', () => {
-  it('with default settings', () => compare(0, 0, 0, 0));
-  it('with adjDemerits = 10000', () => compare(10000, 0, 0, 0));
-  it('with looseness = 1', () => compare(0, 1, 0, 0));
-  it('with consecutiveHyphenLimit = 1', () => compare(0, 0, 1, 0));
-  it('with emergency stretch', () => compare(0, 0, 0, 20));
+  it('with default settings', () => compare(0, 0, 0, 0), SYNTHETIC_TIMEOUT);
+  it('with adjDemerits = 10000', () => compare(10000, 0, 0, 0), SYNTHETIC_TIMEOUT);
+  it('with looseness = 1', () => compare(0, 1, 0, 0), SYNTHETIC_TIMEOUT);
+  it('with consecutiveHyphenLimit = 1', () => compare(0, 0, 1, 0), SYNTHETIC_TIMEOUT);
+  it('with emergency stretch', () => compare(0, 0, 0, 20), SYNTHETIC_TIMEOUT);
 });
 
 // ─── Real node sequences ─────────────────────────────────────────────────────
