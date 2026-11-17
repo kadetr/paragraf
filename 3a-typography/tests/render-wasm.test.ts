@@ -11,6 +11,7 @@ import { describe, it, expect, beforeAll } from 'vitest';
 import {
   createParagraphComposer,
   createDefaultFontEngine,
+  wasmStatus,
 } from '@paragraf/typography';
 import { createMeasurer, FontkitEngine } from '@paragraf/font-engine';
 import { layoutParagraph, renderToSvg } from '@paragraf/render-core';
@@ -38,11 +39,27 @@ const F12: Font = {
   stretch: 'normal',
 };
 
+// The WasmFontEngine cases need the compiled shaper. Without it they are
+// skipped (shown as SKIP), not failed; in CI a missing shaper is a failure:
+// see the CI guard in shaping-mode.test.ts. The createDefaultFontEngine cases
+// further down run either way (on fontkit when the shaper is absent).
+// Skip only when the shaper is not built. A binary that is present but fails
+// to load ('error') must still fail these tests.
+const wasmBuilt = wasmStatus().status !== 'absent';
+if (!wasmBuilt) {
+  console.warn(
+    `[render-wasm.test] WASM shaper not built (${wasmStatus().status}): the ` +
+      'WasmFontEngine tests are skipped. Build it with ' +
+      '`wasm-pack build --target nodejs --out-dir pkg` in 2a-shaping-wasm/wasm.',
+  );
+}
+
 let wasm: any;
 let wasmEngine: WasmFontEngine;
 let otEngine: FontkitEngine;
 
 beforeAll(async () => {
+  if (!wasmBuilt) return;
   wasm = loadShapingWasm();
   wasm.register_font('lib-reg', readFileSync(SERIF_PATH));
 
@@ -53,7 +70,7 @@ beforeAll(async () => {
   await otEngine.loadFont('lib-reg', SERIF_PATH);
 });
 
-describe('WasmFontEngine rendering', () => {
+describe.skipIf(!wasmBuilt)('WasmFontEngine rendering', () => {
   const TEXT = 'The brown fox jumps over the lazy dog.'; // no fi/fl ligatures
 
   it('shape_text_wasm returns valid glyphs for a word', () => {

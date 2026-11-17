@@ -12,13 +12,15 @@ Pure TypeScript. No native deps. No bundled ICC profile files.
   - Chained matrix + XYZ→Lab + LUT path (e.g. sRGB → FOGRA39 CMYK)
   - 3D tetrahedral CLUT interpolation (per ICC spec §10.8)
 - **Synthesize** a built-in sRGB IEC61966-2.1 profile in memory — no disk access, valid ICC v4 bytes ready for PDF OutputIntent embedding
-- Export **`TaggedColor`** — the integration seam for paragraf-knuth-plass v0.11 PDF/X output
+- Describe a PDF **OutputIntent** (`getOutputIntent`) that `@paragraf/render-pdf` and `@paragraf/compile` embed in the PDF
 
 ## Install
 
 ```sh
 npm install @paragraf/color
 ```
+
+Requires Node.js 22 or later.
 
 ## Quick start
 
@@ -28,10 +30,10 @@ import { createColorManager } from '@paragraf/color';
 const mgr = createColorManager();
 const srgb = mgr.loadBuiltinSrgb();
 
-// Transform sRGB red to CIEXYZ D50
+// sRGB → sRGB: the values come back unchanged (within rounding)
 const transform = mgr.createTransform(srgb, srgb);
-const xyz = transform.apply([1, 0, 0]);
-// → [0.4361, 0.2225, 0.0139]
+const same = transform.apply([1, 0, 0]);
+// → [1, 0, 0]
 
 // Load a real output profile (e.g. FOGRA39)
 const fogra = await mgr.loadProfile('/path/to/FOGRA39.icc');
@@ -76,28 +78,53 @@ interface ColorProfile {
   name: string;
   colorSpace: 'RGB' | 'CMYK' | 'Lab' | 'Gray';
   pcs: 'XYZ' | 'Lab';
+  renderingIntent: number;                // from the profile header
   whitePoint: XYZValue;
   matrix?: { r, g, b: XYZValue };        // RGB matrix profiles
   trc?: [TrcCurve, TrcCurve, TrcCurve];  // tone curves
   a2b0?: Mft2Tag;                         // device→PCS LUT
-  b2a0?: Mft2Tag;                         // PCS→device LUT
+  b2a0?: Mft2Tag;                         // PCS→device LUT (perceptual)
+  b2a1?: Mft2Tag;                         // PCS→device LUT (relative colorimetric)
+  b2a2?: Mft2Tag;                         // PCS→device LUT (saturation)
   bytes: Uint8Array;                      // raw ICC bytes for PDF embedding
 }
 ```
 
 ### `TaggedColor`
 
-The v0.11 integration seam — passed to `renderToPdf` as a structured fill color:
+A colour value together with its transformed result and the profile bytes:
 
 ```typescript
 interface TaggedColor {
-  source: RGBColor;                          // original sRGB device value
-  transformed: CMYKColor | RGBColor | null;  // result of ICC transform
-  profileBytes: Uint8Array;                  // for OutputIntent embedding
+  source: RGBColor;                                      // original sRGB device value
+  transformed: CMYKColor | RGBColor | GrayColor | null;  // result of ICC transform
+  profileBytes: Uint8Array;                              // for OutputIntent embedding
 }
 ```
 
-> **Note:** `renderToPdf` integration (PdfOptions.iccProfile, TaggedColor fill) is being wired up in paragraf-knuth-plass v0.11, after the document model lands in v0.9.
+This type is exported for callers that carry colours through their own pipeline. The paragraf renderers do not take a `TaggedColor`; they take an `OutputIntent` and a `ColorTransform` (next section).
+
+## Use with PDF output
+
+`@paragraf/compile` embeds the profile as the PDF OutputIntent. When the profile is a CMYK profile it also converts the text fill colour from sRGB to CMYK:
+
+```typescript
+import { compile } from '@paragraf/compile';
+import { createColorManager } from '@paragraf/color';
+
+const mgr = createColorManager();
+const fogra = await mgr.loadProfile('/path/to/FOGRA39.icc');
+
+const { data } = await compile({
+  template,
+  data: record,
+  output: 'pdf',
+  outputIntent: mgr.getOutputIntent(fogra, 'FOGRA39'),
+  pdfxConformance: 'PDF/X-3:2003', // optional PDF/X-3 markers
+});
+```
+
+With `@paragraf/render-pdf` directly, pass `outputIntent` and, to convert the fill colour, `colorTransform` in the options of `renderToPdf` / `renderDocumentToPdf`.
 
 ## Profile bundling policy
 
@@ -106,7 +133,7 @@ No ICC profiles are bundled. Reasons:
 - sRGB is synthesized in memory from analytical constants — no file needed
 - Keeps the npm tarball clean and legally unambiguous
 
-Test fixtures: download free ICC profiles from [ICC.org](https://www.color.org/registry/) at test time.
+The test suite builds its profiles in memory. To try a real output profile, download one from the [ICC registry](https://www.color.org/registry/).
 
 ## Architecture
 
@@ -120,11 +147,11 @@ manager.ts    — ColorManager (profile cache + factory)
 index.ts      — public API barrel
 ```
 
-## Roadmap
+## Status
 
-| Version | Scope |
-|---------|-------|
-| **v0.1 (current)** | Pure TypeScript: profile parsing, matrix+TRC, tetrahedral LUT, sRGB synthesis |
-| v0.2 | paragraf-knuth-plass v0.11 integration (TaggedColor fill, PDF/X OutputIntent) |
-| v0.3 | Rust/WASM via [qcms](https://github.com/nicowillis/qcms) — perf upgrade for batch image pipelines |
-| v0.4 | CSS Color Level 4 inputs (oklch, display-p3) |
+| Scope | State |
+|-------|-------|
+| Pure TypeScript: profile parsing, matrix+TRC, tetrahedral LUT, sRGB synthesis | in this package |
+| PDF OutputIntent and fill-colour transform | in `@paragraf/render-pdf` and `@paragraf/compile` (`outputIntent`, `pdfxConformance`) |
+| Rust/WASM acceleration of the transforms | in [`@paragraf/color-wasm`](https://github.com/kadetr/paragraf/tree/main/2c-color-wasm) |
+| CSS Color Level 4 inputs (oklch, display-p3) | not implemented |
