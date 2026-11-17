@@ -2,7 +2,7 @@
   "id": "en-narrow-w200",
   "mirrors": "MT-01",
   "engine": "wasm",
-  "lineCount": 8,
+  "lineCount": 9,
   "usedEmergency": false,
   "usedFallback": true,
   "lines": [
@@ -46,61 +46,72 @@
       "y": [105.7383, 105.7383, 105.7383, 105.7383, 105.7383, 105.7383, 105.7383, 105.7383, 105.7383]
     },
     {
-      "text": "This technique is used in high-quality",
-      "hyphenated": false,
-      "ratio": 1.9027,
-      "wordSpacing": 6.8055,
+      "text": "This technique is used in high-qual-",
+      "hyphenated": true,
+      "ratio": 2.7699,
+      "wordSpacing": 8.5398,
       "lineWidth": 200,
       "alignment": "justified",
       "direction": "ltr",
       "isRunt": false,
       "baseline": 118.4473,
-      "x": [72, 100.1395, 120.1258, 153.5914, 168.4008, 197.2023, 213.3418, 259.332],
-      "y": [118.4473, 118.4473, 118.4473, 118.4473, 118.4473, 118.4473, 118.4473, 118.4473]
+      "x": [72, 101.8738, 121.8602, 157.0602, 173.6039, 204.1398, 222.0137],
+      "y": [118.4473, 118.4473, 118.4473, 118.4473, 118.4473, 118.4473, 118.4473]
     },
     {
-      "text": "book typography. A very long URL like",
+      "text": "ity book typography. A very long",
       "hyphenated": false,
-      "ratio": 0.6506,
-      "wordSpacing": 4.3011,
+      "ratio": 4.0133,
+      "wordSpacing": 11.0266,
       "lineWidth": 200,
       "alignment": "justified",
       "direction": "ltr",
       "isRunt": false,
       "baseline": 131.1563,
-      "x": [72, 100.3011, 109.6351, 127.6351, 136.9574, 161.4792, 174.4463, 200.0697, 225.7048, 254.0059],
-      "y": [131.1563, 131.1563, 131.1563, 131.1563, 131.1563, 131.1563, 131.1563, 131.1563, 131.1563, 131.1563]
+      "x": [72, 95.6945, 130.7211, 140.0551, 158.0551, 167.3773, 198.6246, 218.3172, 250.666],
+      "y": [131.1563, 131.1563, 131.1563, 131.1563, 131.1563, 131.1563, 131.1563, 131.1563, 131.1563]
     },
     {
-      "text": "https://www.example.com/path/to/resource?query=value",
+      "text": "URL like https://www.example.com/path/",
       "hyphenated": false,
-      "ratio": -1,
-      "wordSpacing": 1.6667,
+      "ratio": -0.7375,
+      "wordSpacing": 2.0166,
       "lineWidth": 200,
       "alignment": "justified",
       "direction": "ltr",
       "isRunt": false,
       "baseline": 143.8652,
-      "x": [72],
-      "y": [143.8652],
-      "overfull": true,
-      "overflow": 71.9043
+      "x": [72, 98.0166, 118.0273, 151.3672, 177.3652, 221.0117, 248.0059],
+      "y": [143.8652, 143.8652, 143.8652, 143.8652, 143.8652, 143.8652, 143.8652]
     },
     {
-      "text": "will cause overflow in a narrow column",
-      "hyphenated": false,
-      "ratio": 0.7272,
-      "wordSpacing": 4.4544,
+      "text": "to/resource?query=value will cause over-",
+      "hyphenated": true,
+      "ratio": 0.2757,
+      "wordSpacing": 3.5514,
       "lineWidth": 200,
       "alignment": "justified",
       "direction": "ltr",
       "isRunt": false,
       "baseline": 156.5742,
-      "x": [72, 95.1224, 126.2253, 147.5475, 173.998, 187.7865, 197.5671, 212.8893, 236.0059, 250.666],
-      "y": [156.5742, 156.5742, 156.5742, 156.5742, 156.5742, 156.5742, 156.5742, 156.5742, 156.5742, 156.5742]
+      "x": [72, 84.668, 130.6348, 164.7246, 194.2624, 216.4818, 246.6816],
+      "y": [156.5742, 156.5742, 156.5742, 156.5742, 156.5742, 156.5742, 156.5742]
     },
     {
-      "text": "unless emergency stretch is enabled.",
+      "text": "flow in a narrow column unless emergency",
+      "hyphenated": false,
+      "ratio": -0.9087,
+      "wordSpacing": 1.7884,
+      "lineWidth": 200,
+      "alignment": "justified",
+      "direction": "ltr",
+      "isRunt": false,
+      "baseline": 169.2832,
+      "x": [72, 95.7845, 106.9069, 114.0215, 129.3438, 149.7943, 164.4544, 187.5768, 199.5768, 219.3652, 243.3477],
+      "y": [169.2832, 169.2832, 169.2832, 169.2832, 169.2832, 169.2832, 169.2832, 169.2832, 169.2832, 169.2832, 169.2832]
+    },
+    {
+      "text": "stretch is enabled.",
       "hyphenated": false,
       "ratio": 0,
       "wordSpacing": 3,
@@ -108,9 +119,9 @@
       "alignment": "justified",
       "direction": "ltr",
       "isRunt": false,
-      "baseline": 169.2832,
-      "x": [72, 84, 105, 128.9824, 160.6348, 195.6211, 206.625, 217.9512],
-      "y": [169.2832, 169.2832, 169.2832, 169.2832, 169.2832, 169.2832, 169.2832, 169.2832]
+      "baseline": 181.9922,
+      "x": [72, 106.9863, 117.9902, 129.3164],
+      "y": [181.9922, 181.9922, 181.9922, 181.9922]
     }
   ]
 }

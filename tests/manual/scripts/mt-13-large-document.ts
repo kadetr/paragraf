@@ -12,6 +12,8 @@ import { writeJson, type TestMetrics } from '../fixtures/output.js';
 import { CONTENT_W } from '../fixtures/documents.js';
 
 const PARA_COUNT = 100;
+// A paragraph with the same text and font as paragraph 0 (see the inputs below).
+const SAME_INPUT_AS_0 = 90;
 
 const registry = serifRegistry();
 const composer = await createParagraphComposer(registry);
@@ -41,10 +43,12 @@ if (results.length !== PARA_COUNT) {
   failures++;
 }
 
-// Idempotency: para[0] and para[96] use same font/text, should have same line count
-if (results[0].lines.length !== results[96].lines.length) {
+// Idempotency: para[0] and para[90] have the same input (EN_NARROW at 10 pt:
+// both indices are multiples of 3 and of 5), so they must have the same line
+// count. (Index 96 was used before; it is set at 12 pt, a different input.)
+if (results[0].lines.length !== results[SAME_INPUT_AS_0].lines.length) {
   console.log(
-    `  FAIL  idempotency: para[0]=${results[0].lines.length} lines, para[96]=${results[96].lines.length} lines`,
+    `  FAIL  idempotency: para[0]=${results[0].lines.length} lines, para[${SAME_INPUT_AS_0}]=${results[SAME_INPUT_AS_0].lines.length} lines`,
   );
   failures++;
 }
@@ -90,7 +94,8 @@ const metrics: TestMetrics = {
     paragraphs: PARA_COUNT,
     totalLines,
     avgMsPerPara: avgMs,
-    idempotencyOk: results[0].lines.length === results[96].lines.length,
+    idempotencyOk:
+      results[0].lines.length === results[SAME_INPUT_AS_0].lines.length,
   },
 };
 writeJson('mt-13-large-document.metrics.json', metrics);

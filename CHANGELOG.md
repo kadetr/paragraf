@@ -4,6 +4,81 @@ All notable changes to this project will be documented in this file.
 
 ---
 
+## v0.7.1 — unreleased
+
+### ⚠️ Line breaks change in German text and in text that contains URLs
+
+Two things caused most overfull lines in 0.7.0: German nouns were never hyphenated, and a URL was one unbreakable piece. Both are fixed. Two smaller rules changed with them: e-mail addresses are no longer hyphenated, and a word in capitals is recognised with punctuation attached and with letters outside A–Z. Output for other text is unchanged: in the golden corpus only three paragraphs have a new snapshot, and all three contain a URL (the corpus had no German paragraph; it has one now).
+
+**There is no switch for this in `compose()` or `compile()`.** The two options below, `processCapitalized` and `breakUrls`, exist only in `@paragraf/linebreak` (`HyphenateOptions`); `compose()` does not pass them on. From `compose()` and `compile()` the only way back to the 0.7.0 treatment of capitalised German words and of URLs is `hyphenation: false` on the paragraph or style, which switches all hyphenation off.
+
+#### German: capitalised words are hyphenated by default
+The hyphenator skips a capitalised word in mid-sentence, on the assumption that it is a proper noun. In German every noun is capitalised, so long compounds had no break points and stuck out of narrow columns.
+
+- With `language: 'de'`, capitalised words are now hyphenated. `de` is the only shipped language that capitalises all nouns; any `de-…` variant added later is treated the same.
+- Every other language keeps the proper-noun rule.
+- An explicit `processCapitalized: true` or `false` in `HyphenateOptions` wins over the language default. This holds for callers of `hyphenateWord` / `hyphenateParagraph` in `@paragraf/linebreak` only; `compose()` and `compile()` have no such option and always use the language default.
+- **German paragraphs can break differently from 0.7.0**, at any column width: capitalised words are now candidates for hyphenation everywhere, not only where a line used to be overfull.
+- Proper names in German text are hyphenated too, with German patterns: `Shake-speare`, `Hil-de-brandt`, but also `Wa-shing-ton`. See "What is still not handled".
+- Words in capitals (`UNESCO`) and words that contain a digit are still not hyphenated, in any language.
+
+#### Words in capitals: recognised with punctuation and in any script
+A word in capitals is now any token with no lower-case letter and at least two upper-case letters (Unicode classes). In 0.7.0 the test was `A`–`Z` only and failed when punctuation was attached, which did not show in German because capitalised words were skipped anyway.
+
+- Without this, the German change above would have hyphenated `BUNDESREPUBLIK,` or `(NATO)`.
+- **Changed from 0.7.0 in every language:** `GRÖSSE`, `ÉLECTRICITÉ`, `„ACHTUNG“` and, at the start of a paragraph or sentence, `INTERNATIONAL,` were hyphenated and are now left whole. No paragraph in the golden corpus or in the manual-test exports is affected.
+
+#### E-mail addresses are not hyphenated
+A token with an `@` between letters or digits is left whole. In 0.7.0 an address without a digit was hyphenated like a word, with a hyphen that is not part of the address (`first-name.last-name@uni-ver-si-ty.ex-am-ple.org`).
+
+- **A paragraph that contains an e-mail address can break differently from 0.7.0**, and an address wider than the column is now an overfull line where 0.7.0 broke it with a hyphen. An address has no break points of its own.
+- No paragraph in the golden corpus or in the manual-test exports contains an address, so none changed.
+
+#### URLs: break points without a hyphen
+A URL-like token can now be broken:
+
+- **after** `/`, `?`, `&`, `=`, `#`, `_` and `-` (after the last one when several follow each other);
+- **before** a `.` that is followed by a letter or digit, so that no line ends in a dot that reads like the end of a sentence;
+- never inside the scheme or its `://` (a break directly after `://` is allowed);
+- never so that fewer than two characters of the URL are left on either side.
+
+No hyphen is added at such a break, and the line is not marked `hyphenated`. A URL is never passed to the pattern hyphenator. In 0.7.0 that was only true for `http://` and `https://`: a `www.` address without digits could be hyphenated like a word (`www.exam-ple.org`).
+
+Breaking after the separators follows the LaTeX `url` package (`\UrlBreaks`, and its `hyphens` option for `-`). Breaking before the dot and adding no hyphen follows the Chicago Manual of Style (17th ed., 14.18). Chicago also puts the break *before* `/ ? # _ -` and advises against a line that ends in a hyphen belonging to the URL; that part is not followed.
+
+What counts as a URL, deliberately narrow:
+
+| Detected | Example |
+|---|---|
+| `http://`, `https://`, `ftp://` | `https://example.com/a/b` |
+| `www.` followed by a name and a dot | `www.example.org` |
+| a bare host followed by `/`, written in lower case, with a top-level domain from the list below | `example.com/docs/intro`, `sub.example.co.uk/x` |
+
+Top-level domains accepted for a bare host: `com org net edu gov info io dev app eu de uk fr es nl ch ca au jp se dk fi cz br cn`. The list is short on purpose: a dot and a slash also occur in `Node.js/Express`, `README.md/CHANGELOG.md` or `index.html/#top`, so domains that are also common file extensions or abbreviations (`md`, `js`, `sh`, `it`, `at`, `to`, `me`, `us`, …) are left out. A URL under any other domain is detected when it is written with its scheme or with `www.`.
+
+Not detected: a bare host without a slash (`example.com`), a bare host with a capital letter or under a domain that is not on the list (`example.it/docs` is treated as a word and can be hyphenated, as in 0.7.0), e-mail addresses, file paths, other schemes. Punctuation around a URL, as in `(https://example.com/a).`, stays attached to the first or last piece and gets no break.
+
+Each break point is a penalty of 200 (a hyphenation point is 50), so a URL is broken only where the line would otherwise be clearly loose or could not be set.
+
+- **A paragraph that contains a URL can break differently from 0.7.0**, including paragraphs that had no overfull line.
+- A URL is now measured and positioned in pieces, as hyphenated words always were. Each piece is a text run of its own in `ComposedLine.wordRuns` and in the rendered segments; `ComposedLine.words` still has one entry for the URL. **A URL that is not broken can be slightly narrower or wider than in 0.7.0**, for the two reasons that already applied to every word with hyphenation points: letter-spacing is added between the characters of a piece but not between two pieces (with `letterSpacing: 1`, `https://example.com/a/very/long/path/index.html` has nine pieces and is 8 pt narrower than in 0.7.0), and kerning is not applied across a piece boundary (`https://www.AVATAR.To/WAVE/To.Yo` in Liberation Serif 12 pt: 191.18 pt instead of 190.40 pt). With no letter-spacing and no kerning pair at a boundary the URL is set exactly as before.
+- New option `HyphenateOptions.breakUrls` (`@paragraf/linebreak`), default `true`. `false` restores the 0.7.0 treatment in `hyphenateWord` / `hyphenateParagraph`. `compose()` and `compile()` do not pass this option: there, `hyphenation: false` on the paragraph or style keeps URLs in one piece, together with switching hyphenation off, and there is no separate switch.
+- `HyphenatedWord.hyphenable` is `false` for a URL although `fragments` has more than one entry: the fragments are break points that take no hyphen. `buildNodeSequence` puts a zero-width, unflagged penalty between them. Code that builds `HyphenatedWord` objects by hand with several fragments must set `hyphenable: true` to get hyphens, as `hyphenateWord` always did.
+- `composeParagraph` now treats **any** unflagged penalty that directly follows a box as a break point inside a word: when the line does not break there, the box after it is appended to the same entry of `ComposedLine.words` and `wordRuns`. It does not look at the penalty value or at where the penalty came from. `buildNodeSequence` only produces that pattern for URLs, so its output is unaffected; a hand-built node list with box, unflagged penalty, box and no glue between them used to give two words with a space and now gives one.
+- Nodes are built in TypeScript for both engines and the breakers needed no change; the Rust breaker is compared with the TypeScript one on paragraphs with these penalties in `2a-shaping-wasm/tests/url-break-parity.test.ts`.
+
+#### What is still not handled
+- A line that consists only of pieces of one URL, or of one fragment of a hyphenated word, has no space to stretch. In justified text it is set at its natural width and can end short of the right edge.
+- A paragraph whose URL or compound had to be broken that way is still set by the fallback pass: `usedFallback` is `true`, `compile()` lists it in `metadata.fallbackParagraphs`, and `onInfeasible: 'throw'` still throws for it. What changes is that `metadata.overfullLines` is empty where a break point exists.
+- In the fallback pass every loose line costs the same, so the breaker can leave the line before a URL very loose instead of starting the URL on it.
+- Long numbers, words with digits, words in capitals and e-mail addresses still have no break points.
+- URLs in right-to-left paragraphs are still unbreakable: that path does no hyphenation at all and puts no break points into a URL either.
+- Proper names in German text are hyphenated with German patterns, which can be wrong for a foreign name (`Wa-shing-ton`). In `@paragraf/linebreak` a name can be kept whole or given its own break points with `exceptions` (`{ washington: false }` or `{ washington: ['Wash', 'ing', 'ton'] }`; the key is the lower-cased token, so `Washington,` with its comma needs an entry of its own). `compose()` and `compile()` do not take `exceptions`; there a soft hyphen (U+00AD) in the name limits the breaks to that place in `text` input.
+- The shipped German patterns (`de-1996`) make some poor breaks in long compounds: `Rindfleischetikettierungsüberwachungsgesetz` gets `Rind-flei-sch-eti-ket-tie-rungs-…`, so a line can end in `Rindflei-` and the next begin with `schetikettierungs…`. That comes from the pattern set, not from this change; it shows now because such words were not hyphenated at all before.
+- Letter-spacing and kerning are not applied across the boundary between two pieces of a URL or two fragments of a word (see above).
+
+---
+
 ## v0.7.0 — 2026-11-16
 
 First release on the npm registry. All thirteen `@paragraf/*` packages are at 0.7.0.

@@ -2,7 +2,9 @@
 // manual/scripts/mt-06-long-url.ts
 // MT-06 — Long URL / No-Break Word.
 // Tests: a paragraph that cannot be set within tolerance (overfull fallback),
-// the emergency-stretch fix, and a URL wider than the column (overfull line).
+// the emergency-stretch fix, a piece with no break point that is wider than
+// the column (overfull line), and a URL wider than the column, which since
+// v0.7.1 is broken at its own break points and is not overfull.
 //
 // Run:  tsx tests/manual/scripts/mt-06-long-url.ts
 
@@ -67,21 +69,46 @@ const outEmerg = composer.compose({
 });
 const msEmerg = performance.now() - t1;
 
+// ─── An unbreakable piece wider than the column ───────────────────────────────
+// No setting can make this fit: a word that contains a digit has no break
+// point, so the line holding the checksum sticks out and is marked overfull.
+
+const overfullOf = (out: ReturnType<typeof composer.compose>) =>
+  out.lines
+    .map((l, idx) => ({ idx, text: l.words.join(' '), overflow: l.overflow }))
+    .filter((_, idx) => out.lines[idx].overfull);
+
+const UNBREAKABLE =
+  'sha256:9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08';
+const outWide = composer.compose({
+  text: `The checksum of the report is ${UNBREAKABLE} and is checked every week.`,
+  font: F12,
+  lineWidth: LINE_W,
+  tolerance: 2,
+});
+const overfullLines = overfullOf(outWide);
+
 // ─── A URL wider than the column ──────────────────────────────────────────────
-// No setting can make this fit: the line holding the URL sticks out and is
-// marked overfull.
+// Default settings. Since v0.7.1 a URL breaks after / ? & = # _ - and before a
+// dot, without a hyphen, so no line is overfull.
 
 const WIDE_URL =
   'https://example.com/a/very/long/path/that/cannot/be/hyphenated/index.html';
-const outWide = composer.compose({
+const outUrl = composer.compose({
   text: `The report is published at ${WIDE_URL} and is updated every week.`,
   font: F12,
   lineWidth: LINE_W,
   tolerance: 2,
 });
-const overfullLines = outWide.lines
-  .map((l, idx) => ({ idx, text: l.words.join(' '), overflow: l.overflow }))
-  .filter((_, idx) => outWide.lines[idx].overfull);
+const urlOverfullLines = overfullOf(outUrl);
+// The URL is set complete and in order, over more than one line.
+const urlLineTexts = outUrl.lines.map((l) => l.words.join(' '));
+const urlFirstLine = urlLineTexts.findIndex((t) => t.includes('https://'));
+const urlLastLine = urlLineTexts.findIndex((t) => t.includes('index.html'));
+const urlIntact = urlLineTexts.join('').includes(WIDE_URL);
+const urlHyphenAdded = outUrl.lines
+  .slice(urlFirstLine, urlLastLine)
+  .some((l) => l.hyphenated);
 
 // ─── Checks ───────────────────────────────────────────────────────────────────
 
@@ -95,12 +122,18 @@ if (noEmergencyThrew) {
   );
 }
 console.log(
-  `  Wide URL:     ${outWide.lines.length} lines, usedFallback=${outWide.usedFallback}, overfull lines=${overfullLines.length}`,
+  `  Unbreakable:  ${outWide.lines.length} lines, usedFallback=${outWide.usedFallback}, overfull lines=${overfullLines.length}`,
 );
 for (const l of overfullLines) {
   console.log(
     `    line ${l.idx}: ${l.overflow!.toFixed(1)}pt too wide — "${l.text}"`,
   );
+}
+console.log(
+  `  Wide URL:     ${outUrl.lines.length} lines, usedFallback=${outUrl.usedFallback}, overfull lines=${urlOverfullLines.length}, URL on lines ${urlFirstLine}–${urlLastLine}`,
+);
+for (const t of urlLineTexts) {
+  console.log(`    "${t}"`);
 }
 console.log(
   `  Emergency:    ${outEmerg.lines.length} lines, usedEmergency=${outEmerg.usedEmergency}`,
@@ -136,11 +169,13 @@ const pdf = await renderToPdf(rendered, fontEngine, {
 });
 writePdf('mt-06-long-url.pdf', pdf);
 
-// The same paragraph without emergency stretch (set by the fallback), and the
+// The same paragraph without emergency stretch (set by the fallback), the
+// paragraph with the unbreakable piece wider than the column, and the
 // paragraph with the URL wider than the column.
 const extraOutputs: [string, typeof outEmerg | null, string][] = [
   ['mt-06-long-url-fallback', outNoEmerg, 'MT-06 fallback'],
   ['mt-06-long-url-overfull', outWide, 'MT-06 overfull'],
+  ['mt-06-long-url-broken', outUrl, 'MT-06 URL broken'],
 ];
 for (const [name, out, label] of extraOutputs) {
   if (!out) continue;
@@ -189,20 +224,29 @@ const metrics: TestMetrics = {
     noEmergencyMaxRatio: maxRatioNoEmerg,
     noEmergencyUsedEmergency: outNoEmerg?.usedEmergency ?? null,
     noEmergencyUsedFallback: outNoEmerg?.usedFallback ?? null,
-    wideUrlUsedFallback: outWide.usedFallback,
-    wideUrlOverfullLines: overfullLines,
+    unbreakableUsedFallback: outWide.usedFallback,
+    unbreakableOverfullLines: overfullLines,
+    wideUrlUsedFallback: outUrl.usedFallback,
+    wideUrlOverfullLines: urlOverfullLines,
+    wideUrlLines: urlLineTexts,
   },
 };
 
 writeJson('mt-06-long-url.metrics.json', metrics);
 
-// Pass: nothing threw, emergency stretch rescued the first paragraph, and the
-// wide URL is reported as exactly one overfull line.
+// Pass: nothing threw, emergency stretch rescued the first paragraph, the
+// unbreakable piece is reported as exactly one overfull line, and the wide URL
+// is broken over several lines with no overfull line and no hyphen added.
 const ok =
   !noEmergencyThrew &&
   outEmerg.usedEmergency &&
   !outEmerg.usedFallback &&
   overfullLines.length === 1 &&
-  overfullLines[0].text === WIDE_URL;
+  overfullLines[0].text === UNBREAKABLE &&
+  urlOverfullLines.length === 0 &&
+  urlFirstLine >= 0 &&
+  urlLastLine > urlFirstLine &&
+  urlIntact &&
+  !urlHyphenAdded;
 console.log(ok ? '\nPASS' : '\nFAIL');
 process.exit(ok ? 0 : 1);

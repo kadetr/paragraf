@@ -61,6 +61,24 @@ const buildHyphenPenalty = (
   flagged: true,
 });
 
+/**
+ * Penalty for breaking a URL at one of its break points. Four times
+ * HYPHEN_PENALTY (50): a URL is broken only when the line would otherwise be
+ * clearly loose (an adjustment ratio above about 1.25) or could not be set
+ * at all. For comparison, the LaTeX `url` package uses `\binoppenalty`,
+ * 700 in plain TeX, against a hyphen penalty of 50.
+ */
+export const URL_BREAK_PENALTY = 200;
+
+// A break point inside a word that takes no hyphen: zero width, not flagged,
+// so it neither adds a character nor counts as a hyphenated line.
+const buildPlainBreakPenalty = (): Penalty => ({
+  type: 'penalty',
+  width: 0,
+  penalty: URL_BREAK_PENALTY,
+  flagged: false,
+});
+
 // ─── Paragraph termination ────────────────────────────────────────────────────
 
 const buildTermination = (): Node[] => [
@@ -113,6 +131,13 @@ export const buildNodeSequence = (
 
     // soft hyphen words use SOFT_HYPHEN_PENALTY — preferred over algorithmic
     const penaltyValue = hasSoftHyphen ? SOFT_HYPHEN_PENALTY : HYPHEN_PENALTY;
+    // More than one fragment but not hyphenable: the breaks take no hyphen
+    // (a URL). See HyphenatedWord.hyphenable.
+    const plainBreaks = !word.hyphenable && !hasSoftHyphen;
+    const breakPenalty = (penaltyFont: Font): Penalty =>
+      plainBreaks
+        ? buildPlainBreakPenalty()
+        : buildHyphenPenalty(penaltyFont, measurer, penaltyValue);
 
     if (segments) {
       // multi-span word — emit one Box per segment per fragment, threading verticalOffset
@@ -125,7 +150,7 @@ export const buildNodeSequence = (
         if (fi < segments.length - 1) {
           // hyphen penalty uses the last segment's font of this fragment
           const lastSeg = fragSegs[fragSegs.length - 1];
-          nodes.push(buildHyphenPenalty(lastSeg.font, measurer, penaltyValue));
+          nodes.push(breakPenalty(lastSeg.font));
         }
       });
     } else if (fragments.length === 1) {
@@ -134,7 +159,7 @@ export const buildNodeSequence = (
       fragments.forEach((fragment, fi) => {
         nodes.push(buildBox(fragment, font, measurer));
         if (fi < fragments.length - 1) {
-          nodes.push(buildHyphenPenalty(font, measurer, penaltyValue));
+          nodes.push(breakPenalty(font));
         }
       });
     }

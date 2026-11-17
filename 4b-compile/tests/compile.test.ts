@@ -273,10 +273,13 @@ describe('compile() — onMissing behaviour', () => {
 // ─── compile() — onInfeasible ─────────────────────────────────────────────────
 
 describe('compile() — paragraphs that cannot be set within tolerance', () => {
-  const LONG_URL =
-    'https://example.com/a/very/long/path/that/cannot/be/hyphenated/anywhere/index.html';
+  // A piece with no break point under default settings. Since v0.7.1 a URL
+  // has break points, so a checksum stands in for it: a word that contains a
+  // digit is never hyphenated.
+  const UNBREAKABLE =
+    'sha256:9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08';
 
-  // A4 with 200 pt margins leaves a 195 pt column; the URL is far wider.
+  // A4 with 200 pt margins leaves a 195 pt column; the checksum is far wider.
   function narrowTemplate() {
     return defineTemplate({
       layout: { size: 'A4', margins: 200 },
@@ -300,7 +303,7 @@ describe('compile() — paragraphs that cannot be set within tolerance', () => {
   }
   const data = {
     intro: 'A short first paragraph that sets without any trouble at all.',
-    body: `The report is published at ${LONG_URL} and is updated every week.`,
+    body: `The checksum of the report is ${UNBREAKABLE} and is checked every week.`,
   };
 
   for (const shaping of ['fontkit', 'wasm'] as const) {
@@ -319,12 +322,12 @@ describe('compile() — paragraphs that cannot be set within tolerance', () => {
       warn.mockRestore();
 
       expect(result.metadata.pageCount).toBe(1);
-      // Paragraph 0 is fine; paragraph 1 holds the URL.
+      // Paragraph 0 is fine; paragraph 1 holds the checksum.
       expect(result.metadata.fallbackParagraphs).toEqual([1]);
       expect(result.metadata.overfullLines).toHaveLength(1);
       const line = result.metadata.overfullLines[0];
       expect(line.paragraph).toBe(1);
-      expect(line.text).toBe(LONG_URL);
+      expect(line.text).toBe(UNBREAKABLE);
       expect(line.overflow).toBeGreaterThan(100);
       // … and it is announced, not silent.
       expect(warnings.some((w) => /1 overfull line/.test(w))).toBe(true);
