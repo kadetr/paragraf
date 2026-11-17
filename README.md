@@ -350,4 +350,4 @@ console.log(wasmStatus()); // { status: 'loaded' | 'absent' | 'error' }
 
 **Pre-release.** The core algorithm and rendering pipeline are stable and well-tested. APIs may change before v1.0. Published to npm under the `@paragraf` scope since v0.7.0; Node 22 or later.
 
-All packages are at **v0.7.0**.
+All packages are at **v0.7.1**.
