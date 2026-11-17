@@ -35,12 +35,11 @@ const composer = await createParagraphComposer(registry);
 const measurer = createMeasurer(registry);
 const fontEngine = await createDefaultFontEngine(registry);
 
-// Purpose-built paragraph ending with the very short word "it." — short enough
-// that the penultimate line can trivially absorb it once runtPenalty is applied.
-// At colW=220/12pt the natural (no-penalty) layout leaves "it." alone on the
-// last line (widow).  Adding runtPenalty causes the algorithm to prefer the
-// non-widow layout, because "it." is small enough that the demerits increase on
-// the penultimate line is much smaller than the penalty.
+// Purpose-built paragraph ending with the very short word "it.". At the
+// column width below the optimum without a penalty leaves "it." alone on the
+// last line (widow). With runtPenalty the breaker prefers a setting without
+// the one-word last line, because the extra demerits of that setting are
+// smaller than the penalty.
 const WIDOW_TEXT =
   'The Knuth–Plass algorithm finds the globally optimal set of line breaks for a ' +
   'paragraph, minimising a cost function based on how tightly or loosely each line ' +
@@ -52,10 +51,21 @@ const WIDOW_TEXT =
   'right margin. The algorithm was described by Knuth and Plass in 1981, and ' +
   'professional typesetting tools have long relied on it.';
 
-// colW=223: at this width WIDOW_TEXT produces "it." alone on the last line
-// (1-word widow).  runtPenalty=8000 is comfortably above the demerits gap
-// (~14 208) needed to prefer the non-widow layout.
-const colW = 223;
+// colW=384: at this width WIDOW_TEXT is set in 9 lines with "it." alone on
+// the last one, and runtPenalty=8000 gives 8 lines with a full last line.
+// Both engines agree, and the same holds for every width from 381 to 386 pt,
+// so a small change in font metrics does not move the case.
+//
+// History: until v0.7.0 this script used 223 pt. The line breaker then
+// measured every line after the first one word space too wide (see CHANGELOG,
+// "Line measure no longer includes the glue at the previous break"); with the
+// correct measure the optimum at 223 pt has six words on the last line, so
+// there was no widow left for the penalty to remove.
+//
+// runtPenalty is a demerit, not a rule: at some widths (204–207 and 253 pt
+// for this text) 8000 is less than the cost of the alternative and the
+// one-word line stays.
+const colW = 384;
 
 // ─── Without penalties ────────────────────────────────────────────────────────
 
@@ -118,7 +128,9 @@ const renderedYes = layoutParagraph(outPenalty.lines, measurer, {
   y: MARGIN_TOP,
 });
 
-const svgW = PAGE_W;
+// Two columns of colW side by side are wider than A4, so the comparison SVG
+// is as wide as it needs to be. The PDF below is one column on A4.
+const svgW = Math.max(PAGE_W, MARGIN_X * 2 + colW * 2 + 20);
 const svgH = PAGE_H;
 const innerNo = renderToSvg(renderedNo, fontEngine, {
   width: svgW,

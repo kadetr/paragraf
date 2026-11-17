@@ -4,11 +4,23 @@
 import * as path from 'path';
 import { describe, it, expect, beforeAll } from 'vitest';
 
-// itWasm: skips the test (shows as SKIP in the reporter) when WASM is absent.
-// Using bare `return` inside an it() would show a false green dot instead.
-// Evaluated once at module load time — WASM status is fixed at startup.
-const wasmLoaded = () => wasmStatus().status === 'loaded';
-const itWasm = it.skipIf(wasmStatus().status !== 'loaded');
+// itWasm / describeWasm: skip (shown as SKIP in the reporter) when the WASM
+// shaper is not built. Using bare `return` inside an it() would show a false
+// green dot instead. Evaluated once at module load time — WASM status is
+// fixed at startup. In CI a missing shaper is a failure: see the CI guard in
+// shaping-mode.test.ts.
+// Skip only when the shaper is not built. A binary that is present but fails
+// to load ('error') must still fail these tests.
+const wasmBuilt = () => wasmStatus().status !== 'absent';
+const itWasm = it.skipIf(wasmStatus().status === 'absent');
+const describeWasm = describe.skipIf(wasmStatus().status === 'absent');
+if (!wasmBuilt()) {
+  console.warn(
+    `[bidi.test] WASM shaper not built (${wasmStatus().status}): every test ` +
+      'in this file needs it and is skipped. Build it with ' +
+      '`wasm-pack build --target nodejs --out-dir pkg` in 2a-shaping-wasm/wasm.',
+  );
+}
 import {
   createParagraphComposer,
   ParagraphComposer,
@@ -74,7 +86,7 @@ const FONT_EN: Font = {
 
 // ─── Phase 0: WASM analyze_bidi ──────────────────────────────────────────────
 
-describe('analyze_bidi — WASM BiDi run analysis', () => {
+describeWasm('analyze_bidi — WASM BiDi run analysis', () => {
   let wasm: any;
 
   beforeAll(() => {
@@ -144,7 +156,7 @@ describe('analyze_bidi — WASM BiDi run analysis', () => {
 
 // ─── Phase 0: WASM analyze_bidi_v2 ──────────────────────────────────────────
 
-describe('analyze_bidi_v2 — paragraph level + reorder map', () => {
+describeWasm('analyze_bidi_v2 — paragraph level + reorder map', () => {
   let wasm: any;
 
   beforeAll(() => {
@@ -220,7 +232,7 @@ describe('RTL paragraph composition', () => {
   let composer: ParagraphComposer;
 
   beforeAll(async () => {
-    if (!wasmLoaded()) return;
+    if (!wasmBuilt()) return;
     composer = await createParagraphComposer(REGISTRY);
   });
 
@@ -298,7 +310,7 @@ describe('RTL visual reordering in layoutParagraph', () => {
   let measurer: Measurer;
 
   beforeAll(async () => {
-    if (!wasmLoaded()) return;
+    if (!wasmBuilt()) return;
     const { createMeasurer } = await import('@paragraf/font-engine');
     measurer = createMeasurer(REGISTRY);
     composer = await createParagraphComposer(REGISTRY);

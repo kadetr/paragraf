@@ -69,7 +69,7 @@ import { renderToPdf }                                      from '@paragraf/rend
 import { writeFileSync }                                    from 'fs';
 
 const registry = new Map([
-  ['regular', { id: 'regular', face: 'SourceSerif4', filePath: './fonts/SourceSerif4-Regular.ttf' }],
+  ['regular', { id: 'regular', family: 'SourceSerif4', filePath: './fonts/SourceSerif4-Regular.ttf' }],
 ]);
 
 const composer    = await createParagraphComposer(registry);
