@@ -1,6 +1,6 @@
 {
   "name": "@paragraf/shaping-wasm",
-  "version": "0.7.0",
+  "version": "0.7.1",
   "description": "Rust/WASM shaping engine for the paragraf typesetter.",
   "license": "MIT",
   "repository": {
@@ -47,8 +47,8 @@
     "postpack": "node ../scripts/publishconfig-swap.mjs restore"
   },
   "dependencies": {
-    "@paragraf/types": "^0.7.0",
-    "@paragraf/font-engine": "^0.7.0"
+    "@paragraf/types": "^0.7.1",
+    "@paragraf/font-engine": "^0.7.1"
   },
   "devDependencies": {
     "@types/node": "^22.19.15",

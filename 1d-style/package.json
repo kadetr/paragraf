@@ -1,6 +1,6 @@
 {
   "name": "@paragraf/style",
-  "version": "0.7.0",
+  "version": "0.7.1",
   "description": "Paragraph and character style definitions with inheritance resolution for the paragraf typography library.",
   "license": "MIT",
   "repository": {
@@ -46,7 +46,7 @@
     "postpack": "node ../scripts/publishconfig-swap.mjs restore"
   },
   "dependencies": {
-    "@paragraf/types": "^0.7.0"
+    "@paragraf/types": "^0.7.1"
   },
   "devDependencies": {
     "typescript": "^5.4.0",

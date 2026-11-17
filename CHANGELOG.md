@@ -4,7 +4,7 @@ All notable changes to this project will be documented in this file.
 
 ---
 
-## v0.7.1 — unreleased
+## v0.7.1 — 2026-11-17
 
 ### ⚠️ CMYK fills were written at 1% strength
 
