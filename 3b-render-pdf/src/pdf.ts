@@ -141,7 +141,7 @@ interface SelectableOpts {
 //
 // Parses a CSS color string (named, hex, rgb()) to normalized sRGB [0,1] and
 // applies the ColorTransform. Returns a PDFKit-compatible fill value:
-// - 4-element array [C,M,Y,K] in [0,1] for CMYK output
+// - 4-element array [C,M,Y,K] in [0,100] for CMYK output (pdfkit's scale)
 // - original string if parsing fails (safe passthrough)
 
 function parseCssToSrgb(css: string): [number, number, number] | null {
@@ -185,13 +185,12 @@ function applyFillTransform(
   if (!srgb) return fill;
   const out = transform.apply(srgb);
   if (out.length === 4) {
-    // CMYK output: return [C,M,Y,K] in [0,1] for PDFKit's DeviceCMYK colour space.
-    return [
-      Math.min(Math.max(out[0] ?? 0, 0), 1),
-      Math.min(Math.max(out[1] ?? 0, 0), 1),
-      Math.min(Math.max(out[2] ?? 0, 0), 1),
-      Math.min(Math.max(out[3] ?? 0, 0), 1),
-    ];
+    // CMYK output. The transform gives each channel in [0, 1]; pdfkit takes
+    // CMYK in [0, 100] and divides by 100 when it writes the operator, so the
+    // values are scaled here. Passing [0, 1] through wrote 1% of the ink.
+    const pct = (v: number | undefined): number =>
+      Math.min(Math.max(v ?? 0, 0), 1) * 100;
+    return [pct(out[0]), pct(out[1]), pct(out[2]), pct(out[3])];
   }
   if (out.length === 3) {
     // RGB output: convert [0,1] to a CSS hex string.
