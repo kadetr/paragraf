@@ -1,0 +1,101 @@
+{
+  "id": "wide-url-w200",
+  "mirrors": "v0.7.1",
+  "engine": "ts",
+  "lineCount": 7,
+  "usedEmergency": false,
+  "usedFallback": true,
+  "lines": [
+    {
+      "text": "The report is published at https://example",
+      "hyphenated": false,
+      "ratio": 0.0377,
+      "wordSpacing": 3.0754,
+      "lineWidth": 200,
+      "alignment": "justified",
+      "direction": "ltr",
+      "isRunt": false,
+      "baseline": 80.3203,
+      "x": [72, 93.7316, 103.0539, 125.4594, 136.5387, 154.5387, 186.2781, 198.0137, 231.3535],
+      "y": [80.3203, 80.3203, 80.3203, 80.3203, 80.3203, 80.3203, 80.3203, 80.3203, 80.3203]
+    },
+    {
+      "text": ".com/a/very/long/path/that/",
+      "hyphenated": false,
+      "ratio": 0,
+      "wordSpacing": 0,
+      "lineWidth": 200,
+      "alignment": "justified",
+      "direction": "ltr",
+      "isRunt": false,
+      "baseline": 93.0293,
+      "x": [72, 98.9941, 107.6543, 132.3105, 156.9785, 180.9727],
+      "y": [93.0293, 93.0293, 93.0293, 93.0293, 93.0293, 93.0293]
+    },
+    {
+      "text": "cannot/be/hyphenated/index.html and the",
+      "hyphenated": false,
+      "ratio": 0.4312,
+      "wordSpacing": 3.8623,
+      "lineWidth": 200,
+      "alignment": "justified",
+      "direction": "ltr",
+      "isRunt": false,
+      "baseline": 105.7383,
+      "x": [72, 107.3203, 121.9805, 180.627, 207.2871, 236.1514, 257.3398],
+      "y": [105.7383, 105.7383, 105.7383, 105.7383, 105.7383, 105.7383, 105.7383]
+    },
+    {
+      "text": "search page at",
+      "hyphenated": false,
+      "ratio": 33.0107,
+      "wordSpacing": 69.0215,
+      "lineWidth": 200,
+      "alignment": "justified",
+      "direction": "ltr",
+      "isRunt": false,
+      "baseline": 118.4473,
+      "x": [72, 171.666, 263.3398],
+      "y": [118.4473, 118.4473, 118.4473]
+    },
+    {
+      "text": "https://example.com/search?query=line-",
+      "hyphenated": false,
+      "ratio": 0,
+      "wordSpacing": 0,
+      "lineWidth": 200,
+      "alignment": "justified",
+      "direction": "ltr",
+      "isRunt": false,
+      "baseline": 131.1563,
+      "x": [72, 105.3398, 145.9863, 172.9805, 208.9512, 243.041],
+      "y": [131.1563, 131.1563, 131.1563, 131.1563, 131.1563, 131.1563]
+    },
+    {
+      "text": "breaking&lang=en&page=2#results is up-",
+      "hyphenated": true,
+      "ratio": -0.8079,
+      "wordSpacing": 1.9229,
+      "lineWidth": 200,
+      "alignment": "justified",
+      "direction": "ltr",
+      "isRunt": false,
+      "baseline": 143.8652,
+      "x": [72, 123.3164, 150.7441, 171.4043, 200.8242, 212.8242, 246.0771, 256.0039],
+      "y": [143.8652, 143.8652, 143.8652, 143.8652, 143.8652, 143.8652, 143.8652, 143.8652]
+    },
+    {
+      "text": "dated every week.",
+      "hyphenated": false,
+      "ratio": 0,
+      "wordSpacing": 3,
+      "lineWidth": 200,
+      "alignment": "justified",
+      "direction": "ltr",
+      "isRunt": false,
+      "baseline": 156.5742,
+      "x": [72, 100.9863, 130.6348],
+      "y": [156.5742, 156.5742, 156.5742]
+    }
+  ]
+}

@@ -103,6 +103,12 @@ const runEngine = (engine: Engine): void => {
         fontEngine: await createDefaultFontEngine(registry),
       });
     }
+    // Hyphenation patterns for every language a case asks for ('en-us' is
+    // always loaded).
+    for (const c of CASES) {
+      const language = c.input.language;
+      if (language) await kits.get(c.registry)!.composer.ensureLanguage(language);
+    }
   });
 
   const run = (c: GoldenCase): GoldenSnapshot => {

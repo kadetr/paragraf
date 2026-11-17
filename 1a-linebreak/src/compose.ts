@@ -81,6 +81,8 @@ const extractLine = (
   const wordRuns: SpanSegment[][] = [];
   let wordSpacing = 0;
   let spacingResolved = false;
+  // true when the last node was a penalty inside a word that was not taken as
+  // the line break: a hyphenation point, or a hyphenless break point in a URL
   let lastWasHyphenPenalty = false;
   let lastWasBox = false; // true when last node was a box — indicates span continuation within the same word
   // Invariant: buildNodeSequence guarantees a glue node between every two words, so
@@ -129,6 +131,12 @@ const extractLine = (
       lastWasHyphenPenalty = false;
       lastWasBox = true;
     } else if (node.type === 'penalty' && node.flagged) {
+      lastWasHyphenPenalty = i < to;
+      lastWasBox = false;
+    } else if (node.type === 'penalty' && lastWasBox) {
+      // An unflagged penalty directly after a box is a break point inside a
+      // word that takes no hyphen (a URL). When the line does not end here,
+      // the next box continues the same word.
       lastWasHyphenPenalty = i < to;
       lastWasBox = false;
     } else {

@@ -25,8 +25,22 @@ export interface HyphenateOptions {
   preserveSoftHyphens?: boolean; // default true — honour \u00AD in input
   minLeft?: number; // override deriveMinLeft(fontSize); 1 = allow single-char left fragments
   minRight?: number; // override deriveMinRight(fontSize); 1 = allow single-char right fragments
-  processCapitalized?: boolean; // default false — skip non-first capitalized words (proper noun heuristic)
-  // set true to hyphenate all words regardless of capitalisation
+  /**
+   * Whether capitalised words that do not start a sentence are hyphenated.
+   * - `false` — skip them (proper-noun heuristic). Default for every language
+   *   except German.
+   * - `true` — hyphenate all words regardless of capitalisation. Default for
+   *   German (`de`), where every noun is capitalised.
+   * An explicit value always wins over the language default.
+   */
+  processCapitalized?: boolean;
+  /**
+   * Whether a URL-like token gets break points (default `true`). The breaks
+   * insert no hyphen: after `/ ? & = # _ -` and before `.`, never inside
+   * `://`. Set `false` to keep a URL in one piece, as before v0.7.1.
+   * @since v0.7.1
+   */
+  breakUrls?: boolean;
   /** Per-document exception dictionary checked before pattern-based hyphenation. */
   exceptions?: ExceptionDictionary;
 }
@@ -41,7 +55,14 @@ interface HyphenateOptionsInternal extends HyphenateOptions {
 
 export interface HyphenatedWord {
   original: string;
+  /** The word split at its break points; one fragment when there are none. */
   fragments: string[];
+  /**
+   * True when a hyphen is added at a break between fragments. False with more
+   * than one fragment means the breaks take no hyphen: that is how a URL is
+   * returned (since v0.7.1), and `buildNodeSequence` then puts a plain
+   * zero-width penalty between the fragments instead of a hyphen penalty.
+   */
   hyphenable: boolean;
   hasSoftHyphen: boolean; // true if fragments came from explicit soft hyphens
 }
@@ -133,7 +154,196 @@ const extractSoftHyphenFragments = (word: string): string[] | null => {
   return fragments;
 };
 
+// ─── Language defaults ───────────────────────────────────────────────────────
+
+// Languages that capitalise every noun. For these the proper-noun heuristic
+// would leave most long words without break points, so capitalised words are
+// hyphenated unless the caller says otherwise. German is the only such
+// language among the shipped patterns; a regional or orthographic variant
+// (`de-…`) is treated the same should one be added to `Language`.
+const capitalisesAllNouns = (language: Language): boolean =>
+  language === 'de' || (language as string).startsWith('de-');
+
+// ─── URLs ────────────────────────────────────────────────────────────────────
+
+// Punctuation that can surround a URL in running text: "(https://…)." It stays
+// attached to the first or last fragment and never gets a break of its own.
+const URL_LEADING = /^[(\[{<"'“‘«„]+/;
+const URL_TRAILING_CHARS = new Set(')]}>"\'”’».,;:!?');
+
+// Length of the trailing punctuation of `text`. A loop from the end, not a
+// `[…]+$` regex: the regex is quadratic on a long run of such characters that
+// is not at the end, and this runs on every word of every paragraph.
+const trailingPunctuationLength = (text: string): number => {
+  let end = text.length;
+  while (end > 0 && URL_TRAILING_CHARS.has(text[end - 1])) end--;
+  return text.length - end;
+};
+
+// What counts as a URL (kept narrow on purpose):
+//   1. http://…, https://…, ftp://…
+//   2. www.name.tld…
+//   3. a bare host followed by a slash: name.tld/…  — only with lower-case
+//      labels and a top-level domain from BARE_HOST_TLDS (optional port)
+// A bare host WITHOUT a slash ("example.com") is not detected: it cannot be
+// told apart from a missing space after a full stop ("end.Next").
+const URL_WITH_SCHEME = /^(?:https?|ftp):\/\/\S/i;
+const URL_WWW = /^www\.[^\s./]+\.\S/i;
+
+// Top-level domains accepted for a bare host. Short on purpose. A dot and a
+// slash also occur in "Node.js/Express", "README.md/CHANGELOG.md" or
+// "index.html/#top", so every top-level domain that is also a common file
+// extension or abbreviation is left out (md, js, ts, py, sh, rs, pl, so, ai,
+// at, it, is, in, to, me, no, be, us, …). A URL under any other domain is
+// detected when it is written with its scheme or with "www.".
+const BARE_HOST_TLDS = new Set([
+  'com',
+  'org',
+  'net',
+  'edu',
+  'gov',
+  'info',
+  'io',
+  'dev',
+  'app',
+  'eu',
+  'de',
+  'uk',
+  'fr',
+  'es',
+  'nl',
+  'ch',
+  'ca',
+  'au',
+  'jp',
+  'se',
+  'dk',
+  'fi',
+  'cz',
+  'br',
+  'cn',
+]);
+
+const isHostLabel = (label: string): boolean => {
+  if (label.length === 0 || label.length > 63) return false;
+  if (label.startsWith('-') || label.endsWith('-')) return false;
+  for (let i = 0; i < label.length; i++) {
+    const c = label.charCodeAt(i);
+    const lower = c >= 97 && c <= 122;
+    const digit = c >= 48 && c <= 57;
+    if (!lower && !digit && c !== 45) return false;
+  }
+  return true;
+};
+
+const isDigits = (text: string): boolean => {
+  if (text.length === 0) return false;
+  for (let i = 0; i < text.length; i++) {
+    const c = text.charCodeAt(i);
+    if (c < 48 || c > 57) return false;
+  }
+  return true;
+};
+
+// name.tld/… — parsed by hand so that the cost is linear in the host length.
+const isBareHostUrl = (text: string): boolean => {
+  const slash = text.indexOf('/');
+  if (slash < 4 || slash > 260) return false;
+  let host = text.slice(0, slash);
+  const colon = host.indexOf(':');
+  if (colon >= 0) {
+    if (!isDigits(host.slice(colon + 1))) return false;
+    host = host.slice(0, colon);
+  }
+  const labels = host.split('.');
+  if (labels.length < 2) return false;
+  if (!labels.every(isHostLabel)) return false;
+  return BARE_HOST_TLDS.has(labels[labels.length - 1]);
+};
+
+const isUrlLike = (text: string): boolean =>
+  URL_WITH_SCHEME.test(text) || URL_WWW.test(text) || isBareHostUrl(text);
+
+// A break is allowed AFTER each of these …
+const URL_BREAK_AFTER = new Set(['/', '?', '&', '=', '#', '_', '-']);
+// … and BEFORE a full stop, so that no line ends in a dot that could be read
+// as the end of the sentence.
+const URL_BREAK_BEFORE = '.';
+// Neither side of a break may be shorter than this.
+const URL_MIN_SIDE = 2;
+
+const isAsciiAlnum = (ch: string | undefined): boolean =>
+  ch !== undefined && /[A-Za-z0-9]/.test(ch);
+
+/**
+ * Splits a URL-like token at its break points. Returns null when the token is
+ * not URL-like; returns a single fragment when it is but has no break point.
+ *
+ * Rule: break after `/ ? & = # _ -` (after the last one when several follow
+ * each other) and before a `.` that is followed by a letter or digit. Never
+ * inside the scheme or its `://`. No break leaves fewer than two characters
+ * of the URL on either side. No hyphen is added at a break.
+ *
+ * Breaking after the separators is what the LaTeX `url` package does
+ * (`\UrlBreaks`, and its `hyphens` option for `-`). Breaking before the dot
+ * rather than after it, and never adding a hyphen, is the Chicago Manual of
+ * Style rule for URLs (17th ed., 14.18). Chicago would also break BEFORE
+ * `/ ? # _ -` rather than after; that part is not followed.
+ */
+const splitUrl = (word: string): string[] | null => {
+  const lead = word.match(URL_LEADING)?.[0] ?? '';
+  const rest = word.slice(lead.length);
+  // All three tests look at the start only, so a token that is not a URL
+  // leaves here before anything else is done with it.
+  if (!isUrlLike(rest)) return null;
+  const trailLength = trailingPunctuationLength(rest);
+  const trail = rest.slice(rest.length - trailLength);
+  const core = rest.slice(0, rest.length - trailLength);
+  if (!isUrlLike(core)) return null;
+
+  // First position at which a break may occur: right after "://".
+  const schemeEnd = core.indexOf('://');
+  const firstAllowed = Math.max(
+    URL_MIN_SIDE,
+    schemeEnd >= 0 ? schemeEnd + 3 : 0,
+  );
+
+  const fragments: string[] = [];
+  let start = 0;
+  for (let p = firstAllowed; p <= core.length - URL_MIN_SIDE; p++) {
+    const prev = core[p - 1];
+    const next = core[p];
+    const afterSeparator =
+      URL_BREAK_AFTER.has(prev) && !URL_BREAK_AFTER.has(next);
+    const beforeDot =
+      next === URL_BREAK_BEFORE &&
+      prev !== URL_BREAK_BEFORE &&
+      isAsciiAlnum(core[p + 1]);
+    if (afterSeparator || beforeDot) {
+      fragments.push(core.slice(start, p));
+      start = p;
+    }
+  }
+  fragments.push(core.slice(start));
+
+  fragments[0] = lead + fragments[0];
+  fragments[fragments.length - 1] += trail;
+  return fragments;
+};
+
 // ─── Guards ──────────────────────────────────────────────────────────────────
+
+// A word set in capitals: no lower-case letter and at least two upper-case
+// letters, in any script. Punctuation around or inside it does not matter
+// ("NATO", "(NATO)", "BUNDESREPUBLIK,", "GRÖSSE", "U.S.A.").
+const isInCapitals = (word: string): boolean => {
+  if (/\p{Ll}/u.test(word)) return false;
+  const upper = word.match(/\p{Lu}/gu);
+  return upper !== null && upper.length >= 2;
+};
+
+// An e-mail address: an "@" with a letter or digit on both sides.
+const EMAIL_ADDRESS = /[\p{L}\p{N}]@[\p{L}\p{N}]/u;
 
 const shouldSkip = (
   word: string,
@@ -145,8 +355,12 @@ const shouldSkip = (
   if (clean.length < opts.minWordLength) return true;
   if (/\d/.test(clean)) return true;
   if (/^https?:\/\//.test(clean)) return true;
-  if (/^[A-Z][A-Z]+$/.test(clean)) return true;
-  if (!opts.processCapitalized && !isFirstWord && /^[A-Z]/.test(clean)) {
+  if (isInCapitals(clean)) return true;
+  if (EMAIL_ADDRESS.test(clean)) return true;
+  // An explicit processCapitalized wins; otherwise the language decides.
+  const processCapitalized =
+    opts.processCapitalized ?? capitalisesAllNouns(opts.language);
+  if (!processCapitalized && !isFirstWord && /^[A-Z]/.test(clean)) {
     // Allow capitalised words at a sentence start (after .  !  ?  with optional
     // closing punctuation).  This prevents "Mr. Smith went…" from skipping
     // hyphenation on "Smith" because it happens to start with a capital.
@@ -188,6 +402,23 @@ export const hyphenateWord = (
   isFirstWord: boolean = false,
   preserveSoftHyphens: boolean = opts.preserveSoftHyphens ?? true,
 ): HyphenatedWord => {
+  // A URL is never run through the pattern hyphenator and never gets a
+  // hyphen. It gets break points of its own, marked by `hyphenable: false`
+  // with more than one fragment. Checked before soft hyphens so that a soft
+  // hyphen inside a URL cannot put a hyphen into it either.
+  if (opts.breakUrls !== false) {
+    const stripped = word.replaceAll(INPUT_SOFT_HYPHEN, '');
+    const urlFragments = splitUrl(stripped);
+    if (urlFragments) {
+      return {
+        original: stripped,
+        fragments: urlFragments,
+        hyphenable: false,
+        hasSoftHyphen: false,
+      };
+    }
+  }
+
   // check for explicit soft hyphens first
   if (preserveSoftHyphens) {
     const softFragments = extractSoftHyphenFragments(word);
