@@ -1,0 +1,7 @@
+{
+  "version": 1,
+  "state": ".claude/trail-state",
+  "e2e": { "script": "test:e2e" },
+  "exports": { "script": "manual", "dir": "tests/manual/outputs" },
+  "format": { "script": "format:check", "extensions": [".ts", ".tsx"] }
+}
