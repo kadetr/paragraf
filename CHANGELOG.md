@@ -6,6 +6,13 @@ All notable changes to this project will be documented in this file.
 
 ## v0.7.1 — unreleased
 
+### ⚠️ CMYK fills were written at 1% strength
+
+With a CMYK colour transform, every fill reached the PDF at one hundredth of its value: solid black was written as `0 0 0 0.01`, which prints close to white. `compile()` sets such a transform whenever `outputIntent` has a CMYK profile, so PDFs made for print in 0.7.0 are affected. The transform returns each channel between 0 and 1 and pdfkit expects 0 to 100; `@paragraf/render-pdf` now scales the values.
+
+- **PDFs made with a CMYK `colorTransform` change:** fills are 100 times stronger, which is the intended colour. Regenerate any such PDF made with 0.7.0.
+- RGB output, and PDFs made without a colour transform, are unchanged.
+
 ### ⚠️ Line breaks change in German text and in text that contains URLs
 
 Two things caused most overfull lines in 0.7.0: German nouns were never hyphenated, and a URL was one unbreakable piece. Both are fixed. Two smaller rules changed with them: e-mail addresses are no longer hyphenated, and a word in capitals is recognised with punctuation attached and with letters outside A–Z. Output for other text is unchanged: in the golden corpus only three paragraphs have a new snapshot, and all three contain a URL (the corpus had no German paragraph; it has one now).
