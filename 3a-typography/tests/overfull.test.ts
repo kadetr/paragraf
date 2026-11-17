@@ -41,6 +41,16 @@ const GERMAN =
   "Rechtsschutzversicherungsgesellschaften stehen im " +
   "Bundesausbildungsförderungsgesetz nebeneinander.";
 
+// German text with four pieces that stay unbreakable under default settings:
+// a word that contains a digit is never hyphenated, in any language. The
+// other words are too short to be hyphenated, so the lines can be joined
+// back into the text without removing hyphens.
+const GERMAN_UNBREAKABLE =
+  "Die Zahl RE2024000000118734 und das Los " +
+  "AZ77123456789012345 und die IBAN " +
+  "DE89370400440532013000 sind im Buch " +
+  "ISBN9783161484100X da.";
+
 for (const useWasm of [true, false]) {
   describe(`overfull fallback in compose() — ${useWasm ? "WASM" : "TypeScript"} engine`, () => {
     let composer: ParagraphComposer;
@@ -109,24 +119,28 @@ for (const useWasm of [true, false]) {
     });
 
     it("by default it is set; each compound that cannot fit is reported", () => {
-      // Capitalised words are not hyphenated by default, so the four long
-      // nouns have no break points and are each wider than 90 pt.
+      // Since v0.7.1 German capitalised words are hyphenated, so long nouns
+      // no longer stick out. A word that contains a digit is never
+      // hyphenated: the four reference numbers have no break points and are
+      // each wider than 90 pt.
       const out = composer.compose({
-        text: GERMAN,
+        text: GERMAN_UNBREAKABLE,
         font: FONT,
         lineWidth: 90,
         tolerance: 1,
         language: "de",
       });
       expect(out.usedFallback).toBe(true);
-      expect(out.lines.flatMap((l) => l.words).join(" ")).toBe(GERMAN);
+      expect(out.lines.flatMap((l) => l.words).join(" ")).toBe(
+        GERMAN_UNBREAKABLE,
+      );
 
       const overfull = out.lines.filter((l) => l.overfull);
       expect(overfull.map((l) => l.words)).toEqual([
-        ["Donaudampfschifffahrtsgesellschaft"],
-        ["Rindfleischetikettierungsüberwachungsgesetz"],
-        ["Rechtsschutzversicherungsgesellschaften"],
-        ["Bundesausbildungsförderungsgesetz"],
+        ["RE2024000000118734"],
+        ["AZ77123456789012345"],
+        ["DE89370400440532013000"],
+        ["ISBN9783161484100X"],
       ]);
       for (const l of overfull) {
         const width = composer.measurer!.measure(l.words[0], FONT);
