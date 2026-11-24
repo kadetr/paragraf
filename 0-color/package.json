@@ -3,6 +3,7 @@
   "version": "0.7.1",
   "description": "ICC color management for the paragraf typography library",
   "license": "MIT",
+  "author": "kadetr (https://github.com/kadetr)",
   "repository": {
     "type": "git",
     "url": "https://github.com/kadetr/paragraf.git",

@@ -3,6 +3,7 @@
   "version": "0.7.1",
   "description": "Paragraph compositor, optical margin alignment, and document model for the paragraf typesetter.",
   "license": "MIT",
+  "author": "kadetr (https://github.com/kadetr)",
   "repository": {
     "type": "git",
     "url": "https://github.com/kadetr/paragraf.git",
