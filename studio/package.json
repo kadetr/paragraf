@@ -43,7 +43,7 @@
     "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react": "^6.0.1",
     "electron-vite": "^5.0.0",
-    "happy-dom": "^17.1.0",
+    "happy-dom": "^21.0.4",
     "tsx": "^4.21.0",
     "typescript": "^5.4.0",
     "vitest": "^3.2.4"
