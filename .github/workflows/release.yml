@@ -7,7 +7,7 @@ name: Release
 # Starting the workflow by hand from the Actions tab is always a dry run:
 # everything is built, tested, packed and smoke-tested, and nothing is uploaded.
 #
-# Publishing uses npm trusted publishing (OIDC). Each of the 13 packages has a
+# Publishing uses npm trusted publishing (OIDC). Each of the 13 packages needs a
 # trusted publisher on npmjs.com for this repository (kadetr/paragraf), this
 # workflow file (release.yml) and the environment "npm", allowed to run direct
 # `npm publish`. The publish job asks GitHub for a short-lived OIDC token
@@ -15,7 +15,7 @@ name: Release
 # credential; provenance is attached automatically. This needs npm >= 11.5.1
 # and Node >= 22.14.0, so the job installs a pinned npm 11.
 #
-# Transition: the repository secret NPM_TOKEN (environment "npm") is still
+# Transition: the secret NPM_TOKEN of the environment "npm" is still
 # passed as NODE_AUTH_TOKEN. The npm CLI tries OIDC first and falls back to the
 # token. Remove it after the first release that publishes through OIDC (see the
 # TODO on the Publish step).
