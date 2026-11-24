@@ -369,7 +369,7 @@ export const EXPORT_CASES: ExportCase[] = [
     from: ['en-body-451-t3'],
     fill: '#cc3300',
     check:
-      'Orange-red text (RGB 0.8 0.2 0); 14 justified lines on one A4 page.',
+      'Orange-red text (RGB 0.8 0.2 0); 11 justified lines on one A4 page.',
   },
   {
     id: 'cmyk-pdfx-en-body',

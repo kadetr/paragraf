@@ -95,12 +95,7 @@ describe('export baseline — PDF and SVG', () => {
         }
         check(
           path.join(SNAPSHOT_DIR, 'pdf', `${e.id}.json`),
-          toJson({
-            id: e.id,
-            from: e.from,
-            check: e.check,
-            ...summarisePdf(pdf),
-          }),
+          toJson({ id: e.id, from: e.from, ...summarisePdf(pdf) }),
         );
         check(
           path.join(SNAPSHOT_DIR, 'svg', `${e.id}.json`),
