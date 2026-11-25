@@ -40,5 +40,6 @@
     "tsx": "^4.21.0",
     "vite": "^8.0.11",
     "vitest": "^4.1.12"
-  }
+  },
+  "author": "kadetr (https://github.com/kadetr)"
 }
