@@ -49,7 +49,7 @@
     "postpack": "node ../scripts/publishconfig-swap.mjs restore"
   },
   "devDependencies": {
-    "@types/node": "^22.0.0",
+    "@types/node": "^26.6.6",
     "@vitest/coverage-v8": "^4.1.12",
     "@vitest/ui": "^4.1.12",
     "tsx": "^4.21.0",
