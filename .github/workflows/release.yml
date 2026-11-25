@@ -7,9 +7,18 @@ name: Release
 # Starting the workflow by hand from the Actions tab is always a dry run:
 # everything is built, tested, packed and smoke-tested, and nothing is uploaded.
 #
-# Needs the repository secret NPM_TOKEN: an npm access token that may publish
-# to the @paragraf scope and create new packages in it (a granular token with
-# read and write access; such tokens expire, so check it before a release).
+# Publishing uses npm trusted publishing (OIDC). Each of the 13 packages needs a
+# trusted publisher on npmjs.com for this repository (kadetr/paragraf), this
+# workflow file (release.yml) and the environment "npm", allowed to run direct
+# `npm publish`. The publish job asks GitHub for a short-lived OIDC token
+# (permission id-token: write) and the npm CLI exchanges it for a publish
+# credential; provenance is attached automatically. This needs npm >= 11.5.1
+# and Node >= 22.14.0, so the job installs a pinned npm 11.
+#
+# Transition: the secret NPM_TOKEN of the environment "npm" is still
+# passed as NODE_AUTH_TOKEN. The npm CLI tries OIDC first and falls back to the
+# token. Remove it after the first release that publishes through OIDC (see the
+# TODO on the Publish step).
 #
 # The publish job runs in the GitHub environment "npm". Add required reviewers
 # to that environment (Settings → Environments) to get an approval prompt
@@ -108,15 +117,15 @@ jobs:
           path: ${{ runner.temp }}/tarballs/*.tgz
           if-no-files-found: error
 
-  # Only this job can sign provenance and sees the npm token. It publishes the
-  # tarballs the build job checked, not a rebuild.
+  # Only this job can sign provenance and publish. It publishes the tarballs
+  # the build job checked, not a rebuild.
   publish:
     needs: build
     runs-on: ubuntu-latest
     environment: npm
     permissions:
       contents: read
-      id-token: write # npm provenance
+      id-token: write # npm trusted publishing (OIDC) and provenance
 
     steps:
       - uses: actions/checkout@v7
@@ -126,6 +135,13 @@ jobs:
         with:
           node-version: '22'
           registry-url: 'https://registry.npmjs.org'
+
+      # Node 22 ships npm 10.x; trusted publishing needs npm >= 11.5.1. Pinned
+      # to an exact version so a release does not change with the latest npm.
+      - name: Use npm 11 (trusted publishing needs >= 11.5.1)
+        run: |
+          npm install -g npm@11.21.2
+          npm --version
 
       - uses: actions/download-artifact@v8
         with:
@@ -140,4 +156,7 @@ jobs:
         if: github.event_name == 'push'
         run: node scripts/publish-tarballs.mjs tarballs
         env:
+          # TODO: remove this env block (and the NPM_TOKEN secret) after the
+          # first release that publishes via trusted publishing succeeds. The
+          # token is only a fallback; npm tries OIDC first.
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
