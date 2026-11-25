@@ -1,0 +1,313 @@
+apiVersion: backstage.io/v1alpha1
+kind: System
+metadata:
+  name: paragraf
+  description: Publication-quality typesetting in JavaScript (Knuth-Plass line breaking, OpenType shaping, PDF/SVG output).
+  links:
+    - url: https://github.com/kadetr/paragraf
+      title: Source repository
+spec:
+  owner: user:kadetr
+---
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: types
+  description: 'Shared TypeScript interfaces and constants for the paragraf typography library'
+  annotations:
+    github.com/project-slug: kadetr/paragraf
+  tags:
+    - layer-l0
+    - typescript
+    - typesetting
+spec:
+  type: library
+  lifecycle: production
+  owner: user:kadetr
+  system: paragraf
+---
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: color
+  description: 'ICC color management for the paragraf typography library'
+  annotations:
+    github.com/project-slug: kadetr/paragraf
+  tags:
+    - layer-l0
+    - typescript
+    - typesetting
+spec:
+  type: library
+  lifecycle: production
+  owner: user:kadetr
+  system: paragraf
+---
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: linebreak
+  description: 'Knuth-Plass line-breaking algorithm + hyphenation. Browser-safe, zero font dependencies.'
+  annotations:
+    github.com/project-slug: kadetr/paragraf
+  tags:
+    - layer-l1
+    - typescript
+    - typesetting
+spec:
+  type: library
+  lifecycle: production
+  owner: user:kadetr
+  system: paragraf
+  dependsOn:
+    - component:types
+---
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: font-engine
+  description: 'Font metrics abstraction, fontkit adapter, and measurer factory for the paragraf typesetter.'
+  annotations:
+    github.com/project-slug: kadetr/paragraf
+  tags:
+    - layer-l1
+    - typescript
+    - typesetting
+spec:
+  type: library
+  lifecycle: production
+  owner: user:kadetr
+  system: paragraf
+  dependsOn:
+    - component:types
+---
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: layout
+  description: 'Page geometry, unit converters, and named page sizes for the paragraf typesetter.'
+  annotations:
+    github.com/project-slug: kadetr/paragraf
+  tags:
+    - layer-l1
+    - typescript
+    - typesetting
+spec:
+  type: library
+  lifecycle: production
+  owner: user:kadetr
+  system: paragraf
+  dependsOn:
+    - component:types
+---
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: style
+  description: 'Paragraph and character style definitions with inheritance resolution for the paragraf typography library.'
+  annotations:
+    github.com/project-slug: kadetr/paragraf
+  tags:
+    - layer-l1
+    - typescript
+    - typesetting
+spec:
+  type: library
+  lifecycle: production
+  owner: user:kadetr
+  system: paragraf
+  dependsOn:
+    - component:types
+---
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: shaping-wasm
+  description: 'Rust/WASM shaping engine for the paragraf typesetter.'
+  annotations:
+    github.com/project-slug: kadetr/paragraf
+  tags:
+    - layer-l2
+    - typescript
+    - typesetting
+spec:
+  type: library
+  lifecycle: production
+  owner: user:kadetr
+  system: paragraf
+  dependsOn:
+    - component:types
+    - component:font-engine
+---
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: render-core
+  description: 'Canvas/SVG layout engine for the paragraf typesetter.'
+  annotations:
+    github.com/project-slug: kadetr/paragraf
+  tags:
+    - layer-l2
+    - typescript
+    - typesetting
+spec:
+  type: library
+  lifecycle: production
+  owner: user:kadetr
+  system: paragraf
+  dependsOn:
+    - component:types
+    - component:font-engine
+---
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: color-wasm
+  description: 'Rust/WASM ICC color transform backend for @paragraf/color.'
+  annotations:
+    github.com/project-slug: kadetr/paragraf
+  tags:
+    - layer-l2
+    - typescript
+    - typesetting
+spec:
+  type: library
+  lifecycle: production
+  owner: user:kadetr
+  system: paragraf
+  dependsOn:
+    - component:color
+---
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: typography
+  description: 'Paragraph compositor, optical margin alignment, and document model for the paragraf typesetter.'
+  annotations:
+    github.com/project-slug: kadetr/paragraf
+  tags:
+    - layer-l3
+    - typescript
+    - typesetting
+spec:
+  type: library
+  lifecycle: production
+  owner: user:kadetr
+  system: paragraf
+  dependsOn:
+    - component:types
+    - component:linebreak
+    - component:font-engine
+    - component:shaping-wasm
+    - component:render-core
+---
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: render-pdf
+  description: 'PDF rendering backend for the paragraf typesetter.'
+  annotations:
+    github.com/project-slug: kadetr/paragraf
+  tags:
+    - layer-l3
+    - typescript
+    - typesetting
+spec:
+  type: library
+  lifecycle: production
+  owner: user:kadetr
+  system: paragraf
+  dependsOn:
+    - component:types
+    - component:color
+    - component:color-wasm
+    - component:font-engine
+    - component:layout
+    - component:render-core
+---
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: template
+  description: 'Document schema and content slot definitions for the paragraf typesetter.'
+  annotations:
+    github.com/project-slug: kadetr/paragraf
+  tags:
+    - layer-l4
+    - typescript
+    - typesetting
+spec:
+  type: library
+  lifecycle: production
+  owner: user:kadetr
+  system: paragraf
+  dependsOn:
+    - component:types
+    - component:layout
+    - component:style
+---
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: compile
+  description: 'Document compile pipeline for the paragraf typesetter. Merges template, data, fonts, layout, and styles into a rendered PDF, SVG, or document model.'
+  annotations:
+    github.com/project-slug: kadetr/paragraf
+  tags:
+    - layer-l4
+    - typescript
+    - typesetting
+spec:
+  type: library
+  lifecycle: production
+  owner: user:kadetr
+  system: paragraf
+  dependsOn:
+    - component:types
+    - component:layout
+    - component:style
+    - component:template
+    - component:font-engine
+    - component:linebreak
+    - component:typography
+    - component:render-core
+    - component:render-pdf
+---
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: studio
+  description: 'Studio schema translation layer for paragraf — validates and translates studio template.json + content.xml into compile-ready objects.'
+  annotations:
+    github.com/project-slug: kadetr/paragraf
+  tags:
+    - layer-app
+    - typescript
+spec:
+  type: service
+  lifecycle: experimental
+  owner: user:kadetr
+  system: paragraf
+  dependsOn:
+    - component:compile
+    - component:layout
+    - component:style
+    - component:template
+---
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: demo
+  description: 'Browser demo of paragraf, deployed to GitHub Pages.'
+  annotations:
+    github.com/project-slug: kadetr/paragraf
+  tags:
+    - layer-app
+    - typescript
+spec:
+  type: website
+  lifecycle: experimental
+  owner: user:kadetr
+  system: paragraf
+  dependsOn:
+    - component:compile
