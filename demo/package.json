@@ -15,7 +15,7 @@
     "@paragraf/compile": "*"
   },
   "devDependencies": {
-    "vite": "^5.0.0",
+    "vite": "^8.3.8",
     "vite-plugin-wasm": "^3.3.0",
     "typescript": "^5.4.0",
     "vitest": "^4.1.12",
