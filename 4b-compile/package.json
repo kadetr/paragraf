@@ -63,7 +63,7 @@
     "@paragraf/color": "^0.7.1"
   },
   "devDependencies": {
-    "@types/node": "^22.19.15",
+    "@types/node": "^26.6.6",
     "tsup": "^8.5.1",
     "typescript": "^5.4.0",
     "vitest": "^4.1.12"
