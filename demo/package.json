@@ -19,7 +19,7 @@
     "vite-plugin-wasm": "^3.3.0",
     "typescript": "^5.4.0",
     "vitest": "^4.1.12",
-    "@vitest/coverage-v8": "^4.1.12",
+    "@vitest/coverage-v8": "^5.1.1",
     "happy-dom": "^21.0.4",
     "@paragraf/typography": "*",
     "tsx": "^4.0.0"
