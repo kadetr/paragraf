@@ -54,7 +54,7 @@
   "devDependencies": {
     "@types/fontkit": "^2.0.9",
     "@types/node": "^22.19.15",
-    "fontkit": "^2.0.4",
+    "fontkit": "^3.0.0",
     "tsx": "^4.21.0",
     "typescript": "^5.4.0",
     "vitest": "^4.1.12"
