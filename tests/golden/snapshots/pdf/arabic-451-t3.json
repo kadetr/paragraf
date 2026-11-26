@@ -1,0 +1,65 @@
+{
+  "id": "arabic-451-t3",
+  "from": [
+    "arabic-451-t3"
+  ],
+  "version": "1.3",
+  "pageCount": 1,
+  "info": { "Producer": "PDFKit", "Creator": "PDFKit", "Title": "arabic-451-t3", "Lang": "en-us" },
+  "hasId": true,
+  "fonts": [
+    { "BaseFont": "CZZZZZ+NotoSansArabic-Regular", "Subtype": "Type0", "toUnicode": true }
+  ],
+  "outputIntents": [],
+  "pages": [
+    {
+      "boxes": {
+        "MediaBox": [0, 0, 595.28, 841.89],
+        "CropBox": null,
+        "BleedBox": null,
+        "TrimBox": null,
+        "ArtBox": null
+      },
+      "fonts": { "F2": "CZZZZZ+NotoSansArabic-Regular" },
+      "colourOperators": { "/DeviceRGB cs": 256, "0 0 0 scn": 256 },
+      "fills": { "DeviceRGB 0 0 0": 256 },
+      "strokes": {},
+      "text": [
+        { "font": "CZZZZZ+NotoSansArabic-Regular", "size": 12, "mode": 3, "x": 497.396, "y": 88.488, "text": "َكاَّيِإَو" },
+        { "font": "CZZZZZ+NotoSansArabic-Regular", "size": 12, "mode": 3, "x": 472.906, "y": 88.488, "text": "ُدُبْعَن" },
+        { "font": "CZZZZZ+NotoSansArabic-Regular", "size": 12, "mode": 3, "x": 447.876, "y": 88.488, "text": "َكاَّيِإ" },
+        { "font": "CZZZZZ+NotoSansArabic-Regular", "size": 12, "mode": 3, "x": 418.658, "y": 88.488, "text": "ِنيلدام" },
+        { "font": "CZZZZZ+NotoSansArabic-Regular", "size": 12, "mode": 3, "x": 399.087, "y": 88.488, "text": "ِوْكَي" },
+        { "font": "CZZZZZ+NotoSansArabic-Regular", "size": 12, "mode": 3, "x": 370.601, "y": 88.488, "text": "ِمِااَم" },
+        { "font": "CZZZZZ+NotoSansArabic-Regular", "size": 12, "mode": 3, "x": 337.555, "y": 88.488, "text": "ِيحِرَّمام" },
+        { "font": "CZZZZZ+NotoSansArabic-Regular", "size": 12, "mode": 3, "x": 300.033, "y": 88.488, "text": "ِنَبْرَّمام" },
+        { "font": "CZZZZZ+NotoSansArabic-Regular", "size": 12, "mode": 3, "x": 256.511, "y": 88.488, "text": "َنحِبَااَعْام" },
+        { "font": "CZZZZZ+NotoSansArabic-Regular", "size": 12, "mode": 3, "x": 235.681, "y": 88.488, "text": "لرَه" },
+        { "font": "CZZZZZ+NotoSansArabic-Regular", "size": 12, "mode": 3, "x": 218.619, "y": 88.488, "text": "ِلَّحِا" },
+        { "font": "CZZZZZ+NotoSansArabic-Regular", "size": 12, "mode": 3, "x": 187.169, "y": 88.488, "text": "ُدْبَسْام" },
+        { "font": "CZZZZZ+NotoSansArabic-Regular", "size": 12, "mode": 3, "x": 154.122, "y": 88.488, "text": "ِيحِرَّمام" },
+        { "font": "CZZZZZ+NotoSansArabic-Regular", "size": 12, "mode": 3, "x": 116.6, "y": 88.488, "text": "ِنَبْرَّمام" },
+        { "font": "CZZZZZ+NotoSansArabic-Regular", "size": 12, "mode": 3, "x": 96.682, "y": 88.488, "text": "ِلَّحام" },
+        { "font": "CZZZZZ+NotoSansArabic-Regular", "size": 12, "mode": 3, "x": 72, "y": 88.488, "text": "ِيْبِ." },
+        { "font": "CZZZZZ+NotoSansArabic-Regular", "size": 12, "mode": 3, "x": 482.852, "y": 113.832, "text": "ضَنحلااَّهام" },
+        { "font": "CZZZZZ+NotoSansArabic-Regular", "size": 12, "mode": 3, "x": 467.384, "y": 113.832, "text": "َعَو" },
+        { "font": "CZZZZZ+NotoSansArabic-Regular", "size": 12, "mode": 3, "x": 437.324, "y": 113.832, "text": "ْيِغْحَحَغ" },
+        { "font": "CZZZZZ+NotoSansArabic-Regular", "size": 12, "mode": 3, "x": 386.072, "y": 113.832, "text": "ِركُهْتَبْام" },
+        { "font": "CZZZZZ+NotoSansArabic-Regular", "size": 12, "mode": 3, "x": 367.688, "y": 113.832, "text": "ِمْحَأ" },
+        { "font": "CZZZZZ+NotoSansArabic-Regular", "size": 12, "mode": 3, "x": 337.628, "y": 113.832, "text": "ْيِغْحَحَغ" },
+        { "font": "CZZZZZ+NotoSansArabic-Regular", "size": 12, "mode": 3, "x": 302.156, "y": 113.832, "text": "َذْبَعْنَط" },
+        { "font": "CZZZZZ+NotoSansArabic-Regular", "size": 12, "mode": 3, "x": 274.328, "y": 113.832, "text": "َنيِصَّام" },
+        { "font": "CZZZZZ+NotoSansArabic-Regular", "size": 12, "mode": 3, "x": 243.608, "y": 113.832, "text": "َقمَمِت" },
+        { "font": "CZZZZZ+NotoSansArabic-Regular", "size": 12, "mode": 3, "x": 195.74, "y": 113.832, "text": "َيحِصَهْبُبْام" },
+        { "font": "CZZZZZ+NotoSansArabic-Regular", "size": 12, "mode": 3, "x": 158.492, "y": 113.832, "text": "َقمَملام" },
+        { "font": "CZZZZZ+NotoSansArabic-Regular", "size": 12, "mode": 3, "x": 132.524, "y": 113.832, "text": "اَنِدْم" },
+        { "font": "CZZZZZ+NotoSansArabic-Regular", "size": 12, "mode": 3, "x": 92.012, "y": 113.832, "text": "ُنحِعَهْبَن" }
+      ],
+      "paths": {
+        "painting": { "f": 256 },
+        "segments": 5412,
+        "digest": "6c1d908b9d57f538"
+      }
+    }
+  ]
+}

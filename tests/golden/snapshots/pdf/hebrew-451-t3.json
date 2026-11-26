@@ -1,0 +1,70 @@
+{
+  "id": "hebrew-451-t3",
+  "from": [
+    "hebrew-451-t3"
+  ],
+  "version": "1.3",
+  "pageCount": 1,
+  "info": { "Producer": "PDFKit", "Creator": "PDFKit", "Title": "hebrew-451-t3", "Lang": "en-us" },
+  "hasId": true,
+  "fonts": [
+    { "BaseFont": "CZZZZZ+NotoSansHebrew-Regular", "Subtype": "Type0", "toUnicode": true }
+  ],
+  "outputIntents": [],
+  "pages": [
+    {
+      "boxes": {
+        "MediaBox": [0, 0, 595.28, 841.89],
+        "CropBox": null,
+        "BleedBox": null,
+        "TrimBox": null,
+        "ArtBox": null
+      },
+      "fonts": { "F2": "CZZZZZ+NotoSansHebrew-Regular" },
+      "colourOperators": { "/DeviceRGB cs": 268, "0 0 0 scn": 268 },
+      "fills": { "DeviceRGB 0 0 0": 268 },
+      "strokes": {},
+      "text": [
+        { "font": "CZZZZZ+NotoSansHebrew-Regular", "size": 12, "mode": 3, "x": 501.968, "y": 84.816, "text": "ַחּורְו" },
+        { "font": "CZZZZZ+NotoSansHebrew-Regular", "size": 12, "mode": 3, "x": 471.297, "y": 84.816, "text": "םֹוהְת" },
+        { "font": "CZZZZZ+NotoSansHebrew-Regular", "size": 12, "mode": 3, "x": 435.706, "y": 84.816, "text": "יֵנְּפ-לַע" },
+        { "font": "CZZZZZ+NotoSansHebrew-Regular", "size": 12, "mode": 3, "x": 405.623, "y": 84.816, "text": "ְךֶׁשֹחְו" },
+        { "font": "CZZZZZ+NotoSansHebrew-Regular", "size": 12, "mode": 3, "x": 380.857, "y": 84.816, "text": "ּוהֹבָו" },
+        { "font": "CZZZZZ+NotoSansHebrew-Regular", "size": 12, "mode": 3, "x": 358.274, "y": 84.816, "text": "ּוהֹת" },
+        { "font": "CZZZZZ+NotoSansHebrew-Regular", "size": 12, "mode": 3, "x": 328.479, "y": 84.816, "text": "הָתְיָה" },
+        { "font": "CZZZZZ+NotoSansHebrew-Regular", "size": 12, "mode": 3, "x": 293.908, "y": 84.816, "text": "ץֶרָאָהְו" },
+        { "font": "CZZZZZ+NotoSansHebrew-Regular", "size": 12, "mode": 3, "x": 255.749, "y": 84.816, "text": "\u0000ץֶרָאָה" },
+        { "font": "CZZZZZ+NotoSansHebrew-Regular", "size": 12, "mode": 3, "x": 233.106, "y": 84.816, "text": "תֵאְו" },
+        { "font": "CZZZZZ+NotoSansHebrew-Regular", "size": 12, "mode": 3, "x": 194.287, "y": 84.816, "text": "םִיַמָּׁשַה" },
+        { "font": "CZZZZZ+NotoSansHebrew-Regular", "size": 12, "mode": 3, "x": 175.257, "y": 84.816, "text": "תֵא" },
+        { "font": "CZZZZZ+NotoSansHebrew-Regular", "size": 12, "mode": 3, "x": 139.342, "y": 84.816, "text": "םיִהֹלֱא" },
+        { "font": "CZZZZZ+NotoSansHebrew-Regular", "size": 12, "mode": 3, "x": 115.691, "y": 84.816, "text": "אָרָּב" },
+        { "font": "CZZZZZ+NotoSansHebrew-Regular", "size": 12, "mode": 3, "x": 72, "y": 84.816, "text": "תיִׁשאֵרְּב" },
+        { "font": "CZZZZZ+NotoSansHebrew-Regular", "size": 12, "mode": 3, "x": 491.696, "y": 101.136, "text": "בֹוט-יִּכ" },
+        { "font": "CZZZZZ+NotoSansHebrew-Regular", "size": 12, "mode": 3, "x": 443.395, "y": 101.136, "text": "רֹואָה-תֶא" },
+        { "font": "CZZZZZ+NotoSansHebrew-Regular", "size": 12, "mode": 3, "x": 406.927, "y": 101.136, "text": "םיִהֹלֱא" },
+        { "font": "CZZZZZ+NotoSansHebrew-Regular", "size": 12, "mode": 3, "x": 382.374, "y": 101.136, "text": "אְרַּיַו" },
+        { "font": "CZZZZZ+NotoSansHebrew-Regular", "size": 12, "mode": 3, "x": 332.225, "y": 101.136, "text": "\u0000רֹוא-יִהְיַו" },
+        { "font": "CZZZZZ+NotoSansHebrew-Regular", "size": 12, "mode": 3, "x": 311.105, "y": 101.136, "text": "רֹוא" },
+        { "font": "CZZZZZ+NotoSansHebrew-Regular", "size": 12, "mode": 3, "x": 292.96, "y": 101.136, "text": "יִהְי" },
+        { "font": "CZZZZZ+NotoSansHebrew-Regular", "size": 12, "mode": 3, "x": 256.491, "y": 101.136, "text": "םיִהֹלֱא" },
+        { "font": "CZZZZZ+NotoSansHebrew-Regular", "size": 12, "mode": 3, "x": 223.779, "y": 101.136, "text": "רֶמאֹּיַו" },
+        { "font": "CZZZZZ+NotoSansHebrew-Regular", "size": 12, "mode": 3, "x": 185.966, "y": 101.136, "text": "\u0000םִיָּמַה" },
+        { "font": "CZZZZZ+NotoSansHebrew-Regular", "size": 12, "mode": 3, "x": 149.821, "y": 101.136, "text": "יֵנְּפ-לַע" },
+        { "font": "CZZZZZ+NotoSansHebrew-Regular", "size": 12, "mode": 3, "x": 108.469, "y": 101.136, "text": "תֶפֶחַרְמ" },
+        { "font": "CZZZZZ+NotoSansHebrew-Regular", "size": 12, "mode": 3, "x": 72, "y": 101.136, "text": "םיִהֹלֱא" },
+        { "font": "CZZZZZ+NotoSansHebrew-Regular", "size": 12, "mode": 3, "x": 485.312, "y": 117.456, "text": "\u0000ְךֶׁשֹחַה" },
+        { "font": "CZZZZZ+NotoSansHebrew-Regular", "size": 12, "mode": 3, "x": 464.18, "y": 117.456, "text": "ןיֵבּו" },
+        { "font": "CZZZZZ+NotoSansHebrew-Regular", "size": 12, "mode": 3, "x": 436.076, "y": 117.456, "text": "רֹואָה" },
+        { "font": "CZZZZZ+NotoSansHebrew-Regular", "size": 12, "mode": 3, "x": 418.484, "y": 117.456, "text": "ןיֵּב" },
+        { "font": "CZZZZZ+NotoSansHebrew-Regular", "size": 12, "mode": 3, "x": 382.556, "y": 117.456, "text": "םיִהֹלֱא" },
+        { "font": "CZZZZZ+NotoSansHebrew-Regular", "size": 12, "mode": 3, "x": 353.444, "y": 117.456, "text": "לֵּדְבַּיַו" }
+      ],
+      "paths": {
+        "painting": { "f": 268 },
+        "segments": 3846,
+        "digest": "2e46b1b8f53441e0"
+      }
+    }
+  ]
+}
