@@ -17,6 +17,8 @@ npm test --workspaces --if-present
 npm run test:e2e
 ```
 
+CI runs the unit tests with coverage (`npm run test:coverage`, then `node scripts/coverage-summary.mjs` for the per-package table).
+
 Run `npm run format:check -- <files>` on files you changed, and `node scripts/pack-check.mjs --out <dir>` if you touched a package's `package.json` or build output.
 
 ## Branches and pull requests

@@ -52,8 +52,22 @@ jobs:
       - name: Type check (all workspaces)
         run: npm run typecheck
 
-      - name: Run unit tests (all workspaces)
-        run: npm test --workspaces --if-present
+      # Unit tests run once, with v8 coverage. Each workspace writes
+      # coverage/coverage-summary.json; the next step prints the per-package
+      # table into the job summary and fails if a published package has none.
+      - name: Run unit tests with coverage (all workspaces)
+        run: npm run test:coverage
+
+      - name: Coverage summary
+        run: node scripts/coverage-summary.mjs
+
+      - name: Upload coverage summaries
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: coverage
+          path: '*/coverage/coverage-summary.json'
+          if-no-files-found: warn
 
       - name: Run e2e tests
         run: npm run test:e2e
