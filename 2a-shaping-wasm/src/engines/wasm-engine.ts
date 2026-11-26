@@ -149,8 +149,7 @@ export class WasmFontEngine implements FontEngine {
     if (this.faceHandlesByFontId.size < this.maxFaceCacheEntries) return;
 
     const oldest = this.faceHandlesByFontId.entries().next().value as
-      | [string, number]
-      | undefined;
+      [string, number] | undefined;
     if (!oldest) return;
 
     const [oldestFontId, oldestHandle] = oldest;

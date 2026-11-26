@@ -65,7 +65,9 @@ if (unknown.length || missing.length) {
 }
 const versions = new Set([...byName.values()].map((v) => v.version));
 if (versions.size !== 1) {
-  console.error(`Tarballs have different versions: ${[...versions].join(', ')}`);
+  console.error(
+    `Tarballs have different versions: ${[...versions].join(', ')}`,
+  );
   process.exit(1);
 }
 
@@ -82,7 +84,9 @@ const isPublished = (name, version) => {
   process.exit(1);
 };
 
-console.log(`${dryRun ? 'DRY RUN — ' : ''}publishing version ${[...versions][0]}\n`);
+console.log(
+  `${dryRun ? 'DRY RUN — ' : ''}publishing version ${[...versions][0]}\n`,
+);
 let published = 0;
 let skipped = 0;
 for (const name of ORDER) {
@@ -106,4 +110,6 @@ for (const name of ORDER) {
   }
   published++;
 }
-console.log(`\nDone: ${published} ${dryRun ? 'would be ' : ''}published, ${skipped} skipped.`);
+console.log(
+  `\nDone: ${published} ${dryRun ? 'would be ' : ''}published, ${skipped} skipped.`,
+);

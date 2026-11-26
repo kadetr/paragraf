@@ -39,13 +39,27 @@ const metrics = engine.getFontMetrics('regular', 12);
 The serialized binary protocol (used by `@paragraf/typography` internally):
 
 ```ts
-import { serializeNodesToBinary, tracebackWasmBinary } from '@paragraf/shaping-wasm';
+import {
+  serializeNodesToBinary,
+  tracebackWasmBinary,
+} from '@paragraf/shaping-wasm';
 
 const [f64s, u8s] = serializeNodesToBinary(nodes);
 
-const result = tracebackWasmBinary(wasm, nodes, lineWidth, tolerance,
-  emergencyStretch, looseness, consecutiveHyphenLimit, lineWidths, runtPenalty, singleLinePenalty,
-  adjDemerits, onInfeasible); // onInfeasible: 'overfull' (default) | 'throw'
+const result = tracebackWasmBinary(
+  wasm,
+  nodes,
+  lineWidth,
+  tolerance,
+  emergencyStretch,
+  looseness,
+  consecutiveHyphenLimit,
+  lineWidths,
+  runtPenalty,
+  singleLinePenalty,
+  adjDemerits,
+  onInfeasible,
+); // onInfeasible: 'overfull' (default) | 'throw'
 if ('error' in result) throw new Error(result.error);
 const { breaks, usedEmergency, usedFallback } = result.ok;
 ```

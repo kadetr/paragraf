@@ -156,10 +156,7 @@ const bruteForce = (
       const n = nodes[b];
       const penalty = n.type === 'penalty' ? n.penalty : 0;
       const flagged = n.type === 'penalty' && n.flagged;
-      const badness = Math.min(
-        10000,
-        Math.round(100 * Math.abs(ratio) ** 3),
-      );
+      const badness = Math.min(10000, Math.round(100 * Math.abs(ratio) ** 3));
       let d: number;
       if (penalty === FORCED_BREAK) d = (1 + badness) ** 2;
       else if (penalty >= 0) d = (1 + badness + penalty) ** 2;
@@ -241,8 +238,7 @@ describe('line measure excludes the glue at the previous break', () => {
       let prev = -1;
       breaks.slice(0, -1).forEach((b) => {
         const m = measureLine(nodes, prev, b.position, lineWidth);
-        const set =
-          m.natural + b.ratio * (b.ratio >= 0 ? m.stretch : m.shrink);
+        const set = m.natural + b.ratio * (b.ratio >= 0 ? m.stretch : m.shrink);
         expect(set, `seed ${seed}, break at ${b.position}`).toBeCloseTo(
           lineWidth,
           6,
@@ -365,7 +361,13 @@ describe('composeParagraph renders the spacing the ratio describes', () => {
         continue;
       }
       const breaks = traceback(result.node);
-      const lines = composeParagraph(nodes, breaks, 'justified', false, lineWidth);
+      const lines = composeParagraph(
+        nodes,
+        breaks,
+        'justified',
+        false,
+        lineWidth,
+      );
 
       lines.slice(0, -1).forEach((line, k) => {
         if (line.words.length < 2) return; // no gap to space
@@ -433,7 +435,9 @@ const referenceDp = (
           const newRun = flagged ? run + 1 : 0;
           if (hyphenLimit > 0 && newRun > hyphenLimit) continue;
           const total =
-            prev + d + (adjDemerits > 0 && Math.abs(fc - pf) > 1 ? adjDemerits : 0);
+            prev +
+            d +
+            (adjDemerits > 0 && Math.abs(fc - pf) > 1 ? adjDemerits : 0);
           const key = `${to}/${fc}/${Math.min(newRun, 12)}`;
           const cur = best.get(key);
           if (cur === undefined || total < cur) best.set(key, total);
@@ -483,7 +487,12 @@ describe('longer paragraphs equal an independent dynamic programme', () => {
       const nodes = longParagraph(seed, seed % 2 ? 40 : 80, 0.3);
       const lineWidth = 150 + (seed % 5) * 20;
       const expected = referenceDp(nodes, lineWidth, 4, 10000, 0);
-      const actual = solve({ nodes, lineWidth, tolerance: 4, adjDemerits: 10000 });
+      const actual = solve({
+        nodes,
+        lineWidth,
+        tolerance: 4,
+        adjDemerits: 10000,
+      });
       if (expected === null) {
         expect(actual, `seed ${seed}`).toBeNull();
       } else {

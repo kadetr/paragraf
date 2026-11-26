@@ -1,11 +1,11 @@
 {
   "compilerOptions": {
-    "target":           "ES2022",
-    "module":           "ESNext",
+    "target": "ES2022",
+    "module": "ESNext",
     "moduleResolution": "bundler",
-    "strict":           true,
-    "skipLibCheck":     true,
-    "outDir":           "./dist"
+    "strict": true,
+    "skipLibCheck": true,
+    "outDir": "./dist"
   },
   "include": ["src/**/*", "tests/**/*"]
 }

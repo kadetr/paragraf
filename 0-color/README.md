@@ -54,18 +54,18 @@ Factory. Returns a `ColorManager` instance with a profile cache.
 
 ### `ColorManager`
 
-| Method | Description |
-|--------|-------------|
-| `loadBuiltinSrgb()` | Returns (and caches) the synthesized sRGB IEC61966-2.1 profile |
-| `loadProfile(path)` | Reads, parses, and caches an ICC profile from disk |
-| `createTransform(src, dest, intent?)` | Creates a compiled `ColorTransform` between two profiles |
-| `getOutputIntent(profile, condition)` | Returns `{ profile, condition }` for PDF/X OutputIntent |
+| Method                                | Description                                                    |
+| ------------------------------------- | -------------------------------------------------------------- |
+| `loadBuiltinSrgb()`                   | Returns (and caches) the synthesized sRGB IEC61966-2.1 profile |
+| `loadProfile(path)`                   | Reads, parses, and caches an ICC profile from disk             |
+| `createTransform(src, dest, intent?)` | Creates a compiled `ColorTransform` between two profiles       |
+| `getOutputIntent(profile, condition)` | Returns `{ profile, condition }` for PDF/X OutputIntent        |
 
 ### `ColorTransform`
 
 ```typescript
 interface ColorTransform {
-  apply(input: number[]): number[];  // values in [0, 1]
+  apply(input: number[]): number[]; // values in [0, 1]
 }
 ```
 
@@ -78,15 +78,15 @@ interface ColorProfile {
   name: string;
   colorSpace: 'RGB' | 'CMYK' | 'Lab' | 'Gray';
   pcs: 'XYZ' | 'Lab';
-  renderingIntent: number;                // from the profile header
+  renderingIntent: number; // from the profile header
   whitePoint: XYZValue;
-  matrix?: { r, g, b: XYZValue };        // RGB matrix profiles
-  trc?: [TrcCurve, TrcCurve, TrcCurve];  // tone curves
-  a2b0?: Mft2Tag;                         // device→PCS LUT
-  b2a0?: Mft2Tag;                         // PCS→device LUT (perceptual)
-  b2a1?: Mft2Tag;                         // PCS→device LUT (relative colorimetric)
-  b2a2?: Mft2Tag;                         // PCS→device LUT (saturation)
-  bytes: Uint8Array;                      // raw ICC bytes for PDF embedding
+  matrix?: { r; g; b: XYZValue }; // RGB matrix profiles
+  trc?: [TrcCurve, TrcCurve, TrcCurve]; // tone curves
+  a2b0?: Mft2Tag; // device→PCS LUT
+  b2a0?: Mft2Tag; // PCS→device LUT (perceptual)
+  b2a1?: Mft2Tag; // PCS→device LUT (relative colorimetric)
+  b2a2?: Mft2Tag; // PCS→device LUT (saturation)
+  bytes: Uint8Array; // raw ICC bytes for PDF embedding
 }
 ```
 
@@ -96,9 +96,9 @@ A colour value together with its transformed result and the profile bytes:
 
 ```typescript
 interface TaggedColor {
-  source: RGBColor;                                      // original sRGB device value
-  transformed: CMYKColor | RGBColor | GrayColor | null;  // result of ICC transform
-  profileBytes: Uint8Array;                              // for OutputIntent embedding
+  source: RGBColor; // original sRGB device value
+  transformed: CMYKColor | RGBColor | GrayColor | null; // result of ICC transform
+  profileBytes: Uint8Array; // for OutputIntent embedding
 }
 ```
 
@@ -129,6 +129,7 @@ With `@paragraf/render-pdf` directly, pass `outputIntent` and, to convert the fi
 ## Profile bundling policy
 
 No ICC profiles are bundled. Reasons:
+
 - FOGRA39/51 are commercial profiles (FOGRA e.V.)
 - sRGB is synthesized in memory from analytical constants — no file needed
 - Keeps the npm tarball clean and legally unambiguous
@@ -149,9 +150,9 @@ index.ts      — public API barrel
 
 ## Status
 
-| Scope | State |
-|-------|-------|
-| Pure TypeScript: profile parsing, matrix+TRC, tetrahedral LUT, sRGB synthesis | in this package |
-| PDF OutputIntent and fill-colour transform | in `@paragraf/render-pdf` and `@paragraf/compile` (`outputIntent`, `pdfxConformance`) |
-| Rust/WASM acceleration of the transforms | in [`@paragraf/color-wasm`](https://github.com/kadetr/paragraf/tree/main/2c-color-wasm) |
-| CSS Color Level 4 inputs (oklch, display-p3) | not implemented |
+| Scope                                                                         | State                                                                                   |
+| ----------------------------------------------------------------------------- | --------------------------------------------------------------------------------------- |
+| Pure TypeScript: profile parsing, matrix+TRC, tetrahedral LUT, sRGB synthesis | in this package                                                                         |
+| PDF OutputIntent and fill-colour transform                                    | in `@paragraf/render-pdf` and `@paragraf/compile` (`outputIntent`, `pdfxConformance`)   |
+| Rust/WASM acceleration of the transforms                                      | in [`@paragraf/color-wasm`](https://github.com/kadetr/paragraf/tree/main/2c-color-wasm) |
+| CSS Color Level 4 inputs (oklch, display-p3)                                  | not implemented                                                                         |

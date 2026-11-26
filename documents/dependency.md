@@ -2,20 +2,20 @@
 
 ## Direct dependencies per package
 
-| Package | npm name | Direct `@paragraf/*` deps | Direct third-party deps |
-|---|---|---|---|
-| `0-types` | `@paragraf/types` | — | — |
-| `0-color` | `@paragraf/color` | — | — |
-| `1a-linebreak` | `@paragraf/linebreak` | `types` | `hyphen` |
-| `1b-font-engine` | `@paragraf/font-engine` | `types` | `fontkit` |
-| `1c-layout` | `@paragraf/layout` | `types` | — |
-| `1d-style` | `@paragraf/style` | `types` | — |
-| `2a-shaping-wasm` | `@paragraf/shaping-wasm` | `types`, `font-engine` | — |
-| `2b-render-core` | `@paragraf/render-core` | `types`, `font-engine` | — |
-| `3a-typography` | `@paragraf/typography` | `types`, `linebreak`, `font-engine`, `shaping-wasm`, `render-core` | — |
-| `3b-render-pdf` | `@paragraf/render-pdf` | `types`, `font-engine`, `render-core` | `pdfkit` |
-| `4a-template` | `@paragraf/template` | `types`, `layout`, `style` | — |
-| `4b-compile` | `@paragraf/compile` | `types`, `layout`, `style`, `template`, `font-engine`, `typography`, `render-core`, `render-pdf` | — |
+| Package           | npm name                 | Direct `@paragraf/*` deps                                                                        | Direct third-party deps |
+| ----------------- | ------------------------ | ------------------------------------------------------------------------------------------------ | ----------------------- |
+| `0-types`         | `@paragraf/types`        | —                                                                                                | —                       |
+| `0-color`         | `@paragraf/color`        | —                                                                                                | —                       |
+| `1a-linebreak`    | `@paragraf/linebreak`    | `types`                                                                                          | `hyphen`                |
+| `1b-font-engine`  | `@paragraf/font-engine`  | `types`                                                                                          | `fontkit`               |
+| `1c-layout`       | `@paragraf/layout`       | `types`                                                                                          | —                       |
+| `1d-style`        | `@paragraf/style`        | `types`                                                                                          | —                       |
+| `2a-shaping-wasm` | `@paragraf/shaping-wasm` | `types`, `font-engine`                                                                           | —                       |
+| `2b-render-core`  | `@paragraf/render-core`  | `types`, `font-engine`                                                                           | —                       |
+| `3a-typography`   | `@paragraf/typography`   | `types`, `linebreak`, `font-engine`, `shaping-wasm`, `render-core`                               | —                       |
+| `3b-render-pdf`   | `@paragraf/render-pdf`   | `types`, `font-engine`, `render-core`                                                            | `pdfkit`                |
+| `4a-template`     | `@paragraf/template`     | `types`, `layout`, `style`                                                                       | —                       |
+| `4b-compile`      | `@paragraf/compile`      | `types`, `layout`, `style`, `template`, `font-engine`, `typography`, `render-core`, `render-pdf` | —                       |
 
 ---
 
@@ -30,8 +30,8 @@ lands in `node_modules` when you install each package.
 npm install @paragraf/types
 ```
 
-| Package | Source |
-|---|---|
+| Package           | Source |
+| ----------------- | ------ |
 | `@paragraf/types` | direct |
 
 No third-party deps. Safe for any environment.
@@ -44,11 +44,11 @@ No third-party deps. Safe for any environment.
 npm install @paragraf/linebreak
 ```
 
-| Package | Source |
-|---|---|
-| `@paragraf/types` | transitive |
-| `@paragraf/linebreak` | direct |
-| `hyphen` | transitive |
+| Package               | Source     |
+| --------------------- | ---------- |
+| `@paragraf/types`     | transitive |
+| `@paragraf/linebreak` | direct     |
+| `hyphen`              | transitive |
 
 Browser-safe. No font or WASM dependencies.
 
@@ -60,11 +60,11 @@ Browser-safe. No font or WASM dependencies.
 npm install @paragraf/font-engine
 ```
 
-| Package | Source |
-|---|---|
-| `@paragraf/types` | transitive |
-| `@paragraf/font-engine` | direct |
-| `fontkit` | transitive |
+| Package                 | Source     |
+| ----------------------- | ---------- |
+| `@paragraf/types`       | transitive |
+| `@paragraf/font-engine` | direct     |
+| `fontkit`               | transitive |
 
 ---
 
@@ -74,12 +74,12 @@ npm install @paragraf/font-engine
 npm install @paragraf/shaping-wasm
 ```
 
-| Package | Source |
-|---|---|
-| `@paragraf/types` | transitive |
-| `@paragraf/font-engine` | transitive |
-| `@paragraf/shaping-wasm` | direct |
-| `fontkit` | transitive |
+| Package                  | Source     |
+| ------------------------ | ---------- |
+| `@paragraf/types`        | transitive |
+| `@paragraf/font-engine`  | transitive |
+| `@paragraf/shaping-wasm` | direct     |
+| `fontkit`                | transitive |
 
 Adds the Rust/WASM shaping backend on top of `font-engine`.
 
@@ -91,12 +91,12 @@ Adds the Rust/WASM shaping backend on top of `font-engine`.
 npm install @paragraf/render-core
 ```
 
-| Package | Source |
-|---|---|
-| `@paragraf/types` | transitive |
+| Package                 | Source     |
+| ----------------------- | ---------- |
+| `@paragraf/types`       | transitive |
 | `@paragraf/font-engine` | transitive |
-| `@paragraf/render-core` | direct |
-| `fontkit` | transitive |
+| `@paragraf/render-core` | direct     |
+| `fontkit`               | transitive |
 
 Canvas/SVG output. Browser-safe.
 
@@ -111,16 +111,16 @@ alignment, multi-frame/multi-page document model.
 npm install @paragraf/typography
 ```
 
-| Package | Source |
-|---|---|
-| `@paragraf/types` | transitive |
-| `@paragraf/linebreak` | transitive |
-| `@paragraf/font-engine` | transitive |
+| Package                  | Source     |
+| ------------------------ | ---------- |
+| `@paragraf/types`        | transitive |
+| `@paragraf/linebreak`    | transitive |
+| `@paragraf/font-engine`  | transitive |
 | `@paragraf/shaping-wasm` | transitive |
-| `@paragraf/render-core` | transitive |
-| `@paragraf/typography` | direct |
-| `fontkit` | transitive |
-| `hyphen` | transitive |
+| `@paragraf/render-core`  | transitive |
+| `@paragraf/typography`   | direct     |
+| `fontkit`                | transitive |
+| `hyphen`                 | transitive |
 
 ---
 
@@ -133,14 +133,14 @@ Can be used alongside render-core without the full compositor.
 npm install @paragraf/render-pdf
 ```
 
-| Package | Source |
-|---|---|
-| `@paragraf/types` | transitive |
+| Package                 | Source     |
+| ----------------------- | ---------- |
+| `@paragraf/types`       | transitive |
 | `@paragraf/font-engine` | transitive |
 | `@paragraf/render-core` | transitive |
-| `@paragraf/render-pdf` | direct |
-| `fontkit` | transitive |
-| `pdfkit` | transitive |
+| `@paragraf/render-pdf`  | direct     |
+| `fontkit`               | transitive |
+| `pdfkit`                | transitive |
 
 ---
 
@@ -152,10 +152,10 @@ Page geometry, unit converters, and named paper sizes.
 npm install @paragraf/layout
 ```
 
-| Package | Source |
-|---|---|
-| `@paragraf/types` | transitive |
-| `@paragraf/layout` | direct |
+| Package            | Source     |
+| ------------------ | ---------- |
+| `@paragraf/types`  | transitive |
+| `@paragraf/layout` | direct     |
 
 Browser-safe. No font or WASM dependencies.
 
@@ -169,10 +169,10 @@ Paragraph and character style definitions with inheritance resolution.
 npm install @paragraf/style
 ```
 
-| Package | Source |
-|---|---|
+| Package           | Source     |
+| ----------------- | ---------- |
 | `@paragraf/types` | transitive |
-| `@paragraf/style` | direct |
+| `@paragraf/style` | direct     |
 
 Browser-safe. No font or WASM dependencies.
 
@@ -186,8 +186,8 @@ ICC color management utilities.
 npm install @paragraf/color
 ```
 
-| Package | Source |
-|---|---|
+| Package           | Source |
+| ----------------- | ------ |
 | `@paragraf/color` | direct |
 
 Browser-safe. No dependencies at all.
@@ -202,12 +202,12 @@ Document schema and content slot definitions.
 npm install @paragraf/template
 ```
 
-| Package | Source |
-|---|---|
-| `@paragraf/types` | transitive |
-| `@paragraf/layout` | transitive |
-| `@paragraf/style` | transitive |
-| `@paragraf/template` | direct |
+| Package              | Source     |
+| -------------------- | ---------- |
+| `@paragraf/types`    | transitive |
+| `@paragraf/layout`   | transitive |
+| `@paragraf/style`    | transitive |
+| `@paragraf/template` | direct     |
 
 ---
 
@@ -220,22 +220,22 @@ styles into a rendered PDF, SVG, or document model in one call.
 npm install @paragraf/compile
 ```
 
-| Package | Source |
-|---|---|
-| `@paragraf/types` | transitive |
-| `@paragraf/linebreak` | transitive |
-| `@paragraf/font-engine` | transitive |
+| Package                  | Source     |
+| ------------------------ | ---------- |
+| `@paragraf/types`        | transitive |
+| `@paragraf/linebreak`    | transitive |
+| `@paragraf/font-engine`  | transitive |
 | `@paragraf/shaping-wasm` | transitive |
-| `@paragraf/render-core` | transitive |
-| `@paragraf/typography` | transitive |
-| `@paragraf/render-pdf` | transitive |
-| `@paragraf/layout` | transitive |
-| `@paragraf/style` | transitive |
-| `@paragraf/template` | transitive |
-| `@paragraf/compile` | direct |
-| `fontkit` | transitive |
-| `hyphen` | transitive |
-| `pdfkit` | transitive |
+| `@paragraf/render-core`  | transitive |
+| `@paragraf/typography`   | transitive |
+| `@paragraf/render-pdf`   | transitive |
+| `@paragraf/layout`       | transitive |
+| `@paragraf/style`        | transitive |
+| `@paragraf/template`     | transitive |
+| `@paragraf/compile`      | direct     |
+| `fontkit`                | transitive |
+| `hyphen`                 | transitive |
+| `pdfkit`                 | transitive |
 
 ---
 
@@ -245,18 +245,18 @@ npm install @paragraf/compile
 npm install @paragraf/typography @paragraf/render-pdf
 ```
 
-| Package | Source |
-|---|---|
-| `@paragraf/types` | transitive |
-| `@paragraf/linebreak` | transitive |
-| `@paragraf/font-engine` | transitive |
+| Package                  | Source     |
+| ------------------------ | ---------- |
+| `@paragraf/types`        | transitive |
+| `@paragraf/linebreak`    | transitive |
+| `@paragraf/font-engine`  | transitive |
 | `@paragraf/shaping-wasm` | transitive |
-| `@paragraf/render-core` | transitive |
-| `@paragraf/typography` | direct |
-| `@paragraf/render-pdf` | direct |
-| `fontkit` | transitive |
-| `hyphen` | transitive |
-| `pdfkit` | transitive |
+| `@paragraf/render-core`  | transitive |
+| `@paragraf/typography`   | direct     |
+| `@paragraf/render-pdf`   | direct     |
+| `fontkit`                | transitive |
+| `hyphen`                 | transitive |
+| `pdfkit`                 | transitive |
 
 ---
 

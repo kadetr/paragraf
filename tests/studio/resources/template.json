@@ -87,17 +87,10 @@
   },
   "pages": {
     "first": {
-      "frames": [
-        "title-block",
-        "body-text",
-        "footer-note"
-      ]
+      "frames": ["title-block", "body-text", "footer-note"]
     },
     "default": {
-      "frames": [
-        "body-text",
-        "footer-note"
-      ]
+      "frames": ["body-text", "footer-note"]
     }
   },
   "compile": {

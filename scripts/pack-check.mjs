@@ -91,7 +91,9 @@ const fail = (pkg, msg) => {
   console.log(`  FAIL ${pkg}: ${msg}`);
 };
 
-console.log(`Packing ${Object.keys(PACKAGES).length} packages into ${outDir}\n`);
+console.log(
+  `Packing ${Object.keys(PACKAGES).length} packages into ${outDir}\n`,
+);
 
 for (const [dir, extra] of Object.entries(PACKAGES)) {
   const cwd = join(root, dir);
@@ -190,7 +192,10 @@ for (const [dir, extra] of Object.entries(PACKAGES)) {
           ? spec.split('/').slice(0, 2).join('/')
           : spec.split('/')[0];
         if (!declared.has(dep)) {
-          fail(name, `${f} imports "${dep}", which is not a declared dependency`);
+          fail(
+            name,
+            `${f} imports "${dep}", which is not a declared dependency`,
+          );
         }
       }
     }
@@ -199,14 +204,19 @@ for (const [dir, extra] of Object.entries(PACKAGES)) {
     const targets = typeof v === 'string' ? [v] : Object.values(v);
     for (const t of targets) {
       if (typeof t !== 'string') continue;
-      if (t.includes('/src/')) fail(name, `export "${k}" points at source: ${t}`);
+      if (t.includes('/src/'))
+        fail(name, `export "${k}" points at source: ${t}`);
       else if (!has(t.replace(/^\.\//, ''))) {
         fail(name, `export "${k}" points at a file not in the tarball: ${t}`);
       }
     }
   }
 
-  for (const field of ['dependencies', 'peerDependencies', 'optionalDependencies']) {
+  for (const field of [
+    'dependencies',
+    'peerDependencies',
+    'optionalDependencies',
+  ]) {
     for (const [dep, range] of Object.entries(packed[field] ?? {})) {
       if (!dep.startsWith('@paragraf/')) continue;
       if (range !== `^${rootVersion}`) {
@@ -217,7 +227,8 @@ for (const [dir, extra] of Object.entries(PACKAGES)) {
 
   // prepack rewrites package.json and postpack must put it back.
   const after = readFileSync(join(cwd, 'package.json'), 'utf8');
-  if (after !== before) fail(name, 'package.json was not restored after packing');
+  if (after !== before)
+    fail(name, 'package.json was not restored after packing');
   if (existsSync(join(cwd, '.dev-exports.json'))) {
     fail(name, '.dev-exports.json left behind');
   }
@@ -235,7 +246,10 @@ if (tarballs.length !== Object.keys(PACKAGES).length) {
   );
 }
 
-if (!existsSync(join(root, 'studio/package.json')) || !readJson(join(root, 'studio/package.json')).private) {
+if (
+  !existsSync(join(root, 'studio/package.json')) ||
+  !readJson(join(root, 'studio/package.json')).private
+) {
   failures++;
   console.log('  FAIL studio must be private');
 }

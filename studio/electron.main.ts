@@ -111,10 +111,7 @@ function spawnWorker(projectPath: string): Worker {
 
       if (canceled || !filePath) return;
 
-      await writeFile(
-        filePath,
-        result.buffer,
-      );
+      await writeFile(filePath, result.buffer);
       shell.openPath(filePath);
       mainWindow?.webContents.send('compileResult', {
         type: 'pdf',

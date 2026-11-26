@@ -166,7 +166,7 @@ const LTR_STRONG_RE =
  * A strong LTR character encountered before any RTL character returns `false`.
  */
 export function looksLikeRtl(text: string): boolean {
-  for (let i = 0; i < text.length; ) {
+  for (let i = 0; i < text.length;) {
     const cp = text.codePointAt(i)!;
     const ch = String.fromCodePoint(cp);
     if (RTL_STRONG_RE.test(ch)) return true;

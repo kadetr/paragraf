@@ -54,7 +54,13 @@ const randomParagraph = (seed: number): Node[] => {
     }
   }
   nodes.push(
-    { type: 'glue', kind: 'termination', width: 0, stretch: Infinity, shrink: 0 },
+    {
+      type: 'glue',
+      kind: 'termination',
+      width: 0,
+      stretch: Infinity,
+      shrink: 0,
+    },
     { type: 'penalty', width: 0, penalty: FORCED_BREAK, flagged: false },
   );
   return nodes;
@@ -101,7 +107,10 @@ const compare = (adjDemerits: number, looseness: number, hyphenLimit = 0) => {
       expect('error' in res, `seed ${seed}`).toBe(true);
       continue;
     }
-    expect('ok' in res, `seed ${seed}: ${JSON.stringify(res).slice(0, 80)}`).toBe(true);
+    expect(
+      'ok' in res,
+      `seed ${seed}: ${JSON.stringify(res).slice(0, 80)}`,
+    ).toBe(true);
     const rs = res.ok.breaks as { position: number; ratio: number }[];
     expect(
       rs.map((b) => b.position),
@@ -149,7 +158,13 @@ const infeasibleParagraph = (seed: number): Node[] => {
     );
   }
   nodes.push(
-    { type: 'glue', kind: 'termination', width: 0, stretch: Infinity, shrink: 0 },
+    {
+      type: 'glue',
+      kind: 'termination',
+      width: 0,
+      stretch: Infinity,
+      shrink: 0,
+    },
     { type: 'penalty', width: 0, penalty: FORCED_BREAK, flagged: false },
   );
   return nodes;
@@ -181,8 +196,18 @@ const compareFallback = (
       computeBreakpoints({ ...base, onInfeasible: 'throw' }),
     ).toThrow();
     const strict = tracebackWasmBinary(
-      wasm, nodes, lineWidth, tolerance, emergencyStretch, looseness,
-      hyphenLimit, [], 0, 0, adjDemerits, 'throw',
+      wasm,
+      nodes,
+      lineWidth,
+      tolerance,
+      emergencyStretch,
+      looseness,
+      hyphenLimit,
+      [],
+      0,
+      0,
+      adjDemerits,
+      'throw',
     );
     expect('error' in strict, `seed ${seed}`).toBe(true);
 
@@ -190,8 +215,17 @@ const compareFallback = (
     const tsResult = computeBreakpoints(base);
     const ts = traceback(tsResult.node);
     const res = tracebackWasmBinary(
-      wasm, nodes, lineWidth, tolerance, emergencyStretch, looseness,
-      hyphenLimit, [], 0, 0, adjDemerits,
+      wasm,
+      nodes,
+      lineWidth,
+      tolerance,
+      emergencyStretch,
+      looseness,
+      hyphenLimit,
+      [],
+      0,
+      0,
+      adjDemerits,
     );
     expect('ok' in res, `seed ${seed}`).toBe(true);
     expect(res.ok.usedFallback, `seed ${seed}`).toBe(true);
@@ -199,15 +233,18 @@ const compareFallback = (
     expect(res.ok.usedEmergency, `seed ${seed}`).toBe(tsResult.usedEmergency);
 
     const rs = res.ok.breaks as typeof ts;
-    expect(rs.map((b) => b.position), `seed ${seed}`).toEqual(
-      ts.map((b) => b.position),
-    );
-    expect(rs.map((b) => b.overfull === true), `seed ${seed}`).toEqual(
-      ts.map((b) => b.overfull === true),
-    );
-    expect(rs.map((b) => [b.flagged, b.line]), `seed ${seed}`).toEqual(
-      ts.map((b) => [b.flagged, b.line]),
-    );
+    expect(
+      rs.map((b) => b.position),
+      `seed ${seed}`,
+    ).toEqual(ts.map((b) => b.position));
+    expect(
+      rs.map((b) => b.overfull === true),
+      `seed ${seed}`,
+    ).toEqual(ts.map((b) => b.overfull === true));
+    expect(
+      rs.map((b) => [b.flagged, b.line]),
+      `seed ${seed}`,
+    ).toEqual(ts.map((b) => [b.flagged, b.line]));
     rs.forEach((b, k) => {
       expect(Number.isFinite(b.ratio), `seed ${seed} line ${k}`).toBe(true);
       expect(b.ratio, `seed ${seed} line ${k}`).toBeCloseTo(ts[k].ratio, 9);
@@ -227,15 +264,35 @@ describe('Rust and TypeScript agree on the overfull fallback', () => {
 
   it('a word that only fits by hyphenating every line, limit 1', () => {
     const h = { type: 'penalty', width: 4, penalty: 50, flagged: true } as Node;
-    const b = (): Node => ({ type: 'box', width: 40, content: 'x', font: FONT });
+    const b = (): Node => ({
+      type: 'box',
+      width: 40,
+      content: 'x',
+      font: FONT,
+    });
     const nodes: Node[] = [
-      b(), h, b(), h, b(), h, b(),
-      { type: 'glue', kind: 'termination', width: 0, stretch: Infinity, shrink: 0 },
+      b(),
+      h,
+      b(),
+      h,
+      b(),
+      h,
+      b(),
+      {
+        type: 'glue',
+        kind: 'termination',
+        width: 0,
+        stretch: Infinity,
+        shrink: 0,
+      },
       { type: 'penalty', width: 0, penalty: FORCED_BREAK, flagged: false },
     ];
     const ts = traceback(
       computeBreakpoints({
-        nodes, lineWidth: 50, tolerance: 2, consecutiveHyphenLimit: 1,
+        nodes,
+        lineWidth: 50,
+        tolerance: 2,
+        consecutiveHyphenLimit: 1,
       }).node,
     );
     const res = tracebackWasmBinary(wasm, nodes, 50, 2, 0, 0, 1);

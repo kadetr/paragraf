@@ -33,8 +33,7 @@ import { MARGIN_X, MARGIN_TOP, PAGE_W, PAGE_H } from '../fixtures/documents.js';
 
 let loadColorWasm: (() => unknown) | null = null;
 let createWasmTransform:
-  | ((wasm: unknown, src: unknown, dst: unknown) => unknown)
-  | null = null;
+  ((wasm: unknown, src: unknown, dst: unknown) => unknown) | null = null;
 
 try {
   const mod = await import('@paragraf/color-wasm');

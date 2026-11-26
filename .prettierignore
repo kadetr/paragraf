@@ -1,0 +1,6 @@
+# Generated files: written by tools, not by hand.
+tests/golden/snapshots/
+**/wasm/pkg/
+**/wasm/pkg-bundler/
+scripts/fonts-manifest.json
+package-lock.json

@@ -21,7 +21,9 @@ describe('RT1 — renders SVG string inside preview div (first page shown by def
       ],
     };
 
-    render(<PreviewPanel result={result} isCompiling={false} lastError={null} />);
+    render(
+      <PreviewPanel result={result} isCompiling={false} lastError={null} />,
+    );
 
     const pageDiv = screen.getByTestId('svg-page');
     expect(pageDiv.innerHTML).toContain('data-testid="page1"');
@@ -48,7 +50,9 @@ describe('RT3 — single page → no tab bar rendered', () => {
       svgPages: ['<svg/>'],
     };
 
-    render(<PreviewPanel result={result} isCompiling={false} lastError={null} />);
+    render(
+      <PreviewPanel result={result} isCompiling={false} lastError={null} />,
+    );
 
     expect(screen.queryByTestId('page-tabs')).not.toBeInTheDocument();
   });
@@ -63,7 +67,9 @@ describe('RT4 — multiple pages → tab bar with correct count; clicking Page 2
       svgPages: ['<svg id="p1"/>', '<svg id="p2"/>'],
     };
 
-    render(<PreviewPanel result={result} isCompiling={false} lastError={null} />);
+    render(
+      <PreviewPanel result={result} isCompiling={false} lastError={null} />,
+    );
 
     expect(screen.getByTestId('page-tabs')).toBeInTheDocument();
     expect(screen.getByTestId('page-tab-1')).toBeInTheDocument();
@@ -98,7 +104,9 @@ describe('RT5 — frame overlay button toggles overlay visibility', () => {
       ],
     };
 
-    render(<PreviewPanel result={result} isCompiling={false} lastError={null} />);
+    render(
+      <PreviewPanel result={result} isCompiling={false} lastError={null} />,
+    );
 
     // Overlay not visible initially
     expect(screen.queryByTestId('frame-overlay')).not.toBeInTheDocument();

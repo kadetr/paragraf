@@ -46,7 +46,8 @@ const english = {
 };
 
 const german = {
-  intro: 'Ein gewöhnlicher Absatz ohne Schwierigkeiten, der sich normal setzen lässt.',
+  intro:
+    'Ein gewöhnlicher Absatz ohne Schwierigkeiten, der sich normal setzen lässt.',
   body:
     'Die Donaudampfschifffahrtsgesellschaftskapitänsmütze und das ' +
     'Rindfleischetikettierungsüberwachungsaufgabenübertragungsgesetz stehen nebeneinander.',

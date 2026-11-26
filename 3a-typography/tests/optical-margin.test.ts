@@ -265,7 +265,7 @@ describe('buildOmaAdjustments', () => {
       ratio: 0,
       alignment: 'left',
       isWidow: false,
-    isRunt: false,
+      isRunt: false,
       lineWidth: 300,
       lineHeight: 12,
       baseline: 9.6,

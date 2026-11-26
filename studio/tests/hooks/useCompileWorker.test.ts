@@ -9,8 +9,7 @@ import { useCompileWorker } from '../../src/hooks/useCompileWorker.js';
 import type { CompileResult } from '../../src/ipc-types.js';
 
 // Captured callbacks from window.studio stubs
-let capturedOnCompileResult: ((result: CompileResult) => void) | null =
-  null;
+let capturedOnCompileResult: ((result: CompileResult) => void) | null = null;
 let capturedOnFileChanged: (() => void) | null = null;
 
 function setupStudio(): void {

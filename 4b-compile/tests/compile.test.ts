@@ -91,13 +91,13 @@ describe('compile() — rendered output', () => {
   it.skipIf(typography.wasmStatus().status !== 'loaded')(
     'honours the wasm shaping mode when the binary is built',
     async () => {
-    const result = await compile({
-      template: makeTemplate(),
-      data: SAMPLE_DATA,
-      output: 'rendered',
-      shaping: 'wasm',
-    });
-    expect(result.metadata.shapingEngine).toBe('wasm');
+      const result = await compile({
+        template: makeTemplate(),
+        data: SAMPLE_DATA,
+        output: 'rendered',
+        shaping: 'wasm',
+      });
+      expect(result.metadata.shapingEngine).toBe('wasm');
     },
   );
 
@@ -114,7 +114,9 @@ describe('compile() — rendered output', () => {
         session,
         shaping: 'wasm',
       }),
-    ).rejects.toThrow(/shaping: 'wasm' was requested but the session uses fontkit/);
+    ).rejects.toThrow(
+      /shaping: 'wasm' was requested but the session uses fontkit/,
+    );
     // 'auto' and 'fontkit' keep using the session's engine.
     const ok = await compile({
       template: makeTemplate(),
@@ -310,28 +312,31 @@ describe('compile() — paragraphs that cannot be set within tolerance', () => {
     // 'wasm' is strict since v0.7: without the binary this case cannot run.
     it.skipIf(
       shaping === 'wasm' && typography.wasmStatus().status !== 'loaded',
-    )(`produces the document and lists the overfull line (${shaping})`, async () => {
-      const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
-      const result = await compile({
-        template: narrowTemplate(),
-        data,
-        output: 'rendered',
-        shaping,
-      });
-      const warnings = warn.mock.calls.map((c) => String(c[0]));
-      warn.mockRestore();
+    )(
+      `produces the document and lists the overfull line (${shaping})`,
+      async () => {
+        const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+        const result = await compile({
+          template: narrowTemplate(),
+          data,
+          output: 'rendered',
+          shaping,
+        });
+        const warnings = warn.mock.calls.map((c) => String(c[0]));
+        warn.mockRestore();
 
-      expect(result.metadata.pageCount).toBe(1);
-      // Paragraph 0 is fine; paragraph 1 holds the checksum.
-      expect(result.metadata.fallbackParagraphs).toEqual([1]);
-      expect(result.metadata.overfullLines).toHaveLength(1);
-      const line = result.metadata.overfullLines[0];
-      expect(line.paragraph).toBe(1);
-      expect(line.text).toBe(UNBREAKABLE);
-      expect(line.overflow).toBeGreaterThan(100);
-      // … and it is announced, not silent.
-      expect(warnings.some((w) => /1 overfull line/.test(w))).toBe(true);
-    });
+        expect(result.metadata.pageCount).toBe(1);
+        // Paragraph 0 is fine; paragraph 1 holds the checksum.
+        expect(result.metadata.fallbackParagraphs).toEqual([1]);
+        expect(result.metadata.overfullLines).toHaveLength(1);
+        const line = result.metadata.overfullLines[0];
+        expect(line.paragraph).toBe(1);
+        expect(line.text).toBe(UNBREAKABLE);
+        expect(line.overflow).toBeGreaterThan(100);
+        // … and it is announced, not silent.
+        expect(warnings.some((w) => /1 overfull line/.test(w))).toBe(true);
+      },
+    );
   }
 
   it('warns about a paragraph set by the fallback even when no line is overfull', async () => {
@@ -350,7 +355,9 @@ describe('compile() — paragraphs that cannot be set within tolerance', () => {
     expect(result.metadata.overfullLines).toEqual([]);
     expect(result.metadata.fallbackParagraphs).toEqual([0, 1]);
     expect(
-      warnings.some((w) => /2 paragraph\(s\) could not be set within tolerance/.test(w)),
+      warnings.some((w) =>
+        /2 paragraph\(s\) could not be set within tolerance/.test(w),
+      ),
     ).toBe(true);
   });
 

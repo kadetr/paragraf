@@ -5,6 +5,7 @@ All notable changes to `@paragraf/layout` are documented here.
 ## 0.5.0 — 2026-04-06
 
 ### Added
+
 - `landscape(size)` / `portrait(size)` orientation helpers — accept a named `PageSizeName` or an `[width, height]` tuple
 - `columnWidths(frame)` — computes equal column widths accounting for gutter
 - Named page sizes expanded: `A0`, `A1`, `A2`, `SRA3`, `SRA4` added to `PAGE_SIZES`
@@ -12,6 +13,7 @@ All notable changes to `@paragraf/layout` are documented here.
 - `parseDimension(d)` — resolves a `Dimension` value to points; throws on unrecognised format
 
 ### Fixed
+
 - `resolvePageSize()` now throws with a descriptive error for unknown named sizes instead of returning `undefined` (which would cause silent `NaN` geometry downstream)
 
 ## 0.4.0 — Initial release

@@ -53,11 +53,7 @@ import { renderDocumentToPdf } from '@paragraf/render-pdf';
 // tsc to fail for consumers installing with --no-optional.
 type ColorTransform = { apply(input: number[]): number[] };
 
-import type {
-  CompileOptions,
-  CompileResult,
-  OverfullLine,
-} from './types.js';
+import type { CompileOptions, CompileResult, OverfullLine } from './types.js';
 import {
   buildFontRegistry,
   selectVariant,
@@ -315,12 +311,12 @@ export async function compile<T = unknown>(
     return {
       data: renderedDoc,
       metadata: {
-      pageCount,
-      overflowLines,
-      overfullLines,
-      fallbackParagraphs,
-      shapingEngine,
-    },
+        pageCount,
+        overflowLines,
+        overfullLines,
+        fallbackParagraphs,
+        shapingEngine,
+      },
     };
   }
 
@@ -341,12 +337,12 @@ export async function compile<T = unknown>(
     return {
       data: svgPages.join('\n'),
       metadata: {
-      pageCount,
-      overflowLines,
-      overfullLines,
-      fallbackParagraphs,
-      shapingEngine,
-    },
+        pageCount,
+        overflowLines,
+        overfullLines,
+        fallbackParagraphs,
+        shapingEngine,
+      },
     };
   }
 

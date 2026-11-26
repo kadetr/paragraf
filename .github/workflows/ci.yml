@@ -30,6 +30,11 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      # Every file must match .prettierrc. Generated files are listed in
+      # .prettierignore. Fix locally with: npx prettier --write .
+      - name: Format check
+        run: npx prettier --check .
+
       # Fonts are committed to the repository under fonts/.
       # This step verifies that all files are present and match their expected
       # SHA-256 hashes, catching any accidental corruption or truncation.

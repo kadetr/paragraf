@@ -39,14 +39,14 @@ A `Frame` is a rectangular text area on a specific page:
 
 ```ts
 interface Frame {
-  page: number;       // 0-based page index
-  x: number;         // left edge in points
-  y: number;         // top edge in points
-  width: number;     // total frame width in points (including all columns + gutters)
-  height: number;    // total frame height in points
-  columnCount?: number;     // number of columns; default 1
-  gutter?: number;          // inter-column spacing in points; default 0
-  grid?: BaselineGrid;      // optional vertical-rhythm constraint
+  page: number; // 0-based page index
+  x: number; // left edge in points
+  y: number; // top edge in points
+  width: number; // total frame width in points (including all columns + gutters)
+  height: number; // total frame height in points
+  columnCount?: number; // number of columns; default 1
+  gutter?: number; // inter-column spacing in points; default 0
+  grid?: BaselineGrid; // optional vertical-rhythm constraint
   paragraphSpacing?: number; // extra gap below each paragraph in points; default 0
 }
 ```
@@ -91,7 +91,7 @@ Each `RenderedPage` holds:
 ```ts
 interface RenderedPage {
   pageIndex: number;
-  frame: Frame;        // the first frame that initiated this page
+  frame: Frame; // the first frame that initiated this page
   items: RenderedItem[];
 }
 
@@ -136,7 +136,7 @@ A `BaselineGrid` is an optional vertical-rhythm constraint attached to a `Frame`
 
 ```ts
 interface BaselineGrid {
-  first: number;    // Y-offset from frame.y where the first grid line sits
+  first: number; // Y-offset from frame.y where the first grid line sits
   interval: number; // distance between grid lines in points
 }
 ```
@@ -162,7 +162,7 @@ paragraph), not on every line. Lines within a paragraph advance by their
 `lineHeight` rounded up to the grid interval via `gridAdvance`:
 
 ```ts
-gridAdvance(lineHeight, interval) = ceil(lineHeight / interval) * interval
+gridAdvance(lineHeight, interval) = ceil(lineHeight / interval) * interval;
 ```
 
 This keeps all lines within a paragraph on the grid without needing to re-snap
@@ -191,11 +191,14 @@ The baseline grid is set on the `Frame`, not passed to `layoutDocument` separate
 const frames: Frame[] = [
   {
     page: 0,
-    x: 72, y: 72, width: 396, height: 648,
+    x: 72,
+    y: 72,
+    width: 396,
+    height: 648,
     grid: { first: 8.5, interval: 14 },
     //       ↑ cap-height of 11pt body font ≈ 8.5pt
     //                    ↑ 14pt leading
-  }
+  },
 ];
 ```
 
@@ -231,11 +234,17 @@ const doc: Document = {
   paragraphs: [
     { text: 'First paragraph.' },
     { text: 'Second paragraph.', firstLineIndent: 11 },
-    { text: 'Third paragraph.',  firstLineIndent: 11 },
+    { text: 'Third paragraph.', firstLineIndent: 11 },
   ],
   frames: [{ page: 0, x: 72, y: 72, width: 396, height: 648 }],
   styleDefaults: {
-    font: { id: 'regular', size: 11, weight: 400, style: 'normal', stretch: 'normal' },
+    font: {
+      id: 'regular',
+      size: 11,
+      weight: 400,
+      style: 'normal',
+      stretch: 'normal',
+    },
     lineWidth: 396,
     alignment: 'justified',
     tolerance: 2,
@@ -278,17 +287,29 @@ import {
   Document,
 } from '@paragraf/typography';
 import { createMeasurer } from '@paragraf/font-engine';
-import { Frame }          from '@paragraf/render-core';
+import { Frame } from '@paragraf/render-core';
 
 const frames: Frame[] = [
   // Page 0, single column, 9×6.5 inch live area
-  { page: 0, x: 72, y: 72, width: 468, height: 648,
+  {
+    page: 0,
+    x: 72,
+    y: 72,
+    width: 468,
+    height: 648,
     grid: { first: 9, interval: 14 },
-    paragraphSpacing: 0 },
+    paragraphSpacing: 0,
+  },
   // Page 1, same geometry — text overflows here if page 0 fills
-  { page: 1, x: 72, y: 72, width: 468, height: 648,
+  {
+    page: 1,
+    x: 72,
+    y: 72,
+    width: 468,
+    height: 648,
     grid: { first: 9, interval: 14 },
-    paragraphSpacing: 0 },
+    paragraphSpacing: 0,
+  },
 ];
 
 const doc: Document = {
@@ -298,7 +319,13 @@ const doc: Document = {
   ],
   frames,
   styleDefaults: {
-    font: { id: 'regular', size: 11, weight: 400, style: 'normal', stretch: 'normal' },
+    font: {
+      id: 'regular',
+      size: 11,
+      weight: 400,
+      style: 'normal',
+      stretch: 'normal',
+    },
     lineWidth: 468,
     alignment: 'justified',
     tolerance: 2,
@@ -306,12 +333,12 @@ const doc: Document = {
   },
 };
 
-const composer  = await createParagraphComposer(registry);
-const measurer  = createMeasurer(registry);
+const composer = await createParagraphComposer(registry);
+const measurer = createMeasurer(registry);
 const fontEngine = await createDefaultFontEngine(registry);
 
-const composed     = composeDocument(doc, composer);
-const renderedDoc  = layoutDocument(composed, frames, measurer);
+const composed = composeDocument(doc, composer);
+const renderedDoc = layoutDocument(composed, frames, measurer);
 
 // renderedDoc.pages[0].items  ← all rendered items on page 0
 // renderedDoc.pages[1].items  ← items that overflowed to page 1 (if any)
