@@ -1,0 +1,78 @@
+{
+  "id": "wide-url-w200",
+  "from": [
+    "wide-url-w200"
+  ],
+  "version": "1.3",
+  "pageCount": 1,
+  "info": { "Producer": "PDFKit", "Creator": "PDFKit", "Title": "wide-url-w200", "Lang": "en-us" },
+  "hasId": true,
+  "fonts": [
+    { "BaseFont": "CZZZZZ+LiberationSerif", "Subtype": "Type0", "toUnicode": true }
+  ],
+  "outputIntents": [],
+  "pages": [
+    {
+      "boxes": {
+        "MediaBox": [0, 0, 595.28, 841.89],
+        "CropBox": null,
+        "BleedBox": null,
+        "TrimBox": null,
+        "ArtBox": null
+      },
+      "fonts": { "F2": "CZZZZZ+LiberationSerif" },
+      "colourOperators": { "/DeviceRGB cs": 202, "0 0 0 scn": 202 },
+      "fills": { "DeviceRGB 0 0 0": 202 },
+      "strokes": {},
+      "text": [
+        { "font": "CZZZZZ+LiberationSerif", "size": 12, "mode": 3, "x": 72, "y": 80.32, "text": "The" },
+        { "font": "CZZZZZ+LiberationSerif", "size": 12, "mode": 3, "x": 93.732, "y": 80.32, "text": "re" },
+        { "font": "CZZZZZ+LiberationSerif", "size": 12, "mode": 3, "x": 103.054, "y": 80.32, "text": "port" },
+        { "font": "CZZZZZ+LiberationSerif", "size": 12, "mode": 3, "x": 125.459, "y": 80.32, "text": "is" },
+        { "font": "CZZZZZ+LiberationSerif", "size": 12, "mode": 3, "x": 136.539, "y": 80.32, "text": "pub" },
+        { "font": "CZZZZZ+LiberationSerif", "size": 12, "mode": 3, "x": 154.539, "y": 80.32, "text": "lished" },
+        { "font": "CZZZZZ+LiberationSerif", "size": 12, "mode": 3, "x": 186.278, "y": 80.32, "text": "at" },
+        { "font": "CZZZZZ+LiberationSerif", "size": 12, "mode": 3, "x": 198.014, "y": 80.32, "text": "https://" },
+        { "font": "CZZZZZ+LiberationSerif", "size": 12, "mode": 3, "x": 231.354, "y": 80.32, "text": "example" },
+        { "font": "CZZZZZ+LiberationSerif", "size": 12, "mode": 3, "x": 72, "y": 93.029, "text": ".com/" },
+        { "font": "CZZZZZ+LiberationSerif", "size": 12, "mode": 3, "x": 98.994, "y": 93.029, "text": "a/" },
+        { "font": "CZZZZZ+LiberationSerif", "size": 12, "mode": 3, "x": 107.654, "y": 93.029, "text": "very/" },
+        { "font": "CZZZZZ+LiberationSerif", "size": 12, "mode": 3, "x": 132.311, "y": 93.029, "text": "long/" },
+        { "font": "CZZZZZ+LiberationSerif", "size": 12, "mode": 3, "x": 156.979, "y": 93.029, "text": "path/" },
+        { "font": "CZZZZZ+LiberationSerif", "size": 12, "mode": 3, "x": 180.973, "y": 93.029, "text": "that/" },
+        { "font": "CZZZZZ+LiberationSerif", "size": 12, "mode": 3, "x": 72, "y": 105.738, "text": "cannot/" },
+        { "font": "CZZZZZ+LiberationSerif", "size": 12, "mode": 3, "x": 107.32, "y": 105.738, "text": "be/" },
+        { "font": "CZZZZZ+LiberationSerif", "size": 12, "mode": 3, "x": 121.98, "y": 105.738, "text": "hyphenated/" },
+        { "font": "CZZZZZ+LiberationSerif", "size": 12, "mode": 3, "x": 180.627, "y": 105.738, "text": "index" },
+        { "font": "CZZZZZ+LiberationSerif", "size": 12, "mode": 3, "x": 207.287, "y": 105.738, "text": ".html" },
+        { "font": "CZZZZZ+LiberationSerif", "size": 12, "mode": 3, "x": 236.151, "y": 105.738, "text": "and" },
+        { "font": "CZZZZZ+LiberationSerif", "size": 12, "mode": 3, "x": 257.34, "y": 105.738, "text": "the" },
+        { "font": "CZZZZZ+LiberationSerif", "size": 12, "mode": 3, "x": 72, "y": 118.447, "text": "search" },
+        { "font": "CZZZZZ+LiberationSerif", "size": 12, "mode": 3, "x": 171.666, "y": 118.447, "text": "page" },
+        { "font": "CZZZZZ+LiberationSerif", "size": 12, "mode": 3, "x": 263.34, "y": 118.447, "text": "at" },
+        { "font": "CZZZZZ+LiberationSerif", "size": 12, "mode": 3, "x": 72, "y": 131.156, "text": "https://" },
+        { "font": "CZZZZZ+LiberationSerif", "size": 12, "mode": 3, "x": 105.34, "y": 131.156, "text": "example" },
+        { "font": "CZZZZZ+LiberationSerif", "size": 12, "mode": 3, "x": 145.986, "y": 131.156, "text": ".com/" },
+        { "font": "CZZZZZ+LiberationSerif", "size": 12, "mode": 3, "x": 172.98, "y": 131.156, "text": "search?" },
+        { "font": "CZZZZZ+LiberationSerif", "size": 12, "mode": 3, "x": 208.951, "y": 131.156, "text": "query=" },
+        { "font": "CZZZZZ+LiberationSerif", "size": 12, "mode": 3, "x": 243.041, "y": 131.156, "text": "line-" },
+        { "font": "CZZZZZ+LiberationSerif", "size": 12, "mode": 3, "x": 72, "y": 143.865, "text": "breaking&" },
+        { "font": "CZZZZZ+LiberationSerif", "size": 12, "mode": 3, "x": 123.316, "y": 143.865, "text": "lang=" },
+        { "font": "CZZZZZ+LiberationSerif", "size": 12, "mode": 3, "x": 150.744, "y": 143.865, "text": "en&" },
+        { "font": "CZZZZZ+LiberationSerif", "size": 12, "mode": 3, "x": 171.404, "y": 143.865, "text": "page=" },
+        { "font": "CZZZZZ+LiberationSerif", "size": 12, "mode": 3, "x": 200.824, "y": 143.865, "text": "2#" },
+        { "font": "CZZZZZ+LiberationSerif", "size": 12, "mode": 3, "x": 212.824, "y": 143.865, "text": "results" },
+        { "font": "CZZZZZ+LiberationSerif", "size": 12, "mode": 3, "x": 246.077, "y": 143.865, "text": "is" },
+        { "font": "CZZZZZ+LiberationSerif", "size": 12, "mode": 3, "x": 256.004, "y": 143.865, "text": "up-" },
+        { "font": "CZZZZZ+LiberationSerif", "size": 12, "mode": 3, "x": 72, "y": 156.574, "text": "dated" },
+        { "font": "CZZZZZ+LiberationSerif", "size": 12, "mode": 3, "x": 100.986, "y": 156.574, "text": "every" },
+        { "font": "CZZZZZ+LiberationSerif", "size": 12, "mode": 3, "x": 130.635, "y": 156.574, "text": "week." }
+      ],
+      "paths": {
+        "painting": { "f": 202 },
+        "segments": 4717,
+        "digest": "26e0ae042bb6ef94"
+      }
+    }
+  ]
+}

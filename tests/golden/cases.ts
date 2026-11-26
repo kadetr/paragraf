@@ -329,3 +329,89 @@ export const DISTINCT_PAIRS: [string, string][] = [
   ['en-body-451-tracking0', 'en-body-451-tracking1'],
   ['en-body-451-tracking1', 'en-body-451-tracking2'],
 ];
+
+// ─── Export baseline (PDF and SVG) ───────────────────────────────────────────
+//
+// export.test.ts renders these through render-pdf and render-core's SVG
+// renderer and compares a summary of each file with
+// tests/golden/snapshots/pdf/<id>.json and snapshots/svg/<id>.json. The
+// layout snapshots above cannot see the export stage: v0.7.0 wrote CMYK fills
+// at 1 % strength and every layout snapshot stayed the same.
+//
+// Each export case sets one or more of the paragraph cases above. `check` is
+// what a person looks for when opening the file
+// (`npm run golden:preview` writes the files to tests/golden/outputs/export/).
+
+export interface ExportCase {
+  /** File-name-safe identifier; also the snapshot file name. */
+  id: string;
+  /** Ids of cases in CASES, set in this order. */
+  from: string[];
+  /** What to look for when opening the exported file. */
+  check: string;
+  /** Glyph fill colour as CSS (render-pdf `fill`); default black. */
+  fill?: string;
+  /**
+   * Render the fill through a CMYK colour transform, with a CMYK
+   * OutputIntent and PDF/X-3 markers.
+   */
+  cmyk?: boolean;
+  /**
+   * Set the paragraphs as a document flowing through frames of this height,
+   * one frame per page, instead of as one paragraph on one page.
+   */
+  frameHeight?: number;
+}
+
+export const EXPORT_CASES: ExportCase[] = [
+  {
+    id: 'rgb-en-body',
+    from: ['en-body-451-t3'],
+    fill: '#cc3300',
+    check:
+      'Orange-red text (RGB 0.8 0.2 0); 11 justified lines on one A4 page.',
+  },
+  {
+    id: 'cmyk-pdfx-en-body',
+    from: ['en-body-451-t3'],
+    cmyk: true,
+    check:
+      'Solid black: Acrobat Output Preview shows 100 % Black and 0 % C, M, Y; ' +
+      'OutputIntent GTS_PDFX "FOGRA39"; Info GTS_PDFXVersion PDF/X-3:2003.',
+  },
+  {
+    id: 'de-compounds-w200',
+    from: ['de-compounds-w200'],
+    check:
+      'German compound nouns hyphenated in a 200 pt column, no line sticks out.',
+  },
+  {
+    id: 'arabic-451-t3',
+    from: ['arabic-451-t3'],
+    check: 'Arabic set right to left, letters joined, lines flush right.',
+  },
+  {
+    id: 'hebrew-451-t3',
+    from: ['hebrew-451-t3'],
+    check: 'Hebrew set right to left, lines flush right.',
+  },
+  {
+    id: 'wide-url-w200',
+    from: ['wide-url-w200'],
+    check:
+      'The URLs break after "/" or "?" or before "." with no hyphen added.',
+  },
+  {
+    id: 'spans-mixed-font',
+    from: ['spans-mixed-font'],
+    check: 'Regular, bold and italic in one paragraph; three fonts embedded.',
+  },
+  {
+    id: 'multi-page',
+    from: ['en-body-451-t3', 'de-compounds-w200', 'en-narrow-w200'],
+    frameHeight: 160,
+    check:
+      'Three paragraphs flowing over 3 pages, each page holding a 160 pt ' +
+      'frame; no line lost or repeated between pages.',
+  },
+];

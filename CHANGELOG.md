@@ -4,6 +4,14 @@ All notable changes to this project will be documented in this file.
 
 ---
 
+## Unreleased
+
+### Tests
+
+- **Export baseline for PDF and SVG.** The golden snapshots held layout JSON only, so the 1 % CMYK fills of 0.7.0 passed every test. `tests/golden/export.test.ts` renders eight cases (RGB, CMYK with a PDF/X OutputIntent, German hyphenation, Arabic, Hebrew, URLs, mixed fonts, three pages) to PDF and SVG and compares a summary of each file with `tests/golden/snapshots/pdf/` and `snapshots/svg/`: colour operators with their values, text-showing operators with position, font and text, fonts, page boxes, OutputIntents and the Info dictionary. It runs in `npm run test:e2e`; `npm run golden:update` and `golden:preview` cover it. The test PDFs get a fixed creation date and /ID through the existing `preDraw` hook; no option was added to `@paragraf/render-pdf`, and PDFs made by applications are unchanged.
+
+---
+
 ## v0.7.1 — 2026-11-17
 
 ### ⚠️ CMYK fills were written at 1% strength
