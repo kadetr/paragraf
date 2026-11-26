@@ -89,11 +89,22 @@ const paragraphWithUrls = (seed: number): Node[] => {
         { type: 'box', width: width / 2, content: 'x', font: FONT },
       );
     } else {
-      nodes.push({ type: 'box', width: 8 + r() * 28, content: 'x', font: FONT });
+      nodes.push({
+        type: 'box',
+        width: 8 + r() * 28,
+        content: 'x',
+        font: FONT,
+      });
     }
   }
   nodes.push(
-    { type: 'glue', kind: 'termination', width: 0, stretch: Infinity, shrink: 0 },
+    {
+      type: 'glue',
+      kind: 'termination',
+      width: 0,
+      stretch: Infinity,
+      shrink: 0,
+    },
     { type: 'penalty', width: 0, penalty: FORCED_BREAK, flagged: false },
   );
   return nodes;
@@ -137,18 +148,24 @@ const compare = (
       0,
       adjDemerits,
     );
-    expect('ok' in res, `seed ${seed}: ${JSON.stringify(res).slice(0, 80)}`).toBe(true);
+    expect(
+      'ok' in res,
+      `seed ${seed}: ${JSON.stringify(res).slice(0, 80)}`,
+    ).toBe(true);
     const rs = res.ok.breaks as typeof ts;
 
-    expect(rs.map((b) => b.position), `seed ${seed}`).toEqual(
-      ts.map((b) => b.position),
-    );
-    expect(rs.map((b) => [b.flagged, b.line]), `seed ${seed}`).toEqual(
-      ts.map((b) => [b.flagged, b.line]),
-    );
-    expect(rs.map((b) => b.overfull === true), `seed ${seed}`).toEqual(
-      ts.map((b) => b.overfull === true),
-    );
+    expect(
+      rs.map((b) => b.position),
+      `seed ${seed}`,
+    ).toEqual(ts.map((b) => b.position));
+    expect(
+      rs.map((b) => [b.flagged, b.line]),
+      `seed ${seed}`,
+    ).toEqual(ts.map((b) => [b.flagged, b.line]));
+    expect(
+      rs.map((b) => b.overfull === true),
+      `seed ${seed}`,
+    ).toEqual(ts.map((b) => b.overfull === true));
     expect(res.ok.usedFallback, `seed ${seed}`).toBe(tsResult.usedFallback);
     expect(res.ok.usedEmergency, `seed ${seed}`).toBe(tsResult.usedEmergency);
     rs.forEach((b, k) => {
@@ -183,9 +200,17 @@ const SYNTHETIC_TIMEOUT = 60_000;
 
 describe('Rust and TypeScript agree on paragraphs with URL break points', () => {
   it('with default settings', () => compare(0, 0, 0, 0), SYNTHETIC_TIMEOUT);
-  it('with adjDemerits = 10000', () => compare(10000, 0, 0, 0), SYNTHETIC_TIMEOUT);
+  it(
+    'with adjDemerits = 10000',
+    () => compare(10000, 0, 0, 0),
+    SYNTHETIC_TIMEOUT,
+  );
   it('with looseness = 1', () => compare(0, 1, 0, 0), SYNTHETIC_TIMEOUT);
-  it('with consecutiveHyphenLimit = 1', () => compare(0, 0, 1, 0), SYNTHETIC_TIMEOUT);
+  it(
+    'with consecutiveHyphenLimit = 1',
+    () => compare(0, 0, 1, 0),
+    SYNTHETIC_TIMEOUT,
+  );
   it('with emergency stretch', () => compare(0, 0, 0, 20), SYNTHETIC_TIMEOUT);
 });
 
@@ -234,17 +259,25 @@ describe('Rust and TypeScript agree on real URL and German node sequences', () =
         const res = tracebackWasmBinary(wasm, nodes, lineWidth, 2, 0, 0, 0);
         expect('ok' in res, `${chars} chars`).toBe(true);
         const rs = res.ok.breaks as typeof ts;
-        expect(rs.map((b) => b.position), `${chars} chars`).toEqual(
-          ts.map((b) => b.position),
-        );
-        expect(rs.map((b) => b.flagged), `${chars} chars`).toEqual(
-          ts.map((b) => b.flagged),
-        );
+        expect(
+          rs.map((b) => b.position),
+          `${chars} chars`,
+        ).toEqual(ts.map((b) => b.position));
+        expect(
+          rs.map((b) => b.flagged),
+          `${chars} chars`,
+        ).toEqual(ts.map((b) => b.flagged));
         expect(res.ok.usedFallback, `${chars} chars`).toBe(
           tsResult.usedFallback,
         );
-        expect(ts.some((b) => b.overfull), `${chars} chars`).toBe(false);
-        expect(rs.some((b) => b.overfull), `${chars} chars`).toBe(false);
+        expect(
+          ts.some((b) => b.overfull),
+          `${chars} chars`,
+        ).toBe(false);
+        expect(
+          rs.some((b) => b.overfull),
+          `${chars} chars`,
+        ).toBe(false);
       }
     });
   }

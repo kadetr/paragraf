@@ -14,10 +14,7 @@ const __dirname = path.dirname(__filename);
 const FONTS_DIR = path.resolve(__dirname, '../../fonts');
 
 type RunMode =
-  | 'wasm-cache-on'
-  | 'wasm-cache-off'
-  | 'ts-cache-on'
-  | 'ts-cache-off';
+  'wasm-cache-on' | 'wasm-cache-off' | 'ts-cache-on' | 'ts-cache-off';
 
 const REGISTRY: FontRegistry = new Map([
   [

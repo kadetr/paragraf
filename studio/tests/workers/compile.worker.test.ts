@@ -9,13 +9,18 @@ import * as path from 'path';
 import { defineTemplate } from '@paragraf/template';
 import { handleMessage } from '../../workers/compile.worker.js';
 import type { WorkerDeps } from '../../workers/compile.worker.js';
-import type { CompileWorkerInput, CompileWorkerResult } from '../../src/ipc-types.js';
+import type {
+  CompileWorkerInput,
+  CompileWorkerResult,
+} from '../../src/ipc-types.js';
 
 const FONTS_DIR = path.resolve(__dirname, '../../../fonts');
 
 // ─── Shared fixture ───────────────────────────────────────────────────────────
 
-function makeInput(overrides: Partial<CompileWorkerInput> = {}): CompileWorkerInput {
+function makeInput(
+  overrides: Partial<CompileWorkerInput> = {},
+): CompileWorkerInput {
   const template = defineTemplate({
     layout: { size: 'A4', margins: 72 },
     fonts: {
@@ -112,7 +117,16 @@ describe('RT3 — compile() throws → { type: compile-error, message }, no reth
 
 describe('RT4 — two calls with identical fontsKey → createCompilerSession called once', () => {
   it('reuses the session on the second call', async () => {
-    const mockSvgResult = { data: '<svg></svg>', metadata: { pageCount: 1, overflowLines: 0, overfullLines: [], fallbackParagraphs: [], shapingEngine: 'fontkit' as const } };
+    const mockSvgResult = {
+      data: '<svg></svg>',
+      metadata: {
+        pageCount: 1,
+        overflowLines: 0,
+        overfullLines: [],
+        fallbackParagraphs: [],
+        shapingEngine: 'fontkit' as const,
+      },
+    };
     const deps = makeMockDeps({
       compile: vi.fn().mockResolvedValue(mockSvgResult),
     });
@@ -131,7 +145,16 @@ describe('RT4 — two calls with identical fontsKey → createCompilerSession ca
 
 describe('RT5 — two calls where fontsKey changes → createCompilerSession called twice', () => {
   it('rebuilds the session when fontsKey changes', async () => {
-    const mockSvgResult = { data: '<svg></svg>', metadata: { pageCount: 1, overflowLines: 0, overfullLines: [], fallbackParagraphs: [], shapingEngine: 'fontkit' as const } };
+    const mockSvgResult = {
+      data: '<svg></svg>',
+      metadata: {
+        pageCount: 1,
+        overflowLines: 0,
+        overfullLines: [],
+        fallbackParagraphs: [],
+        shapingEngine: 'fontkit' as const,
+      },
+    };
     const deps = makeMockDeps({
       compile: vi.fn().mockResolvedValue(mockSvgResult),
     });
@@ -166,10 +189,14 @@ describe('RT7 — CompileWorkerResult union covers all branches', () => {
   it('is exhaustively typed (compile-time check)', () => {
     function assertExhaustive(result: CompileWorkerResult): string {
       switch (result.type) {
-        case 'svg': return 'svg';
-        case 'pdf': return 'pdf';
-        case 'error': return 'error';
-        case 'compile-error': return 'compile-error';
+        case 'svg':
+          return 'svg';
+        case 'pdf':
+          return 'pdf';
+        case 'error':
+          return 'error';
+        case 'compile-error':
+          return 'compile-error';
         default: {
           const _: never = result;
           return _;
@@ -178,9 +205,13 @@ describe('RT7 — CompileWorkerResult union covers all branches', () => {
     }
 
     expect(assertExhaustive({ type: 'svg', svgPages: ['<svg/>'] })).toBe('svg');
-    expect(assertExhaustive({ type: 'pdf', buffer: Buffer.from('') })).toBe('pdf');
+    expect(assertExhaustive({ type: 'pdf', buffer: Buffer.from('') })).toBe(
+      'pdf',
+    );
     expect(assertExhaustive({ type: 'error', errors: [] })).toBe('error');
-    expect(assertExhaustive({ type: 'compile-error', message: 'oops' })).toBe('compile-error');
+    expect(assertExhaustive({ type: 'compile-error', message: 'oops' })).toBe(
+      'compile-error',
+    );
   });
 });
 
@@ -199,10 +230,18 @@ const mockSvg = {
 
 type Shaping = 'fontkit' | 'wasm' | 'auto';
 
-function shapingInput(shaping?: Shaping, fontsKey = 'same-key'): CompileWorkerInput {
+function shapingInput(
+  shaping?: Shaping,
+  fontsKey = 'same-key',
+): CompileWorkerInput {
   return makeInput({
     fontsKey,
-    options: { data: { text: 'Hello.' }, output: 'svg', verbose: false, shaping },
+    options: {
+      data: { text: 'Hello.' },
+      output: 'svg',
+      verbose: false,
+      shaping,
+    },
   });
 }
 
@@ -227,7 +266,9 @@ describe('RT9 — options.shaping is passed to createCompilerSession', () => {
   it.each(['fontkit', 'wasm', 'auto'] as const)(
     'creates the session with shaping: %s',
     async (shaping) => {
-      const deps = makeMockDeps({ compile: vi.fn().mockResolvedValue(mockSvg) });
+      const deps = makeMockDeps({
+        compile: vi.fn().mockResolvedValue(mockSvg),
+      });
 
       await handleMessage(
         shapingInput(shaping),
@@ -331,7 +372,10 @@ describe('RT12 — integration: the session engine follows the requested mode', 
       // No binary: no session is created and the preview gets the reason.
       expect(engine).toBeUndefined();
       expect(result.type).toBe('compile-error');
-      const r = result as Extract<CompileWorkerResult, { type: 'compile-error' }>;
+      const r = result as Extract<
+        CompileWorkerResult,
+        { type: 'compile-error' }
+      >;
       expect(r.message).toMatch(/wasm/i);
     }
   });

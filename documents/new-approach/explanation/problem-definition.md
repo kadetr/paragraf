@@ -37,13 +37,13 @@ The two fields also use different technical vocabularies.
 
 Some concepts have close equivalents:
 
-| Typography / publishing | Software-oriented representation |
-| --- | --- |
-| leading | line spacing / line-height |
-| measure | available line width |
-| paragraph style | reusable style definition |
-| font metrics | numeric measurements of glyphs and fonts |
-| page geometry | dimensions and layout constraints |
+| Typography / publishing | Software-oriented representation         |
+| ----------------------- | ---------------------------------------- |
+| leading                 | line spacing / line-height               |
+| measure                 | available line width                     |
+| paragraph style         | reusable style definition                |
+| font metrics            | numeric measurements of glyphs and fonts |
+| page geometry           | dimensions and layout constraints        |
 
 Other concepts do not map cleanly.
 

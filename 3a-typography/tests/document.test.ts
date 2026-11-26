@@ -199,8 +199,8 @@ describe('composeDocument', () => {
 
   it('merges styleDefaults (per-paragraph wins)', () => {
     const composer = makeMockComposer();
-    const spy = vi.fn(
-      (_input: ParagraphInput): ParagraphOutput => makeParagraphOutput(2),
+    const spy = vi.fn((_input: ParagraphInput): ParagraphOutput =>
+      makeParagraphOutput(2),
     );
     const spyComposer: ParagraphComposer = {
       compose: spy,
@@ -219,8 +219,8 @@ describe('composeDocument', () => {
   });
 
   it('applies styleDefaults when paragraph does not override', () => {
-    const spy = vi.fn(
-      (_input: ParagraphInput): ParagraphOutput => makeParagraphOutput(2),
+    const spy = vi.fn((_input: ParagraphInput): ParagraphOutput =>
+      makeParagraphOutput(2),
     );
     const spyComposer: ParagraphComposer = {
       compose: spy,
@@ -238,8 +238,8 @@ describe('composeDocument', () => {
   });
 
   it('derives column width for single-column frame (= frame.width)', () => {
-    const spy = vi.fn(
-      (_input: ParagraphInput): ParagraphOutput => makeParagraphOutput(2),
+    const spy = vi.fn((_input: ParagraphInput): ParagraphOutput =>
+      makeParagraphOutput(2),
     );
     const spyComposer: ParagraphComposer = {
       compose: spy,
@@ -256,8 +256,8 @@ describe('composeDocument', () => {
   });
 
   it('derives column width for multi-column frame with gutter', () => {
-    const spy = vi.fn(
-      (_input: ParagraphInput): ParagraphOutput => makeParagraphOutput(2),
+    const spy = vi.fn((_input: ParagraphInput): ParagraphOutput =>
+      makeParagraphOutput(2),
     );
     const spyComposer: ParagraphComposer = {
       compose: spy,
@@ -863,8 +863,8 @@ describe('composeDocument — deriveLineWidths integration (F018)', () => {
     // frame0 width=200, frame1 width=400 — different column widths.
     // Without deriveLineWidths, composeDocument uses frame[0] colWidth (200) for all paragraphs.
     // With deriveLineWidths, para0 gets 200 and para1 gets 400.
-    const spy = vi.fn(
-      (_input: ParagraphInput): ParagraphOutput => makeParagraphOutput(2),
+    const spy = vi.fn((_input: ParagraphInput): ParagraphOutput =>
+      makeParagraphOutput(2),
     );
     const spyComposer: ParagraphComposer = {
       compose: spy,
@@ -896,8 +896,8 @@ describe('composeDocument — styleDefaults.lineWidth (F001)', () => {
     // Paragraph has lineWidth=0 (not set explicitly).
     // Before fix: composeDocument falls through to textWidth=500.
     // After fix: composeDocument uses styleDefaults.lineWidth=400.
-    const spy = vi.fn(
-      (_input: ParagraphInput): ParagraphOutput => makeParagraphOutput(2),
+    const spy = vi.fn((_input: ParagraphInput): ParagraphOutput =>
+      makeParagraphOutput(2),
     );
     const spyComposer: ParagraphComposer = {
       compose: spy,
@@ -913,8 +913,8 @@ describe('composeDocument — styleDefaults.lineWidth (F001)', () => {
   });
 
   it('RT2: per-paragraph lineWidth wins over styleDefaults.lineWidth', () => {
-    const spy = vi.fn(
-      (_input: ParagraphInput): ParagraphOutput => makeParagraphOutput(2),
+    const spy = vi.fn((_input: ParagraphInput): ParagraphOutput =>
+      makeParagraphOutput(2),
     );
     const spyComposer: ParagraphComposer = {
       compose: spy,
@@ -930,8 +930,8 @@ describe('composeDocument — styleDefaults.lineWidth (F001)', () => {
   });
 
   it('RT3: falls back to frame-derived textWidth when neither paragraph nor styleDefaults provides lineWidth', () => {
-    const spy = vi.fn(
-      (_input: ParagraphInput): ParagraphOutput => makeParagraphOutput(2),
+    const spy = vi.fn((_input: ParagraphInput): ParagraphOutput =>
+      makeParagraphOutput(2),
     );
     const spyComposer: ParagraphComposer = {
       compose: spy,

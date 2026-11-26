@@ -476,7 +476,8 @@ export const computeBreakpoints = (paragraph: Paragraph): BreakpointResult => {
 
   const targetLine = optimal.line + looseness;
   const candidates = active.filter((n) => n.line === targetLine);
-  if (candidates.length === 0) return { node: optimal, usedEmergency, usedFallback };
+  if (candidates.length === 0)
+    return { node: optimal, usedEmergency, usedFallback };
 
   return {
     node: candidates.reduce((prev, curr) =>

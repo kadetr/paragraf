@@ -19,14 +19,27 @@ import { createParagraphComposer } from '@paragraf/typography';
 import { FontRegistry } from '@paragraf/types';
 
 const registry: FontRegistry = new Map([
-  ['regular', { id: 'regular', family: 'SourceSerif4', filePath: './fonts/SourceSerif4-Regular.ttf' }],
+  [
+    'regular',
+    {
+      id: 'regular',
+      family: 'SourceSerif4',
+      filePath: './fonts/SourceSerif4-Regular.ttf',
+    },
+  ],
 ]);
 
 const composer = await createParagraphComposer(registry);
 
 const { lines } = composer.compose({
   text: 'The quick brown fox jumps over the lazy dog.',
-  font: { id: 'regular', size: 11, weight: 400, style: 'normal', stretch: 'normal' },
+  font: {
+    id: 'regular',
+    size: 11,
+    weight: 400,
+    style: 'normal',
+    stretch: 'normal',
+  },
   lineWidth: 396, // points (5.5 inches)
   tolerance: 2,
   language: 'en-us',
@@ -46,19 +59,19 @@ interface ParagraphInput {
   spans?: TextSpan[];
 
   lineWidth: number;
-  lineWidths?: number[];        // per-line widths for shaped columns
-  tolerance?: number;           // Knuth-Plass tolerance, default 2
-  emergencyStretch?: number;    // fallback stretch when no solution found
+  lineWidths?: number[]; // per-line widths for shaped columns
+  tolerance?: number; // Knuth-Plass tolerance, default 2
+  emergencyStretch?: number; // fallback stretch when no solution found
   onInfeasible?: 'throw' | 'overfull'; // when it still cannot be set; default 'overfull'
   firstLineIndent?: number;
-  alignment?: AlignmentMode;    // 'justified' | 'left' | 'right' | 'center'
-  language?: Language;          // default 'en-us'
-  looseness?: number;           // 0 = optimum, -1 = tighter, +1 = looser
+  alignment?: AlignmentMode; // 'justified' | 'left' | 'right' | 'center'
+  language?: Language; // default 'en-us'
+  looseness?: number; // 0 = optimum, -1 = tighter, +1 = looser
   justifyLastLine?: boolean;
   consecutiveHyphenLimit?: number;
   runtPenalty?: number;
   singleLinePenalty?: number;
-  adjDemerits?: number;         // TeX \adjdemerits; default 0
+  adjDemerits?: number; // TeX \adjdemerits; default 0
   opticalMarginAlignment?: boolean; // hang punctuation into margins
 }
 ```
@@ -70,7 +83,7 @@ interface ParagraphOutput {
   lines: ComposedParagraph;
   lineCount: number;
   usedEmergency: boolean; // true if emergencyStretch was needed
-  usedFallback: boolean;  // true if the paragraph could not be set within tolerance
+  usedFallback: boolean; // true if the paragraph could not be set within tolerance
 }
 ```
 
@@ -87,7 +100,12 @@ const composer = await createParagraphComposer(registry);
 // Pre-load additional hyphenation dictionaries
 await composer.ensureLanguage('de');
 
-const { lines } = composer.compose({ text: '...', font, lineWidth: 396, language: 'de' });
+const { lines } = composer.compose({
+  text: '...',
+  font,
+  lineWidth: 396,
+  language: 'de',
+});
 ```
 
 ## Document composition
@@ -129,11 +147,11 @@ const { status } = wasmStatus();
 const composer = await createParagraphComposer(registry, { shaping: 'wasm' });
 ```
 
-| `shaping` | WASM built | WASM absent or broken |
-|---|---|---|
-| `'auto'` (default) | WASM | fontkit, with one warning per process or worker thread |
-| `'wasm'` | WASM | throws |
-| `'fontkit'` | fontkit | fontkit, no fallback warning |
+| `shaping`          | WASM built | WASM absent or broken                                  |
+| ------------------ | ---------- | ------------------------------------------------------ |
+| `'auto'` (default) | WASM       | fontkit, with one warning per process or worker thread |
+| `'wasm'`           | WASM       | throws                                                 |
+| `'fontkit'`        | fontkit    | fontkit, no fallback warning                           |
 
 `createDefaultFontEngine` takes the same option; pass the same value to both.
 `useWasm` is deprecated: `false` means `'fontkit'`, `true` means `'auto'`.
@@ -143,7 +161,8 @@ const composer = await createParagraphComposer(registry, { shaping: 'wasm' });
 ```ts
 const { lines } = composer.compose({
   text: '"Opening quote and punctuation hang into the margin."',
-  font, lineWidth: 396,
+  font,
+  lineWidth: 396,
   opticalMarginAlignment: true,
 });
 // each line.xOffset is the left-margin protrusion in points

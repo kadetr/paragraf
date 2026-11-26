@@ -52,7 +52,9 @@ const rows: SweepRow[] = [];
 // tolerance has real effect.
 const NARROW_W = 250;
 
-console.log('\n  Tol  Lines  RatioVar  Time(ms)  Emergency  Fallback (infeasible)');
+console.log(
+  '\n  Tol  Lines  RatioVar  Time(ms)  Emergency  Fallback (infeasible)',
+);
 console.log('  ────────────────────────────────────────────────────');
 
 let failures = 0;

@@ -107,7 +107,8 @@ const runEngine = (engine: Engine): void => {
     // always loaded).
     for (const c of CASES) {
       const language = c.input.language;
-      if (language) await kits.get(c.registry)!.composer.ensureLanguage(language);
+      if (language)
+        await kits.get(c.registry)!.composer.ensureLanguage(language);
     }
   });
 

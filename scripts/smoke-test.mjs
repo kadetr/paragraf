@@ -28,7 +28,9 @@ import { fileURLToPath } from 'url';
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const tarballDir = process.argv[2] ? resolve(process.argv[2]) : null;
 if (!tarballDir || !existsSync(tarballDir)) {
-  console.error('Usage: node scripts/smoke-test.mjs <directory with the .tgz files>');
+  console.error(
+    'Usage: node scripts/smoke-test.mjs <directory with the .tgz files>',
+  );
   process.exit(1);
 }
 
@@ -36,7 +38,9 @@ const tarballs = readdirSync(tarballDir)
   .filter((f) => f.endsWith('.tgz'))
   .map((f) => join(tarballDir, f));
 if (tarballs.length !== 13) {
-  console.error(`Expected 13 tarballs in ${tarballDir}, found ${tarballs.length}.`);
+  console.error(
+    `Expected 13 tarballs in ${tarballDir}, found ${tarballs.length}.`,
+  );
   process.exit(1);
 }
 
@@ -52,7 +56,11 @@ console.log(`Smoke test project: ${project}`);
 
 writeFileSync(
   join(project, 'package.json'),
-  JSON.stringify({ name: 'paragraf-smoke', private: true, type: 'module' }, null, 2),
+  JSON.stringify(
+    { name: 'paragraf-smoke', private: true, type: 'module' },
+    null,
+    2,
+  ),
 );
 
 console.log(`Installing ${tarballs.length} tarballs…`);
@@ -139,23 +147,33 @@ try {
   });
   report = JSON.parse(out.trim().split('\n').pop());
 } catch (e) {
-  console.error(`\nSmoke test FAILED: the quick-start did not run.\n${e.stderr || e.message}`);
+  console.error(
+    `\nSmoke test FAILED: the quick-start did not run.\n${e.stderr || e.message}`,
+  );
   process.exit(1);
 }
 
 const problems = [];
 if (!report.resolvedFrom.startsWith(join(project, 'node_modules'))) {
-  problems.push(`@paragraf/compile resolved from ${report.resolvedFrom}, not from the installed tarball`);
+  problems.push(
+    `@paragraf/compile resolved from ${report.resolvedFrom}, not from the installed tarball`,
+  );
 }
 if (!report.colorWasm) problems.push('the colour WASM module did not load');
-if (report.wasm !== 'loaded') problems.push(`wasmStatus() is "${report.wasm}", expected "loaded"`);
-if (report.engine !== 'wasm') problems.push(`shaping engine is "${report.engine}", expected "wasm"`);
-if (report.header !== '%PDF-') problems.push(`output does not start with %PDF- (got "${report.header}")`);
+if (report.wasm !== 'loaded')
+  problems.push(`wasmStatus() is "${report.wasm}", expected "loaded"`);
+if (report.engine !== 'wasm')
+  problems.push(`shaping engine is "${report.engine}", expected "wasm"`);
+if (report.header !== '%PDF-')
+  problems.push(`output does not start with %PDF- (got "${report.header}")`);
 if (!(report.bytes > 1000)) problems.push(`PDF is only ${report.bytes} bytes`);
 if (report.pages !== 1) problems.push(`expected 1 page, got ${report.pages}`);
 
 const installed = JSON.parse(
-  readFileSync(join(project, 'node_modules/@paragraf/compile/package.json'), 'utf8'),
+  readFileSync(
+    join(project, 'node_modules/@paragraf/compile/package.json'),
+    'utf8',
+  ),
 ).version;
 
 if (problems.length) {

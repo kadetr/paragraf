@@ -15,11 +15,25 @@ npm install @paragraf/font-engine @paragraf/types
 
 ```ts
 import { createMeasurer } from '@paragraf/font-engine';
-import { FontRegistry }   from '@paragraf/types';
+import { FontRegistry } from '@paragraf/types';
 
 const registry: FontRegistry = new Map([
-  ['regular', { id: 'regular', family: 'SourceSerif4', filePath: './fonts/SourceSerif4-Regular.ttf' }],
-  ['bold',    { id: 'bold',    family: 'SourceSerif4', filePath: './fonts/SourceSerif4-Bold.ttf' }],
+  [
+    'regular',
+    {
+      id: 'regular',
+      family: 'SourceSerif4',
+      filePath: './fonts/SourceSerif4-Regular.ttf',
+    },
+  ],
+  [
+    'bold',
+    {
+      id: 'bold',
+      family: 'SourceSerif4',
+      filePath: './fonts/SourceSerif4-Bold.ttf',
+    },
+  ],
 ]);
 
 const measurer = createMeasurer(registry);
@@ -36,8 +50,8 @@ import { FontkitEngine } from '@paragraf/font-engine';
 const engine = new FontkitEngine();
 await engine.loadFont('regular', './fonts/SourceSerif4-Regular.ttf');
 
-const glyphs  = engine.glyphsForString('regular', 'Hello');
-const path    = engine.getGlyphPath('regular', glyph, x, y, fontSize);
+const glyphs = engine.glyphsForString('regular', 'Hello');
+const path = engine.getGlyphPath('regular', glyph, x, y, fontSize);
 const metrics = engine.getFontMetrics('regular', fontSize);
 ```
 
@@ -51,10 +65,24 @@ interface FontEngine {
   glyphsForString(fontId: string, text: string, font?: Font): Glyph[];
   glyphForCodePoint?(fontId: string, codePoint: number): Glyph | null; // only this is optional
   applyLigatures(fontId: string, glyphs: Glyph[]): Glyph[];
-  applySingleSubstitution(fontId: string, glyphs: Glyph[], featureTag: 'sups' | 'subs'): Glyph[];
+  applySingleSubstitution(
+    fontId: string,
+    glyphs: Glyph[],
+    featureTag: 'sups' | 'subs',
+  ): Glyph[];
   getKerning(fontId: string, glyph1: Glyph, glyph2: Glyph): number;
-  getGlyphPath(fontId: string, glyph: Glyph, x: number, y: number, fontSize: number): GlyphPath;
-  getFontMetrics(fontId: string, fontSize: number, variant?: 'normal' | 'superscript' | 'subscript'): FontMetrics;
+  getGlyphPath(
+    fontId: string,
+    glyph: Glyph,
+    x: number,
+    y: number,
+    fontSize: number,
+  ): GlyphPath;
+  getFontMetrics(
+    fontId: string,
+    fontSize: number,
+    variant?: 'normal' | 'superscript' | 'subscript',
+  ): FontMetrics;
 }
 ```
 

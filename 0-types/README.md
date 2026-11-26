@@ -16,13 +16,13 @@ npm install @paragraf/types
 
 ```ts
 interface Font {
-  id: FontId;        // registered font identifier
-  size: number;      // point size
-  weight: number;    // e.g. 400 = regular, 700 = bold
-  style: FontStyle;  // 'normal' | 'italic' | 'oblique'
+  id: FontId; // registered font identifier
+  size: number; // point size
+  weight: number; // e.g. 400 = regular, 700 = bold
+  style: FontStyle; // 'normal' | 'italic' | 'oblique'
   stretch: FontStretch;
   letterSpacing?: number; // extra tracking (same unit as size)
-  variant?: FontVariant;  // 'normal' | 'superscript' | 'subscript'
+  variant?: FontVariant; // 'normal' | 'superscript' | 'subscript'
 }
 
 interface FontDescriptor {
@@ -41,8 +41,8 @@ OS/2 table values scaled to `font.size`:
 ```ts
 interface FontMetrics {
   unitsPerEm: number;
-  ascender: number;    // sTypoAscender
-  descender: number;   // sTypoDescender (negative)
+  ascender: number; // sTypoAscender
+  descender: number; // sTypoDescender (negative)
   xHeight: number;
   capHeight: number;
   lineGap: number;
@@ -71,9 +71,25 @@ interface SpanSegment {
 The Knuth-Plass algorithm operates on a sequence of boxes, glues, and penalties:
 
 ```ts
-interface Box     { type: 'box';     width: number; content: string; font: Font; }
-interface Glue    { type: 'glue';    width: number; stretch: number; shrink: number; kind: 'word' | 'termination'; }
-interface Penalty { type: 'penalty'; width: number; penalty: number; flagged: boolean; }
+interface Box {
+  type: 'box';
+  width: number;
+  content: string;
+  font: Font;
+}
+interface Glue {
+  type: 'glue';
+  width: number;
+  stretch: number;
+  shrink: number;
+  kind: 'word' | 'termination';
+}
+interface Penalty {
+  type: 'penalty';
+  width: number;
+  penalty: number;
+  flagged: boolean;
+}
 
 type Node = Box | Glue | Penalty;
 ```
@@ -104,7 +120,7 @@ interface ComposedLine {
   direction?: 'ltr' | 'rtl';
   xOffset?: number; // optical margin alignment shift
   overfull?: boolean; // true when the line is wider than its measure (since v0.7)
-  overflow?: number;  // how far an overfull line sticks out, in points
+  overflow?: number; // how far an overfull line sticks out, in points
   // ... further optional fields in the type definition
 }
 
@@ -114,11 +130,11 @@ type ComposedParagraph = ComposedLine[];
 ### Constants
 
 ```ts
-const FORCED_BREAK      = -Infinity; // mandatory line break
-const PROHIBITED        = +Infinity; // no break allowed
-const HYPHEN_PENALTY    = 50;
+const FORCED_BREAK = -Infinity; // mandatory line break
+const PROHIBITED = +Infinity; // no break allowed
+const HYPHEN_PENALTY = 50;
 const DOUBLE_HYPHEN_PENALTY = 3000;
-const SOFT_HYPHEN_PENALTY   = 0;
+const SOFT_HYPHEN_PENALTY = 0;
 ```
 
 ### Measurer interface
@@ -126,7 +142,7 @@ const SOFT_HYPHEN_PENALTY   = 0;
 ```ts
 interface Measurer {
   measure: (content: string, font: Font) => number;
-  space:   (font: Font) => GlueSpaceMetrics;
+  space: (font: Font) => GlueSpaceMetrics;
   metrics: (font: Font) => FontMetrics;
   registry: FontRegistry;
 }

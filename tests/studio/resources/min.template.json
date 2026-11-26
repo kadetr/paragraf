@@ -26,9 +26,7 @@
   },
   "pages": {
     "default": {
-      "frames": [
-        "main"
-      ]
+      "frames": ["main"]
     }
   },
   "compile": {

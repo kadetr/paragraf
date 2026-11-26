@@ -504,8 +504,7 @@ const writeMeasureCache = (
   _measureCacheStore.set(key, value);
   while (maxCacheEntries > 0 && _measureCacheStore.size > maxCacheEntries) {
     const oldestKey = _measureCacheStore.keys().next().value as
-      | string
-      | undefined;
+      string | undefined;
     if (oldestKey === undefined) break;
     _measureCacheStore.delete(oldestKey);
     _measureCacheStats.evictions += 1;

@@ -27,16 +27,22 @@ to a font descriptor:
 import { FontRegistry } from '@paragraf/types';
 
 const registry: FontRegistry = new Map([
-  ['regular', {
-    id: 'regular',
-    face: 'SourceSerif4',
-    filePath: './fonts/SourceSerif4-Regular.ttf',
-  }],
-  ['bold', {
-    id: 'bold',
-    face: 'SourceSerif4',
-    filePath: './fonts/SourceSerif4-Bold.ttf',
-  }],
+  [
+    'regular',
+    {
+      id: 'regular',
+      face: 'SourceSerif4',
+      filePath: './fonts/SourceSerif4-Regular.ttf',
+    },
+  ],
+  [
+    'bold',
+    {
+      id: 'bold',
+      face: 'SourceSerif4',
+      filePath: './fonts/SourceSerif4-Bold.ttf',
+    },
+  ],
 ]);
 ```
 
@@ -80,18 +86,19 @@ import { Font } from '@paragraf/types';
 
 const bodyFont: Font = {
   id: 'regular',
-  size: 11,           // points
+  size: 11, // points
   weight: 400,
   style: 'normal',
   stretch: 'normal',
 };
 
 const { lines, lineCount, usedEmergency } = composer.compose({
-  text: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. '
-      + 'Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.',
+  text:
+    'Lorem ipsum dolor sit amet, consectetur adipiscing elit. ' +
+    'Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.',
   font: bodyFont,
-  lineWidth: 396,         // 5.5 inches at 72 dpi
-  tolerance: 2,           // Knuth-Plass tolerance (1 = tight, 10 = loose)
+  lineWidth: 396, // 5.5 inches at 72 dpi
+  tolerance: 2, // Knuth-Plass tolerance (1 = tight, 10 = loose)
   alignment: 'justified',
   language: 'en-us',
 });
@@ -102,16 +109,16 @@ word content, spacing, hyphenation status, and metrics.
 
 ### Key options
 
-| Option | Default | Description |
-|---|---|---|
-| `alignment` | `'justified'` | `'justified'` \| `'left'` \| `'right'` \| `'center'` |
-| `tolerance` | `2` | How aggressively to fit lines; higher = more flexibility |
-| `emergencyStretch` | `0` | Extra stretch budget for paragraphs that can't fit at tolerance |
-| `onInfeasible` | `'overfull'` | If it still can't fit: `'overfull'` returns lines and marks the ones that stick out; `'throw'` throws |
-| `looseness` | `0` | `+1` = prefer looser (more lines), `-1` = prefer tighter |
-| `firstLineIndent` | `0` | First-line indent in points |
-| `language` | `'en-us'` | Drives the hyphenation dictionary |
-| `opticalMarginAlignment` | `false` | Hang punctuation and thin letters into margins |
+| Option                   | Default       | Description                                                                                           |
+| ------------------------ | ------------- | ----------------------------------------------------------------------------------------------------- |
+| `alignment`              | `'justified'` | `'justified'` \| `'left'` \| `'right'` \| `'center'`                                                  |
+| `tolerance`              | `2`           | How aggressively to fit lines; higher = more flexibility                                              |
+| `emergencyStretch`       | `0`           | Extra stretch budget for paragraphs that can't fit at tolerance                                       |
+| `onInfeasible`           | `'overfull'`  | If it still can't fit: `'overfull'` returns lines and marks the ones that stick out; `'throw'` throws |
+| `looseness`              | `0`           | `+1` = prefer looser (more lines), `-1` = prefer tighter                                              |
+| `firstLineIndent`        | `0`           | First-line indent in points                                                                           |
+| `language`               | `'en-us'`     | Drives the hyphenation dictionary                                                                     |
+| `opticalMarginAlignment` | `false`       | Hang punctuation and thin letters into margins                                                        |
 
 ---
 
@@ -130,7 +137,7 @@ const spans: TextSpan[] = [
 
 const { lines } = composer.compose({
   spans,
-  font: bodyFont,   // used for glue/spacing metrics
+  font: bodyFont, // used for glue/spacing metrics
   lineWidth: 396,
   alignment: 'justified',
 });
@@ -145,7 +152,7 @@ x/y positions for every text segment on the page:
 
 ```ts
 import { layoutParagraph } from '@paragraf/render-core';
-import { createMeasurer }  from '@paragraf/font-engine';
+import { createMeasurer } from '@paragraf/font-engine';
 
 const measurer = createMeasurer(registry);
 
@@ -163,13 +170,13 @@ text block in points from the page origin.
 
 ```ts
 import { createDefaultFontEngine } from '@paragraf/typography';
-import { renderToPdf }             from '@paragraf/render-pdf';
-import { writeFileSync }           from 'fs';
+import { renderToPdf } from '@paragraf/render-pdf';
+import { writeFileSync } from 'fs';
 
 const fontEngine = await createDefaultFontEngine(registry);
 
 const pdfBuffer = await renderToPdf(rendered, fontEngine, {
-  width: 595.28,   // A4
+  width: 595.28, // A4
   height: 841.89,
   fill: 'black',
 });
@@ -203,29 +210,48 @@ import {
   composeDocument,
   layoutDocument,
 } from '@paragraf/typography';
-import { createMeasurer }      from '@paragraf/font-engine';
+import { createMeasurer } from '@paragraf/font-engine';
 import { renderDocumentToPdf } from '@paragraf/render-pdf';
-import { writeFileSync }       from 'fs';
+import { writeFileSync } from 'fs';
 
 const registry = new Map([
-  ['regular', { id: 'regular', face: 'SourceSerif4', filePath: './fonts/SourceSerif4-Regular.ttf' }],
+  [
+    'regular',
+    {
+      id: 'regular',
+      face: 'SourceSerif4',
+      filePath: './fonts/SourceSerif4-Regular.ttf',
+    },
+  ],
 ]);
 
-const composer   = await createParagraphComposer(registry);
+const composer = await createParagraphComposer(registry);
 const fontEngine = await createDefaultFontEngine(registry);
-const measurer   = createMeasurer(registry);
+const measurer = createMeasurer(registry);
 
 const doc = {
   paragraphs: [
     {
       text: 'First paragraph. It will be typeset and flowed into the frame.',
-      font: { id: 'regular', size: 11, weight: 400, style: 'normal', stretch: 'normal' },
+      font: {
+        id: 'regular',
+        size: 11,
+        weight: 400,
+        style: 'normal',
+        stretch: 'normal',
+      },
       lineWidth: 396,
       alignment: 'justified' as const,
     },
     {
       text: 'Second paragraph. Continues in the same frame after the first.',
-      font: { id: 'regular', size: 11, weight: 400, style: 'normal', stretch: 'normal' },
+      font: {
+        id: 'regular',
+        size: 11,
+        weight: 400,
+        style: 'normal',
+        stretch: 'normal',
+      },
       lineWidth: 396,
       alignment: 'justified' as const,
       firstLineIndent: 11,
@@ -234,8 +260,8 @@ const doc = {
   frames: [{ page: 0, x: 72, y: 72, width: 396, height: 648 }],
 };
 
-const composed       = composeDocument(doc, composer);
-const renderedDoc    = layoutDocument(composed, doc.frames, measurer);
+const composed = composeDocument(doc, composer);
+const renderedDoc = layoutDocument(composed, doc.frames, measurer);
 
 const pdfBuffer = await renderDocumentToPdf(renderedDoc, fontEngine, {
   pageWidth: 595.28,

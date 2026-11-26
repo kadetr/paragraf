@@ -5,11 +5,7 @@ import { Font, FontMetrics } from '@paragraf/types';
 
 export interface PathCommand {
   command:
-    | 'moveTo'
-    | 'lineTo'
-    | 'quadraticCurveTo'
-    | 'bezierCurveTo'
-    | 'closePath';
+    'moveTo' | 'lineTo' | 'quadraticCurveTo' | 'bezierCurveTo' | 'closePath';
   args: number[];
 }
 

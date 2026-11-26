@@ -17,7 +17,7 @@ npm test --workspaces --if-present
 npm run test:e2e
 ```
 
-Run `npm run format:check -- <files>` on files you changed, and `node scripts/pack-check.mjs --out <dir>` if you touched a package's `package.json` or build output.
+Run `npm run format:check -- <files>` on files you changed (CI runs `npx prettier --check .` on the whole repository and fails on any unformatted file), and `node scripts/pack-check.mjs --out <dir>` if you touched a package's `package.json` or build output.
 
 ## Branches and pull requests
 

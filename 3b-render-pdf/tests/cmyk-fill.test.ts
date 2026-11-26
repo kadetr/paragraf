@@ -26,15 +26,21 @@ const FONT: Font = {
 const REGISTRY: FontRegistry = new Map([
   [
     'liberation-serif',
-    { id: 'liberation-serif', family: 'Liberation Serif', filePath: SERIF_PATH },
+    {
+      id: 'liberation-serif',
+      family: 'Liberation Serif',
+      filePath: SERIF_PATH,
+    },
   ],
 ]);
 
 // Every CMYK fill operator in an uncompressed PDF, as four numbers each.
 const cmykFills = (pdf: Buffer): number[][] =>
-  [...pdf.toString('latin1').matchAll(/^([\d.]+) ([\d.]+) ([\d.]+) ([\d.]+) (?:k|scn)$/gm)].map(
-    (m) => m.slice(1, 5).map(Number),
-  );
+  [
+    ...pdf
+      .toString('latin1')
+      .matchAll(/^([\d.]+) ([\d.]+) ([\d.]+) ([\d.]+) (?:k|scn)$/gm),
+  ].map((m) => m.slice(1, 5).map(Number));
 
 let rendered: RenderedParagraph;
 let fontEngine: FontkitEngine;

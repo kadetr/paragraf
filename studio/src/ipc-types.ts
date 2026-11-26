@@ -63,13 +63,11 @@ type CompileResultCommon =
  * forwards a CompileResult carrying the file path instead.
  */
 export type CompileWorkerResult =
-  | CompileResultCommon
-  | { type: 'pdf'; buffer: Uint8Array };
+  CompileResultCommon | { type: 'pdf'; buffer: Uint8Array };
 
 /** Result sent from the main process to the renderer over IPC. */
 export type CompileResult =
-  | CompileResultCommon
-  | { type: 'pdf'; filePath: string };
+  CompileResultCommon | { type: 'pdf'; filePath: string };
 
 // ─── Workspace state ──────────────────────────────────────────────────────────
 

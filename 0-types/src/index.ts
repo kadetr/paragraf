@@ -6,11 +6,7 @@
 export type FontStyle = 'normal' | 'italic' | 'oblique';
 
 export type FontStretch =
-  | 'condensed'
-  | 'semi-condensed'
-  | 'normal'
-  | 'semi-expanded'
-  | 'expanded';
+  'condensed' | 'semi-condensed' | 'normal' | 'semi-expanded' | 'expanded';
 
 /**
  * Authoring weight — named keywords or numeric values (100–900).

@@ -17,42 +17,42 @@ import { defineStyles, defineCharStyles } from '@paragraf/style';
 
 const styles = defineStyles({
   defaults: {
-    font:        { family: 'SourceSerif4', size: 10, weight: 400, style: 'normal' },
-    language:    'en-us',
-    alignment:   'justified',
-    lineHeight:  14,
+    font: { family: 'SourceSerif4', size: 10, weight: 400, style: 'normal' },
+    language: 'en-us',
+    alignment: 'justified',
+    lineHeight: 14,
     hyphenation: true,
   },
   body: {
-    extends:     'defaults',
+    extends: 'defaults',
     spaceBefore: 0,
-    spaceAfter:  4,
+    spaceAfter: 4,
   },
   heading: {
-    extends:     'defaults',
-    font:        { size: 18, weight: 700 },   // family inherited from defaults
-    alignment:   'left',
+    extends: 'defaults',
+    font: { size: 18, weight: 700 }, // family inherited from defaults
+    alignment: 'left',
     spaceBefore: 18,
-    spaceAfter:  8,
+    spaceAfter: 8,
     hyphenation: false,
-    next:        'body',
+    next: 'body',
   },
   caption: {
-    extends:   'body',
-    font:      { size: 8 },     // family + weight inherited through body → defaults
+    extends: 'body',
+    font: { size: 8 }, // family + weight inherited through body → defaults
     alignment: 'left',
   },
 });
 
 const heading = styles.resolve('heading');
-heading.font.family     // 'SourceSerif4' — inherited from defaults
-heading.font.size       // 18
-heading.hyphenation     // false
-heading.next            // 'body'
+heading.font.family; // 'SourceSerif4' — inherited from defaults
+heading.font.size; // 18
+heading.hyphenation; // false
+heading.next; // 'body'
 
 const caption = styles.resolve('caption');
-caption.font.size       // 8
-caption.spaceAfter      // 4 — inherited from body
+caption.font.size; // 8
+caption.spaceAfter; // 4 — inherited from body
 ```
 
 ## `resolve()` usage
@@ -67,13 +67,13 @@ const resolved = styles.resolve('body');
 
 ```ts
 const chars = defineCharStyles({
-  emphasis:  { font: { style: 'italic' } },
-  bold:      { font: { weight: 700 } },
+  emphasis: { font: { style: 'italic' } },
+  bold: { font: { weight: 700 } },
   highlight: { color: '#ffff00' },
 });
 
-chars.resolve('emphasis').font.style    // 'italic'
-chars.resolve('highlight').color        // '#ffff00'
+chars.resolve('emphasis').font.style; // 'italic'
+chars.resolve('highlight').color; // '#ffff00'
 ```
 
 ---
@@ -86,12 +86,12 @@ Creates a `StyleRegistry` from a map of named `ParagraphStyleDef` objects. Valid
 
 ### `StyleRegistry`
 
-| Method | Description |
-|---|---|
+| Method          | Description                                                                  |
+| --------------- | ---------------------------------------------------------------------------- |
 | `resolve(name)` | Returns a fully-resolved `ResolvedParagraphStyle`. Throws if name not found. |
-| `get(name)` | Returns the raw (unresolved) `ParagraphStyleDef`, or `undefined`. |
-| `has(name)` | Returns `true` if a style with this name exists. |
-| `names()` | Returns all defined style names. |
+| `get(name)`     | Returns the raw (unresolved) `ParagraphStyleDef`, or `undefined`.            |
+| `has(name)`     | Returns `true` if a style with this name exists.                             |
+| `names()`       | Returns all defined style names.                                             |
 
 ### `defineCharStyles(defs)`
 
@@ -99,62 +99,62 @@ Creates a `CharStyleRegistry` from a map of named `CharStyleDef` objects. No inh
 
 ### `CharStyleRegistry`
 
-| Method | Description |
-|---|---|
-| `resolve(name)` | Returns a `ResolvedCharStyle`. Throws if name not found. |
-| `get(name)` | Returns the raw `CharStyleDef`, or `undefined` if not found. |
-| `has(name)` | Returns `true` if a char style with this name exists. |
-| `names()` | Returns all defined char style names. |
+| Method          | Description                                                  |
+| --------------- | ------------------------------------------------------------ |
+| `resolve(name)` | Returns a `ResolvedCharStyle`. Throws if name not found.     |
+| `get(name)`     | Returns the raw `CharStyleDef`, or `undefined` if not found. |
+| `has(name)`     | Returns `true` if a char style with this name exists.        |
+| `names()`       | Returns all defined char style names.                        |
 
 ### Re-exported font types
 
 `@paragraf/style` re-exports the following from `@paragraf/types` so that consumers do not need a separate `@paragraf/types` import:
 
-| Export | Kind | Description |
-|---|---|---|
-| `FontWeight` | type | `number \| 'thin' \| 'light' \| 'bold'` … — authoring weight |
-| `FontStyle` | type | `'normal' \| 'italic' \| 'oblique'` |
-| `FontStretch` | type | `'condensed' \| 'semi-condensed' \| 'normal' \| 'semi-expanded' \| 'expanded'` |
-| `FontVariant` | type | `'normal' \| 'superscript' \| 'subscript'` |
-| `resolveWeight(w)` | function | Converts a `FontWeight` to its numeric equivalent |
+| Export             | Kind     | Description                                                                    |
+| ------------------ | -------- | ------------------------------------------------------------------------------ |
+| `FontWeight`       | type     | `number \| 'thin' \| 'light' \| 'bold'` … — authoring weight                   |
+| `FontStyle`        | type     | `'normal' \| 'italic' \| 'oblique'`                                            |
+| `FontStretch`      | type     | `'condensed' \| 'semi-condensed' \| 'normal' \| 'semi-expanded' \| 'expanded'` |
+| `FontVariant`      | type     | `'normal' \| 'superscript' \| 'subscript'`                                     |
+| `resolveWeight(w)` | function | Converts a `FontWeight` to its numeric equivalent                              |
 
 ---
 
 ### `ParagraphStyleDef` fields
 
-| Field | Type | Default | Description |
-|---|---|---|---|
-| `extends` | `string` | — | Name of parent style in the same registry |
-| `font` | `FontSpec` | — | Merged field-by-field with parent |
-| `language` | `Language` | `'en-us'` | Hyphenation language |
-| `alignment` | `AlignmentMode` | `'justified'` | Text alignment |
-| `lineHeight` | `number` | `14` | Total line height in points |
-| `hyphenation` | `boolean` | `true` | Enable hyphenation |
-| `spaceBefore` | `number` | `0` | Vertical space above paragraph (pt) |
-| `spaceAfter` | `number` | `0` | Vertical space below paragraph (pt) |
-| `firstLineIndent` | `number` | `0` | First-line indent (pt) |
-| `tolerance` | `number` | `2` | Knuth–Plass tolerance |
-| `looseness` | `number` | `0` | Knuth–Plass looseness |
-| `next` | `string` | — | Style to apply to the following paragraph |
+| Field             | Type            | Default       | Description                               |
+| ----------------- | --------------- | ------------- | ----------------------------------------- |
+| `extends`         | `string`        | —             | Name of parent style in the same registry |
+| `font`            | `FontSpec`      | —             | Merged field-by-field with parent         |
+| `language`        | `Language`      | `'en-us'`     | Hyphenation language                      |
+| `alignment`       | `AlignmentMode` | `'justified'` | Text alignment                            |
+| `lineHeight`      | `number`        | `14`          | Total line height in points               |
+| `hyphenation`     | `boolean`       | `true`        | Enable hyphenation                        |
+| `spaceBefore`     | `number`        | `0`           | Vertical space above paragraph (pt)       |
+| `spaceAfter`      | `number`        | `0`           | Vertical space below paragraph (pt)       |
+| `firstLineIndent` | `number`        | `0`           | First-line indent (pt)                    |
+| `tolerance`       | `number`        | `2`           | Knuth–Plass tolerance                     |
+| `looseness`       | `number`        | `0`           | Knuth–Plass looseness                     |
+| `next`            | `string`        | —             | Style to apply to the following paragraph |
 
 ### `FontSpec` fields
 
-| Field | Type | Default | Description |
-|---|---|---|---|
-| `family` | `string` | `''` | Font family name; inherited from parent chain if absent |
-| `size` | `number` | `10` | Size in points |
-| `weight` | `FontWeight` | `400` | Numeric (100–900) or named keyword — see `resolveWeight()` |
-| `style` | `FontStyle` | `'normal'` | `'normal'` \| `'italic'` \| `'oblique'` |
-| `stretch` | `FontStretch` | `'normal'` | `'condensed'` \| `'semi-condensed'` \| `'normal'` \| `'semi-expanded'` \| `'expanded'` |
-| `variant` | `FontVariant` | `'normal'` | `'normal'` \| `'superscript'` \| `'subscript'` |
-| `letterSpacing` | `number` | `0` | Extra tracking in points |
+| Field           | Type          | Default    | Description                                                                            |
+| --------------- | ------------- | ---------- | -------------------------------------------------------------------------------------- |
+| `family`        | `string`      | `''`       | Font family name; inherited from parent chain if absent                                |
+| `size`          | `number`      | `10`       | Size in points                                                                         |
+| `weight`        | `FontWeight`  | `400`      | Numeric (100–900) or named keyword — see `resolveWeight()`                             |
+| `style`         | `FontStyle`   | `'normal'` | `'normal'` \| `'italic'` \| `'oblique'`                                                |
+| `stretch`       | `FontStretch` | `'normal'` | `'condensed'` \| `'semi-condensed'` \| `'normal'` \| `'semi-expanded'` \| `'expanded'` |
+| `variant`       | `FontVariant` | `'normal'` | `'normal'` \| `'superscript'` \| `'subscript'`                                         |
+| `letterSpacing` | `number`      | `0`        | Extra tracking in points                                                               |
 
 ### `CharStyleDef` fields
 
-| Field | Type | Description |
-|---|---|---|
-| `font` | `Partial<FontSpec>` | Font overrides (use `font.letterSpacing` for tracking) |
-| `color` | `string` | CSS hex/rgb string (stored, not rendered) |
+| Field   | Type                | Description                                            |
+| ------- | ------------------- | ------------------------------------------------------ |
+| `font`  | `Partial<FontSpec>` | Font overrides (use `font.letterSpacing` for tracking) |
+| `color` | `string`            | CSS hex/rgb string (stored, not rendered)              |
 
 ---
 

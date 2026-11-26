@@ -42,17 +42,17 @@ Most JavaScript PDF libraries use a greedy algorithm — fill each line as full 
 
 ## How it compares
 
-| Capability | paragraf | Puppeteer | pdfmake | react-pdf | LaTeX | Typst |
-|---|:---:|:---:|:---:|:---:|:---:|:---:|
-| Knuth-Plass (whole-paragraph) line breaking | ✅ | — | — | ✅ | ✅ | ✅ |
-| Real OpenType shaping (GSUB/GPOS) | ✅ | ✅¹ | — | ✅² | ✅ | ✅ |
-| Multi-language hyphenation | ✅ (22) | via CSS | — | ✅ | ✅ | ✅ |
-| Unicode BiDi (Arabic, Hebrew) | partial³ | ✅ | — | ✅ | partial | ✅ |
-| Optical margin alignment | ✅ | — | — | — | ✅ | ✅ |
-| Multi-frame / multi-column layout | ✅ | via CSS | ✅ | via flexbox | ✅ | ✅ |
-| Selectable text in PDF output | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| Node-native (no subprocess, no separate toolchain) | ✅ | — | ✅ | ✅ | — | —⁴ |
-| Open source | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Capability                                         | paragraf | Puppeteer | pdfmake |  react-pdf  |  LaTeX  | Typst |
+| -------------------------------------------------- | :------: | :-------: | :-----: | :---------: | :-----: | :---: |
+| Knuth-Plass (whole-paragraph) line breaking        |    ✅    |     —     |    —    |     ✅      |   ✅    |  ✅   |
+| Real OpenType shaping (GSUB/GPOS)                  |    ✅    |    ✅¹    |    —    |     ✅²     |   ✅    |  ✅   |
+| Multi-language hyphenation                         | ✅ (22)  |  via CSS  |    —    |     ✅      |   ✅    |  ✅   |
+| Unicode BiDi (Arabic, Hebrew)                      | partial³ |    ✅     |    —    |     ✅      | partial |  ✅   |
+| Optical margin alignment                           |    ✅    |     —     |    —    |      —      |   ✅    |  ✅   |
+| Multi-frame / multi-column layout                  |    ✅    |  via CSS  |   ✅    | via flexbox |   ✅    |  ✅   |
+| Selectable text in PDF output                      |    ✅    |    ✅     |   ✅    |     ✅      |   ✅    |  ✅   |
+| Node-native (no subprocess, no separate toolchain) |    ✅    |     —     |   ✅    |     ✅      |    —    |  —⁴   |
+| Open source                                        |    ✅    |    ✅     |   ✅    |     ✅      |   ✅    |  ✅   |
 
 This table reflects our reading of each project's documentation in November 2026. If an entry is out of date, please open an issue.
 
@@ -71,20 +71,20 @@ This table reflects our reading of each project's documentation in November 2026
 
 Twelve packages in strict layers. Each package only imports from layers below it.
 
-| Folder | Package | What it does | Env |
-|---|---|---|:---:|
-| `0-types/` | `@paragraf/types` | Zero-dep shared interfaces: `Font`, `ComposedLine`, `FontRegistry`, `TextSpan` | both |
-| `0-color/` | `@paragraf/color` | ICC colour profiles, sRGB/Lab/CMYK spaces, LUT interpolation | both |
-| `1a-linebreak/` | `@paragraf/linebreak` | Knuth-Plass algorithm, 22-language hyphenation, traceback, node builder | both |
-| `1b-font-engine/` | `@paragraf/font-engine` | FontEngine interface, fontkit adapter, measurer factory | Node⁵ |
-| `1c-layout/` | `@paragraf/layout` | Page geometry, unit converters (mm/in/cm), named page sizes (A4, Letter…) | both |
-| `1d-style/` | `@paragraf/style` | Paragraph and character style definitions with cascading inheritance | both |
-| `2a-shaping-wasm/` | `@paragraf/shaping-wasm` | Rust/WASM OpenType shaper (rustybuzz): GSUB ligatures, GPOS kerning, sups/subs | Node |
-| `2b-render-core/` | `@paragraf/render-core` | Glyph layout → SVG / Canvas, document types | both |
-| `3a-typography/` | `@paragraf/typography` | Paragraph compositor, OMA, BiDi, document model | Node |
-| `3b-render-pdf/` | `@paragraf/render-pdf` | PDF output via pdfkit, selectable text overlay | Node |
-| `4a-template/` | `@paragraf/template` | Document schema: named content slots, style bindings, page size declarations | Node |
-| `4b-compile/` | `@paragraf/compile` | Full pipeline: template + data + fonts → PDF / SVG / RenderedDocument | Node |
+| Folder             | Package                  | What it does                                                                   |  Env  |
+| ------------------ | ------------------------ | ------------------------------------------------------------------------------ | :---: |
+| `0-types/`         | `@paragraf/types`        | Zero-dep shared interfaces: `Font`, `ComposedLine`, `FontRegistry`, `TextSpan` | both  |
+| `0-color/`         | `@paragraf/color`        | ICC colour profiles, sRGB/Lab/CMYK spaces, LUT interpolation                   | both  |
+| `1a-linebreak/`    | `@paragraf/linebreak`    | Knuth-Plass algorithm, 22-language hyphenation, traceback, node builder        | both  |
+| `1b-font-engine/`  | `@paragraf/font-engine`  | FontEngine interface, fontkit adapter, measurer factory                        | Node⁵ |
+| `1c-layout/`       | `@paragraf/layout`       | Page geometry, unit converters (mm/in/cm), named page sizes (A4, Letter…)      | both  |
+| `1d-style/`        | `@paragraf/style`        | Paragraph and character style definitions with cascading inheritance           | both  |
+| `2a-shaping-wasm/` | `@paragraf/shaping-wasm` | Rust/WASM OpenType shaper (rustybuzz): GSUB ligatures, GPOS kerning, sups/subs | Node  |
+| `2b-render-core/`  | `@paragraf/render-core`  | Glyph layout → SVG / Canvas, document types                                    | both  |
+| `3a-typography/`   | `@paragraf/typography`   | Paragraph compositor, OMA, BiDi, document model                                | Node  |
+| `3b-render-pdf/`   | `@paragraf/render-pdf`   | PDF output via pdfkit, selectable text overlay                                 | Node  |
+| `4a-template/`     | `@paragraf/template`     | Document schema: named content slots, style bindings, page size declarations   | Node  |
+| `4b-compile/`      | `@paragraf/compile`      | Full pipeline: template + data + fonts → PDF / SVG / RenderedDocument          | Node  |
 
 ⁵ The `FontEngine` interface is environment-agnostic, but the bundled fontkit adapter (`createMeasurer`, `FontkitEngine`) reads font files from disk via Node's `fs.openSync` and is Node-only. In a browser you must supply your own `FontEngine` implementation backed by `fetch`/`ArrayBuffer`.
 
@@ -117,26 +117,26 @@ import { writeFileSync } from 'fs';
 const template = defineTemplate({
   layout: { size: 'A4', margins: 72 },
   fonts: {
-    'LiberationSerif': {
+    LiberationSerif: {
       regular: './fonts/LiberationSerif-Regular.ttf',
-      bold:    './fonts/LiberationSerif-Bold.ttf',
+      bold: './fonts/LiberationSerif-Bold.ttf',
     },
   },
   styles: {
     body: {
-      font:       { family: 'LiberationSerif', size: 11 },
-      alignment:  'justified',
+      font: { family: 'LiberationSerif', size: 11 },
+      alignment: 'justified',
       lineHeight: 16,
     },
     heading: {
-      font:       { family: 'LiberationSerif', size: 18, weight: 700 },
-      alignment:  'left',
+      font: { family: 'LiberationSerif', size: 18, weight: 700 },
+      alignment: 'left',
       lineHeight: 24,
     },
   },
   content: [
     { style: 'heading', text: '{{title}}' },
-    { style: 'body',    text: '{{body}}' },
+    { style: 'body', text: '{{body}}' },
   ],
 });
 
@@ -144,8 +144,9 @@ const result = await compile({
   template,
   data: {
     title: 'Of Wishing',
-    body:  'In olden times when wishing still helped one, there lived a king '
-         + 'whose daughters were all beautiful.',
+    body:
+      'In olden times when wishing still helped one, there lived a king ' +
+      'whose daughters were all beautiful.',
   },
   output: 'pdf',
 });
@@ -166,31 +167,44 @@ npm install @paragraf/typography @paragraf/render-pdf
 `@paragraf/types`, `@paragraf/linebreak`, `@paragraf/font-engine`, `@paragraf/render-core`, and `@paragraf/shaping-wasm` (whose npm package is set up to carry the compiled WASM shaper) are all declared as direct dependencies of `@paragraf/typography` and install automatically.
 
 ```ts
-import { createParagraphComposer, createDefaultFontEngine } from '@paragraf/typography';
-import { createMeasurer }  from '@paragraf/font-engine';
+import {
+  createParagraphComposer,
+  createDefaultFontEngine,
+} from '@paragraf/typography';
+import { createMeasurer } from '@paragraf/font-engine';
 import { layoutParagraph } from '@paragraf/render-core';
-import { renderToPdf }     from '@paragraf/render-pdf';
-import { writeFileSync }   from 'fs';
+import { renderToPdf } from '@paragraf/render-pdf';
+import { writeFileSync } from 'fs';
 
 // 1. Register fonts — LiberationSerif ships with the repository
 const registry = new Map([
-  ['body', {
-    id: 'body',
-    family: 'LiberationSerif',
-    filePath: './fonts/LiberationSerif-Regular.ttf',
-  }],
+  [
+    'body',
+    {
+      id: 'body',
+      family: 'LiberationSerif',
+      filePath: './fonts/LiberationSerif-Regular.ttf',
+    },
+  ],
 ]);
 
 // 2. Compose — Knuth-Plass finds optimal line breaks for the whole paragraph
 const composer = await createParagraphComposer(registry);
 const { lines } = composer.compose({
-  text:      'In olden times when wishing still helped one, there lived a king '
-           + 'whose daughters were all beautiful.',
-  font:      { id: 'body', size: 11, weight: 400, style: 'normal', stretch: 'normal' },
-  lineWidth:  396,   // points — 5.5 inches at 72pt/inch
-  tolerance:  2,
+  text:
+    'In olden times when wishing still helped one, there lived a king ' +
+    'whose daughters were all beautiful.',
+  font: {
+    id: 'body',
+    size: 11,
+    weight: 400,
+    style: 'normal',
+    stretch: 'normal',
+  },
+  lineWidth: 396, // points — 5.5 inches at 72pt/inch
+  tolerance: 2,
   alignment: 'justified',
-  language:  'en-us',
+  language: 'en-us',
 });
 
 // 3. Layout — positions every glyph on the page
@@ -198,9 +212,9 @@ const measurer = createMeasurer(registry);
 const rendered = layoutParagraph(lines, measurer, { x: 72, y: 72 });
 
 // 4. Render to PDF — returns a Buffer
-const engine    = await createDefaultFontEngine(registry);
+const engine = await createDefaultFontEngine(registry);
 const pdfBuffer = await renderToPdf(rendered, engine, {
-  width:  595.28,   // A4
+  width: 595.28, // A4
   height: 841.89,
 });
 writeFileSync('output.pdf', pdfBuffer);
@@ -210,12 +224,12 @@ writeFileSync('output.pdf', pdfBuffer);
 
 ```ts
 const pdfBuffer = await renderToPdf(rendered, engine, {
-  width:        595.28,
-  height:       841.89,
-  selectable:   true,      // adds invisible text overlay at exact glyph positions
-  fontRegistry: registry,  // required for font embedding
-  title:        'My Document',
-  lang:         'en',
+  width: 595.28,
+  height: 841.89,
+  selectable: true, // adds invisible text overlay at exact glyph positions
+  fontRegistry: registry, // required for font embedding
+  title: 'My Document',
+  lang: 'en',
 });
 ```
 
@@ -223,35 +237,53 @@ const pdfBuffer = await renderToPdf(rendered, engine, {
 
 ```ts
 import { composeDocument, layoutDocument } from '@paragraf/typography';
-import { renderDocumentToPdf }             from '@paragraf/render-pdf';
+import { renderDocumentToPdf } from '@paragraf/render-pdf';
 
 const doc = {
   paragraphs: [
     {
-      text:      'First paragraph.',
-      font:      { id: 'body', size: 11, weight: 400, style: 'normal', stretch: 'normal' },
-      lineWidth:  396,
+      text: 'First paragraph.',
+      font: {
+        id: 'body',
+        size: 11,
+        weight: 400,
+        style: 'normal',
+        stretch: 'normal',
+      },
+      lineWidth: 396,
       alignment: 'justified' as const,
     },
     {
-      text:           'Second paragraph, indented.',
-      font:           { id: 'body', size: 11, weight: 400, style: 'normal', stretch: 'normal' },
-      lineWidth:       396,
-      alignment:      'justified' as const,
+      text: 'Second paragraph, indented.',
+      font: {
+        id: 'body',
+        size: 11,
+        weight: 400,
+        style: 'normal',
+        stretch: 'normal',
+      },
+      lineWidth: 396,
+      alignment: 'justified' as const,
       firstLineIndent: 11,
     },
   ],
-  frames: [{
-    page: 0, x: 72, y: 72, width: 396, height: 648,
-  }],
+  frames: [
+    {
+      page: 0,
+      x: 72,
+      y: 72,
+      width: 396,
+      height: 648,
+    },
+  ],
 };
 
-const composed    = composeDocument(doc, composer);
-const measurer    = createMeasurer(registry);
+const composed = composeDocument(doc, composer);
+const measurer = createMeasurer(registry);
 const renderedDoc = layoutDocument(composed, doc.frames, measurer);
 
 const pdfBuffer = await renderDocumentToPdf(renderedDoc, engine, {
-  pageWidth:  595.28,
+  pageWidth: 595.28,
   pageHeight: 841.89,
 });
 writeFileSync('document.pdf', pdfBuffer);
@@ -263,16 +295,16 @@ writeFileSync('document.pdf', pdfBuffer);
 
 **Knuth-Plass parameters** — all TeX-equivalent controls exposed:
 
-| Parameter | Default | Description |
-|---|---|---|
-| `tolerance` | `2` | How aggressively to fit lines; higher = more flexibility |
-| `looseness` | `0` | `+1` prefer looser (more lines), `-1` prefer tighter |
-| `emergencyStretch` | `0` | Extra stretch budget when no solution found at tolerance |
-| `onInfeasible` | `'overfull'` | What happens when the paragraph still cannot be set: `'overfull'` returns lines anyway (lines that fit are set however loose; a piece wider than the measure sticks out and is marked `overfull`), `'throw'` throws an error |
-| `firstLineIndent` | `0` | First-line indent in points |
-| `consecutiveHyphenLimit` | `∞` | Maximum consecutive hyphenated lines |
-| `runtPenalty` | `0` | Demerit added when the final line of a paragraph is a single word (runt line). Best-effort — does not guarantee elimination when no feasible alternative layout exists. |
-| `singleLinePenalty` | `0` | Demerit added when the entire paragraph fits on a single line (no intermediate breaks), regardless of word count. Same caveat as `runtPenalty`. |
+| Parameter                | Default      | Description                                                                                                                                                                                                                  |
+| ------------------------ | ------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `tolerance`              | `2`          | How aggressively to fit lines; higher = more flexibility                                                                                                                                                                     |
+| `looseness`              | `0`          | `+1` prefer looser (more lines), `-1` prefer tighter                                                                                                                                                                         |
+| `emergencyStretch`       | `0`          | Extra stretch budget when no solution found at tolerance                                                                                                                                                                     |
+| `onInfeasible`           | `'overfull'` | What happens when the paragraph still cannot be set: `'overfull'` returns lines anyway (lines that fit are set however loose; a piece wider than the measure sticks out and is marked `overfull`), `'throw'` throws an error |
+| `firstLineIndent`        | `0`          | First-line indent in points                                                                                                                                                                                                  |
+| `consecutiveHyphenLimit` | `∞`          | Maximum consecutive hyphenated lines                                                                                                                                                                                         |
+| `runtPenalty`            | `0`          | Demerit added when the final line of a paragraph is a single word (runt line). Best-effort — does not guarantee elimination when no feasible alternative layout exists.                                                      |
+| `singleLinePenalty`      | `0`          | Demerit added when the entire paragraph fits on a single line (no intermediate breaks), regardless of word count. Same caveat as `runtPenalty`.                                                                              |
 
 **Language hyphenation** — 22 languages built in via Knuth–Liang pattern tables:
 `en-us` `en-gb` `de` `fr` `tr` `nl` `pl` `it` `es` `sv` `no` `da` `fi`
@@ -331,11 +363,11 @@ wasm-pack build --target bundler --out-dir pkg-bundler --release  # Browser (Vit
 
 `@paragraf/typography` auto-detects the WASM shaper at module init. What happens when it is absent depends on the `shaping` option of `createParagraphComposer`, `createDefaultFontEngine`, `compile()` and `createCompilerSession`:
 
-| `shaping` | WASM built | WASM absent or broken |
-|---|---|---|
-| `'auto'` (default) | WASM | fontkit, with one warning per process or worker thread |
-| `'wasm'` | WASM | throws, with the build command in the message |
-| `'fontkit'` | fontkit | fontkit, no fallback warning |
+| `shaping`          | WASM built | WASM absent or broken                                  |
+| ------------------ | ---------- | ------------------------------------------------------ |
+| `'auto'` (default) | WASM       | fontkit, with one warning per process or worker thread |
+| `'wasm'`           | WASM       | throws, with the build command in the message          |
+| `'fontkit'`        | fontkit    | fontkit, no fallback warning                           |
 
 Use `'wasm'` in production builds where a silent change of shaping engine would be a defect. Check which path is active:
 

@@ -7,37 +7,37 @@
 //     breaks right after that piece and marks the line `overfull`.
 // `onInfeasible: 'throw'` keeps the earlier behaviour.
 
-import { describe, it, expect } from "vitest";
-import { computeBreakpoints } from "../src/linebreak";
-import { traceback, LineBreak } from "../src/traceback";
-import { composeParagraph } from "../src/compose";
-import { Node, Font, Paragraph, FORCED_BREAK } from "@paragraf/types";
+import { describe, it, expect } from 'vitest';
+import { computeBreakpoints } from '../src/linebreak';
+import { traceback, LineBreak } from '../src/traceback';
+import { composeParagraph } from '../src/compose';
+import { Node, Font, Paragraph, FORCED_BREAK } from '@paragraf/types';
 
 const FONT: Font = {
-  id: "test",
+  id: 'test',
   size: 12,
   weight: 400,
-  style: "normal",
-  stretch: "normal",
+  style: 'normal',
+  stretch: 'normal',
 };
 
-const box = (width: number, content = "x"): Node => ({
-  type: "box",
+const box = (width: number, content = 'x'): Node => ({
+  type: 'box',
   width,
   content,
   font: FONT,
 });
 // Space of a 12 pt font: width 3, stretch 2, shrink 4/3.
 const SPACE = (): Node => ({
-  type: "glue",
-  kind: "word",
+  type: 'glue',
+  kind: 'word',
   width: 3,
   stretch: 2,
   shrink: 4 / 3,
 });
 const END: Node[] = [
-  { type: "glue", kind: "termination", width: 0, stretch: Infinity, shrink: 0 },
-  { type: "penalty", width: 0, penalty: FORCED_BREAK, flagged: false },
+  { type: 'glue', kind: 'termination', width: 0, stretch: Infinity, shrink: 0 },
+  { type: 'penalty', width: 0, penalty: FORCED_BREAK, flagged: false },
 ];
 
 /** Boxes of the given widths separated by spaces, with the paragraph end. */
@@ -58,39 +58,39 @@ const run = (p: Paragraph) => {
 /** Width of a line at full shrink, measured independently of the breaker. */
 const minWidth = (nodes: Node[], prev: number, to: number): number => {
   let s = prev === 0 ? 0 : prev + 1;
-  while (s < to && nodes[s].type !== "box") s++;
+  while (s < to && nodes[s].type !== 'box') s++;
   let w = 0;
   for (let i = s; i < to; i++) {
     const n = nodes[i];
-    if (n.type === "box") w += n.width;
-    else if (n.type === "glue") w += n.width - n.shrink;
+    if (n.type === 'box') w += n.width;
+    else if (n.type === 'glue') w += n.width - n.shrink;
   }
   const last = nodes[to];
-  if (last.type === "penalty") w += last.width;
+  if (last.type === 'penalty') w += last.width;
   return w;
 };
 
 // ─── A piece wider than the measure ──────────────────────────────────────────
 
-describe("overfull fallback — a box wider than the measure", () => {
+describe('overfull fallback — a box wider than the measure', () => {
   // 30 30 [200] 30 at a measure of 100: the 200 pt box cannot fit anywhere.
   const nodes = words([30, 30, 200, 30]);
   const para: Paragraph = { nodes, lineWidth: 100, tolerance: 2 };
 
-  it("still throws when asked to", () => {
+  it('still throws when asked to', () => {
     expect(() =>
-      computeBreakpoints({ ...para, onInfeasible: "throw" }),
+      computeBreakpoints({ ...para, onInfeasible: 'throw' }),
     ).toThrow(/could not be set within tolerance/);
   });
 
-  it("returns breaks by default and says the fallback was used", () => {
+  it('returns breaks by default and says the fallback was used', () => {
     const { breaks, usedFallback, usedEmergency } = run(para);
     expect(usedFallback).toBe(true);
     expect(usedEmergency).toBe(false);
     expect(breaks.length).toBe(3);
   });
 
-  it("marks exactly the line holding the wide box as overfull", () => {
+  it('marks exactly the line holding the wide box as overfull', () => {
     const { breaks } = run(para);
     const overfull = breaks.filter((b) => b.overfull);
     expect(overfull.length).toBe(1);
@@ -101,16 +101,16 @@ describe("overfull fallback — a box wider than the measure", () => {
     expect(breaks[1].ratio).toBe(-1);
   });
 
-  it("gives every break a finite ratio", () => {
+  it('gives every break a finite ratio', () => {
     const { breaks } = run(para);
     for (const b of breaks) expect(Number.isFinite(b.ratio)).toBe(true);
   });
 
-  it("reports the overflow in points on the composed line", () => {
+  it('reports the overflow in points on the composed line', () => {
     const { breaks } = run(para);
-    const lines = composeParagraph(nodes, breaks, "justified", false, 100);
+    const lines = composeParagraph(nodes, breaks, 'justified', false, 100);
     expect(lines.length).toBe(3);
-    expect(lines[1].words).toEqual(["w2"]);
+    expect(lines[1].words).toEqual(['w2']);
     expect(lines[1].overfull).toBe(true);
     expect(lines[1].overflow).toBeCloseTo(100, 6);
     expect(lines[0].overfull).toBeUndefined();
@@ -121,19 +121,19 @@ describe("overfull fallback — a box wider than the measure", () => {
 
 // ─── Everything fits, but only loosely ───────────────────────────────────────
 
-describe("overfull fallback — lines that fit but exceed the tolerance", () => {
+describe('overfull fallback — lines that fit but exceed the tolerance', () => {
   // Six 40 pt words at a measure of 100. Two words: 83 pt, 17 pt short with
   // 2 pt of stretch → ratio 8.5. Three words: 126 pt, too long even shrunk.
   const nodes = words([40, 40, 40, 40, 40, 40]);
   const para: Paragraph = { nodes, lineWidth: 100, tolerance: 2 };
 
-  it("is infeasible within tolerance", () => {
+  it('is infeasible within tolerance', () => {
     expect(() =>
-      computeBreakpoints({ ...para, onInfeasible: "throw" }),
+      computeBreakpoints({ ...para, onInfeasible: 'throw' }),
     ).toThrow();
   });
 
-  it("sets two words per line and no line is overfull", () => {
+  it('sets two words per line and no line is overfull', () => {
     const { breaks, usedFallback } = run(para);
     expect(usedFallback).toBe(true);
     expect(breaks.map((b) => b.position)).toEqual([3, 7, 12]);
@@ -141,7 +141,7 @@ describe("overfull fallback — lines that fit but exceed the tolerance", () => 
     expect(breaks[0].ratio).toBeCloseTo(8.5, 9);
   });
 
-  it("uses emergency stretch first when that is enough", () => {
+  it('uses emergency stretch first when that is enough', () => {
     // 17 pt short with 2 + 20 pt of stretch → ratio 0.77, within tolerance.
     const { breaks, usedFallback, usedEmergency } = run({
       ...para,
@@ -156,23 +156,23 @@ describe("overfull fallback — lines that fit but exceed the tolerance", () => 
 
 // ─── Feasible paragraphs are untouched ───────────────────────────────────────
 
-describe("overfull fallback — feasible paragraphs", () => {
+describe('overfull fallback — feasible paragraphs', () => {
   const nodes = words([30, 30, 30, 30, 30, 30]);
 
-  it("gives the same breaks under both settings, with no overfull key", () => {
+  it('gives the same breaks under both settings, with no overfull key', () => {
     const base: Paragraph = { nodes, lineWidth: 100, tolerance: 2 };
-    const a = run({ ...base, onInfeasible: "throw" });
+    const a = run({ ...base, onInfeasible: 'throw' });
     const b = run(base);
     expect(b.breaks).toEqual(a.breaks);
     expect(b.usedFallback).toBe(false);
-    for (const br of b.breaks) expect("overfull" in br).toBe(false);
+    for (const br of b.breaks) expect('overfull' in br).toBe(false);
   });
 });
 
 // ─── A line with no stretch at all ───────────────────────────────────────────
 
-describe("overfull fallback — single short word on a line", () => {
-  it("sets it at natural width with ratio 0, not Infinity", () => {
+describe('overfull fallback — single short word on a line', () => {
+  it('sets it at natural width with ratio 0, not Infinity', () => {
     // 60 | 60 | 60 at 100: each word alone, nothing to stretch.
     const nodes = words([60, 60, 60]);
     const { breaks, usedFallback } = run({
@@ -189,7 +189,7 @@ describe("overfull fallback — single short word on a line", () => {
 
 // ─── Randomised invariants ───────────────────────────────────────────────────
 
-describe("overfull fallback — invariants on random paragraphs", () => {
+describe('overfull fallback — invariants on random paragraphs', () => {
   // Small deterministic generator, so a failure can be reproduced.
   const rng = (seed: number) => () => {
     seed = (seed * 1664525 + 1013904223) >>> 0;
@@ -206,7 +206,7 @@ describe("overfull fallback — invariants on random paragraphs", () => {
         // … and there was no earlier place to break it that would have fit.
         for (let j = prev + 1; j < b.position; j++) {
           const n = nodes[j];
-          const legal = n.type === "glue" && nodes[j - 1].type === "box";
+          const legal = n.type === 'glue' && nodes[j - 1].type === 'box';
           if (legal && j > prev + 1) {
             expect(minWidth(nodes, prev, j)).toBeGreaterThan(lineWidth);
           }
@@ -218,7 +218,7 @@ describe("overfull fallback — invariants on random paragraphs", () => {
     }
   };
 
-  it("never throws; overfull is flagged exactly when a line cannot fit", () => {
+  it('never throws; overfull is flagged exactly when a line cannot fit', () => {
     const next = rng(20261115);
     let fallbacks = 0;
     let overfullLines = 0;

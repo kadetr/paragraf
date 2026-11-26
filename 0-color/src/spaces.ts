@@ -27,10 +27,7 @@ export interface GrayColor {
 }
 
 export type RenderingIntent =
-  | 'perceptual'
-  | 'relative'
-  | 'saturation'
-  | 'absolute';
+  'perceptual' | 'relative' | 'saturation' | 'absolute';
 
 /** Tagged color: source value + the result of an ICC transform, plus profile bytes for PDF/X embedding. */
 export interface TaggedColor {

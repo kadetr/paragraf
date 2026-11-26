@@ -511,14 +511,14 @@ interface Frame {
   y: number;
   width: number;
   height: number;
-  columnCount?: number;    // default 1
-  gutter?: number;         // default 0
+  columnCount?: number; // default 1
+  gutter?: number; // default 0
   grid?: BaselineGrid;
   paragraphSpacing?: number; // default 0
 }
 
 interface BaselineGrid {
-  first: number;    // offset from frame.y to first grid line
+  first: number; // offset from frame.y to first grid line
   interval: number; // distance between grid lines in points
 }
 ```
@@ -531,15 +531,15 @@ Options for `renderToPdf` and `renderDocumentToPdf` in `@paragraf/render-pdf`.
 
 ```ts
 interface PdfOptions {
-  width?: number;   // default 595.28 (A4)
-  height?: number;  // default 841.89 (A4)
-  fill?: string;    // default 'black'
+  width?: number; // default 595.28 (A4)
+  height?: number; // default 841.89 (A4)
+  fill?: string; // default 'black'
 }
 
 interface DocumentPdfOptions {
-  pageWidth?: number;   // default 595.28
-  pageHeight?: number;  // default 841.89
-  fill?: string;        // default 'black'
+  pageWidth?: number; // default 595.28
+  pageHeight?: number; // default 841.89
+  fill?: string; // default 'black'
 }
 ```
 
@@ -560,20 +560,20 @@ One-line signature for every primary function in the pipeline.
 
 ### `1a` — `@paragraf/linebreak`
 
-| Input | Function | Output |
-|---|---|---|
-| `string[], Font[], Measurer, opts` | `buildNodeSequence` | `Node[]` |
-| `Node[], lineWidth, opts` | `computeBreakpoints` | `BreakpointResult` |
-| `Node[], LineBreak[], alignment, opts` | `composeParagraph` | `ComposedParagraph` |
+| Input                                  | Function             | Output              |
+| -------------------------------------- | -------------------- | ------------------- |
+| `string[], Font[], Measurer, opts`     | `buildNodeSequence`  | `Node[]`            |
+| `Node[], lineWidth, opts`              | `computeBreakpoints` | `BreakpointResult`  |
+| `Node[], LineBreak[], alignment, opts` | `composeParagraph`   | `ComposedParagraph` |
 
 The three functions compose: build nodes → find breakpoints → assemble lines.
 The higher-level entry point in `3a` wraps all three.
 
 ### `1b` — `@paragraf/font-engine`
 
-| Input | Function | Output |
-|---|---|---|
-| `FontRegistry` | `createMeasurer(registry)` | `Measurer` |
+| Input            | Function                                             | Output       |
+| ---------------- | ---------------------------------------------------- | ------------ |
+| `FontRegistry`   | `createMeasurer(registry)`                           | `Measurer`   |
 | `string, string` | `new FontkitEngine()` then `.loadFont(id, filePath)` | `FontEngine` |
 
 `createMeasurer` wraps the engine so the algorithm layer can measure word widths
@@ -582,11 +582,11 @@ adapter.
 
 ### `2a` — `@paragraf/shaping-wasm`
 
-| Input | Function | Output |
-|---|---|---|
-| `(none)` | `loadShapingWasm()` | raw WASM module |
-| `Font[], wasm` | `new WasmFontEngine(fonts, wasm)` | `FontEngine` |
-| `Node[]` | `serializeNodesToBinary(nodes)` | `Uint8Array` |
+| Input                         | Function                           | Output              |
+| ----------------------------- | ---------------------------------- | ------------------- |
+| `(none)`                      | `loadShapingWasm()`                | raw WASM module     |
+| `Font[], wasm`                | `new WasmFontEngine(fonts, wasm)`  | `FontEngine`        |
+| `Node[]`                      | `serializeNodesToBinary(nodes)`    | `Uint8Array`        |
 | `Uint8Array, lineWidth, opts` | `tracebackWasmBinary(binary, ...)` | `ComposedParagraph` |
 
 Drop-in `FontEngine` replacement that shapes glyphs in Rust. The binary
@@ -594,24 +594,24 @@ serialize/traceback path offloads the full KP solve to WASM.
 
 ### `2b` — `@paragraf/render-core`
 
-| Input | Function | Output |
-|---|---|---|
-| `ComposedParagraph, Measurer, origin` | `layoutParagraph` | `RenderedParagraph` |
-| `RenderedParagraph, FontEngine, viewport` | `renderToSvg` | `string` (SVG markup) |
-| `RenderedParagraph, FontEngine, ctx` | `renderToCanvas` | `void` |
+| Input                                     | Function          | Output                |
+| ----------------------------------------- | ----------------- | --------------------- |
+| `ComposedParagraph, Measurer, origin`     | `layoutParagraph` | `RenderedParagraph`   |
+| `RenderedParagraph, FontEngine, viewport` | `renderToSvg`     | `string` (SVG markup) |
+| `RenderedParagraph, FontEngine, ctx`      | `renderToCanvas`  | `void`                |
 
 `layoutParagraph` resolves composed lines to absolute page coordinates.
 `renderToSvg` / `renderToCanvas` consume those coordinates to produce output.
 
 ### `3a` — `@paragraf/typography`
 
-| Input | Function | Output |
-|---|---|---|
-| `FontRegistry, ComposerOptions?` | `createParagraphComposer` | `ParagraphComposer` |
-| `ParagraphInput` | `composer.compose` | `ParagraphOutput` |
-| `Document, ParagraphComposer` | `composeDocument` | `ComposedDocument` |
-| `ComposedDocument, Frame[], Measurer` | `layoutDocument` | `RenderedDocument` |
-| `FontRegistry` | `createDefaultFontEngine` | `FontEngine` |
+| Input                                 | Function                  | Output              |
+| ------------------------------------- | ------------------------- | ------------------- |
+| `FontRegistry, ComposerOptions?`      | `createParagraphComposer` | `ParagraphComposer` |
+| `ParagraphInput`                      | `composer.compose`        | `ParagraphOutput`   |
+| `Document, ParagraphComposer`         | `composeDocument`         | `ComposedDocument`  |
+| `ComposedDocument, Frame[], Measurer` | `layoutDocument`          | `RenderedDocument`  |
+| `FontRegistry`                        | `createDefaultFontEngine` | `FontEngine`        |
 
 `3a` is the standard entry point for the full pipeline. It wraps `1a` and
 delegates rendering to `2b`. For single-paragraph use: `compose` → `layoutParagraph`.
@@ -619,9 +619,9 @@ For multi-frame documents: `composeDocument` → `layoutDocument`.
 
 ### `3b` — `@paragraf/render-pdf`
 
-| Input | Function | Output |
-|---|---|---|
-| `RenderedParagraph, FontEngine, PdfOptions?` | `renderToPdf` | `Promise<Buffer>` |
+| Input                                               | Function              | Output            |
+| --------------------------------------------------- | --------------------- | ----------------- |
+| `RenderedParagraph, FontEngine, PdfOptions?`        | `renderToPdf`         | `Promise<Buffer>` |
 | `RenderedDocument, FontEngine, DocumentPdfOptions?` | `renderDocumentToPdf` | `Promise<Buffer>` |
 
 Consumes layout output from `2b` (`layoutParagraph`) or `3a` (`layoutDocument`)

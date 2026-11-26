@@ -15,13 +15,25 @@ npm install @paragraf/linebreak @paragraf/types
 Build a node sequence, find breakpoints, then assemble composed lines:
 
 ```ts
-import { computeBreakpoints, traceback, composeParagraph } from '@paragraf/linebreak';
+import {
+  computeBreakpoints,
+  traceback,
+  composeParagraph,
+} from '@paragraf/linebreak';
 
 const result = computeBreakpoints(paragraph);
 // result.usedEmergency is true if emergencyStretch was needed; result.usedFallback is true
 // if the paragraph could not be set within tolerance (pass onInfeasible: 'throw' to throw instead)
 const breaks = traceback(result.node);
-const lines  = composeParagraph(nodes, breaks, 'justified', false, lineWidth, [], getMetrics);
+const lines = composeParagraph(
+  nodes,
+  breaks,
+  'justified',
+  false,
+  lineWidth,
+  [],
+  getMetrics,
+);
 ```
 
 ### Node building: `buildNodeSequence`
@@ -37,12 +49,21 @@ const nodes = buildNodeSequence(hyphenatedWords, measurer);
 ### Hyphenation
 
 ```ts
-import { loadHyphenator, hyphenateWord, hyphenateParagraph, loadLanguages } from '@paragraf/linebreak';
+import {
+  loadHyphenator,
+  hyphenateWord,
+  hyphenateParagraph,
+  loadLanguages,
+} from '@paragraf/linebreak';
 
 // Load patterns for a language (must call before hyphenating)
 await loadHyphenator('en-us');
 // patterns loaded — use hyphenateWord / hyphenateParagraph from this point on
-const words = hyphenateParagraph(text, { language: 'en-us', minWordLength: 5, fontSize: 12 });
+const words = hyphenateParagraph(text, {
+  language: 'en-us',
+  minWordLength: 5,
+  fontSize: 12,
+});
 
 // Batch-load multiple languages
 await loadLanguages(['en-us', 'de', 'fr']);
@@ -52,14 +73,14 @@ await loadLanguages(['en-us', 'de', 'fr']);
 
 ```ts
 interface HyphenateOptions {
-  minWordLength: number;          // required — skip words shorter than this
-  fontSize: number;               // required — drives minLeft/minRight derivation
-  language: Language;             // required
-  preserveSoftHyphens?: boolean;  // default true
-  minLeft?: number;               // override the font-size-derived minimum left fragment
-  minRight?: number;              // override the font-size-derived minimum right fragment
-  processCapitalized?: boolean;   // default: true for 'de', false for every other language
-  breakUrls?: boolean;            // default true (since v0.7.1)
+  minWordLength: number; // required — skip words shorter than this
+  fontSize: number; // required — drives minLeft/minRight derivation
+  language: Language; // required
+  preserveSoftHyphens?: boolean; // default true
+  minLeft?: number; // override the font-size-derived minimum left fragment
+  minRight?: number; // override the font-size-derived minimum right fragment
+  processCapitalized?: boolean; // default: true for 'de', false for every other language
+  breakUrls?: boolean; // default true (since v0.7.1)
   exceptions?: ExceptionDictionary;
 }
 ```

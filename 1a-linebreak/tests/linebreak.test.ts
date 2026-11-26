@@ -1,6 +1,9 @@
 import { describe, it, expect, beforeAll } from 'vitest';
 import * as path from 'path';
-import { computeBreakpoints as computeBreakpointsDefault, BreakpointResult } from '../src/linebreak';
+import {
+  computeBreakpoints as computeBreakpointsDefault,
+  BreakpointResult,
+} from '../src/linebreak';
 import { buildNodeSequence } from '../src/nodes';
 import { hyphenateParagraph, loadLanguages } from '../src/hyphenate';
 import { createMeasurer } from './helpers/measure';

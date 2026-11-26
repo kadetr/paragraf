@@ -179,7 +179,10 @@ const extraOutputs: [string, typeof outEmerg | null, string][] = [
 ];
 for (const [name, out, label] of extraOutputs) {
   if (!out) continue;
-  const r = layoutParagraph(out.lines, measurer, { x: MARGIN_X, y: MARGIN_TOP });
+  const r = layoutParagraph(out.lines, measurer, {
+    x: MARGIN_X,
+    y: MARGIN_TOP,
+  });
   writeSvg(
     `${name}.svg`,
     renderToSvg(r, fontEngine, { width: PAGE_W, height: PAGE_H }),
