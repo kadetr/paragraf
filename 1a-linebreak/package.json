@@ -3,6 +3,7 @@
   "version": "0.7.1",
   "description": "Knuth-Plass line-breaking algorithm + hyphenation. Browser-safe, zero font dependencies.",
   "license": "MIT",
+  "author": "kadetr (https://github.com/kadetr)",
   "repository": {
     "type": "git",
     "url": "https://github.com/kadetr/paragraf.git",
@@ -56,6 +57,6 @@
     "fontkit": "^2.0.4",
     "tsx": "^4.21.0",
     "typescript": "^5.4.0",
-    "vitest": "^3.2.4"
+    "vitest": "^4.1.12"
   }
 }

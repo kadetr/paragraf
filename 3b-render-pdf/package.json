@@ -3,6 +3,7 @@
   "version": "0.7.1",
   "description": "PDF rendering backend for the paragraf typesetter.",
   "license": "MIT",
+  "author": "kadetr (https://github.com/kadetr)",
   "repository": {
     "type": "git",
     "url": "https://github.com/kadetr/paragraf.git",
@@ -57,6 +58,6 @@
     "@types/node": "^22.19.15",
     "@types/pdfkit": "^0.17.5",
     "typescript": "^5.4.0",
-    "vitest": "^3.2.4"
+    "vitest": "^4.1.12"
   }
 }

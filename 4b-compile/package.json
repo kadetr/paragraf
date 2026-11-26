@@ -3,6 +3,7 @@
   "version": "0.7.1",
   "description": "Document compile pipeline for the paragraf typesetter. Merges template, data, fonts, layout, and styles into a rendered PDF, SVG, or document model.",
   "license": "MIT",
+  "author": "kadetr (https://github.com/kadetr)",
   "repository": {
     "type": "git",
     "url": "https://github.com/kadetr/paragraf.git",
@@ -65,6 +66,6 @@
     "@types/node": "^22.19.15",
     "tsup": "^8.5.1",
     "typescript": "^5.4.0",
-    "vitest": "^3.2.4"
+    "vitest": "^4.1.12"
   }
 }

@@ -3,6 +3,7 @@
   "version": "0.7.1",
   "description": "Paragraph and character style definitions with inheritance resolution for the paragraf typography library.",
   "license": "MIT",
+  "author": "kadetr (https://github.com/kadetr)",
   "repository": {
     "type": "git",
     "url": "https://github.com/kadetr/paragraf.git",
@@ -51,6 +52,6 @@
   "devDependencies": {
     "typescript": "^5.4.0",
     "tsup": "^8.5.1",
-    "vitest": "^3.2.4"
+    "vitest": "^4.1.12"
   }
 }
