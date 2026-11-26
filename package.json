@@ -5,6 +5,7 @@
   "scripts": {
     "build": "npm run build --workspaces --if-present",
     "test": "npm test --workspaces --if-present",
+    "test:coverage": "npm test --workspaces --if-present -- --coverage --coverage.reporter=text-summary --coverage.reporter=json-summary",
     "typecheck": "npm run typecheck --workspaces --if-present",
     "test:e2e": "vitest run --config tests/vitest.config.ts",
     "golden:update": "UPDATE_GOLDEN=1 vitest run --config tests/vitest.config.ts tests/golden",
@@ -35,6 +36,7 @@
   ],
   "devDependencies": {
     "@changesets/cli": "^3.0.3",
+    "@vitest/coverage-v8": "^4.1.12",
     "prettier": "3.10.1",
     "tsup": "^8.5.1",
     "tsx": "^4.21.0",
